@@ -24,7 +24,7 @@ Goal: deployed app where every module exists behind its contract and returns fix
 | F2 | Schema + migrations | Claude Code | done |
 | F3 | Seed data | Claude Code | done |
 | F4 | Auth and roles | Claude Code | done |
-| F5 | CI | Claude Code | todo |
+| F5 | CI | Claude Code | done |
 | F6 | Deploy to Vercel + Neon | Claude Code | todo |
 | F7 | UI kit from `05` | Claude Code | todo |
 | D1 | Start `docs/tdd-notes.md` | Claude Code | todo |
