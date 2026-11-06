@@ -27,10 +27,11 @@ Goal: deployed app where every module exists behind its contract and returns fix
 | F5 | CI | Claude Code | done |
 | F6 | Deploy to Vercel + Neon | Claude Code | todo |
 | F7 | UI kit from `05` | Claude Code | done |
-| D1 | Start `docs/tdd-notes.md` | Claude Code | todo |
+| D1 | Start `docs/tdd-notes.md` | Claude Code | done |
 
 ## Done
 1. Docs structure, backlog and design system.
+2. S0 (except F6): scaffold, frozen contracts, schema, seed, auth, CI, UI kit, TDD notes. See the summary at the end of this file.
 
 ## Blockers
 1. Images: scrum master to supply `public/images/*` per shot list in `05`. Until then, use neutral placeholders of the right aspect ratio.
@@ -48,3 +49,31 @@ Goal: deployed app where every module exists behind its contract and returns fix
 | 2026-11-07 | AI processing via persisted states, `after()`, sweep and Retry; no floating promises |
 | 2026-11-07 | Design direction "Quiet estate" per `05` |
 | 2026-11-07 | S0 built by a single developer; parallel work starts from S1 |
+| 2026-11-07 | S0: Next.js 16 with `cacheComponents`; runtime reads (cookies, searchParams, clock) go inside `<Suspense>` |
+| 2026-11-07 | S0: GST slabs seeded as 5% up to Rs 7,500 per night and 18% above, bounds inclusive, effective 2025-09-22 (verify, A2) |
+| 2026-11-07 | S0: promo `value` is a percent for `pct` and paise for `flat` |
+| 2026-11-07 | S0: staff and guest logins are separate Auth.js providers; sessions are JWT |
+
+## S0 summary (Claude Code, 2026-11-07)
+
+**What works**
+1. Frozen contracts and fixtures for pricing, inventory, booking, enquiries, ai-router (plus read-only catalog); stubs return fixtures; `quoteHash` implemented and tested.
+2. Drizzle schema, one migration, all CHECKs and indexes from `03`, applied to the Neon `development` branch. Idempotent seed (`pnpm db:reset && pnpm db:seed`).
+3. Auth.js credentials for guests and staff, `requireRole()`, `requireGuestOwner()`, sign up with consent, route protection.
+4. UI kit, guest, staff and auth shells, hidden review page at `/dev/ui` (screenshot in `docs/screenshots/F7.png`).
+5. CI workflow (typecheck, lint, format, unit, build, Postgres integration). TDD notes started.
+6. Last run: typecheck, lint, format check, 31 unit tests, 13 integration tests and build all pass. The development branch was re-seeded after the final test run.
+
+**How to verify**
+1. `pnpm install`, make sure `.env.local` has `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `AUTH_SECRET`.
+2. `pnpm typecheck && pnpm lint && pnpm test && pnpm test:integration`.
+3. `pnpm dev`, open `/dev/ui`, `/login`, `/admin/login`. Demo logins are in `README.md` (password `Demo@12345`).
+
+**Open questions for the scrum master**
+1. F6 (deploy) is untouched, as agreed. Production DB credentials were never used; `.env.local` holds only the `development` branch and is git ignored.
+2. GST slab values and the inclusive boundary at Rs 7,500 need confirming before go-live (A2). Also confirm that `value` is paise for flat promos.
+3. `03` lists no index on FK columns such as `payments.booking_id` or `booking_events.booking_id`; I added none to stay exact. Say if you want them.
+4. CI has not run on GitHub (nothing pushed). First push will show whether `pnpm/action-setup` accepts the `packageManager` pin.
+5. `acquireHold` takes `{ stay, quoteHash, guestId }` and returns the full `Booking`; `confirmPayment` returns `REFUND_PENDING` as an ok outcome. Both are documented in `01` (Contract notes) and need your sign-off since contracts are frozen.
+6. Mobile (375px) audit of `/dev/ui` is left to H4; the headless screenshot tooling could not emulate that width reliably.
+7. Auth rate limiting and security headers are deferred to H2.
