@@ -35,7 +35,7 @@ if (protectedHosts.some((h) => host.includes(h)))
 
 const { db, client } = createDb(url, { max: 2 });
 const rand = rng(20261107);
-const pick = <T,>(xs: readonly T[]) => xs[Math.floor(rand() * xs.length)];
+const pick = <T>(xs: readonly T[]) => xs[Math.floor(rand() * xs.length)];
 const now = new Date();
 const today = todayIST(now);
 const DAYS = 180;
@@ -221,7 +221,10 @@ async function main() {
       const checkIn = addDays(today, 2 + Math.floor(rand() * 110));
       const ds = eachNight(checkIn, addDays(checkIn, nightsCount));
       if (isBlackedOut(room.id, ds)) continue;
-      if (counts && ds.some((d) => usageOf(room.id, d).sold + usageOf(room.id, d).held + 1 > rs.allotment))
+      if (
+        counts &&
+        ds.some((d) => usageOf(room.id, d).sold + usageOf(room.id, d).held + 1 > rs.allotment)
+      )
         continue;
 
       const planCode = pick(["EP", "CP", "CP", "MAP"]);
