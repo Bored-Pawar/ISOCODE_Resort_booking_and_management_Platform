@@ -15,12 +15,13 @@
     "images:optimize": "node scripts/optimize-images.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --tsconfig tsconfig.json --env-file-if-exists=.env.local src/db/migrate.mts",
-    "db:seed": "tsx --tsconfig tsconfig.json --env-file-if-exists=.env.local src/db/seed/index.mts",
+    "db:seed": "tsx --tsconfig tsconfig.json --env-file-if-exists=.env.local src/db/seed/index.ts",
     "db:reset": "tsx --tsconfig tsconfig.json --env-file-if-exists=.env.local src/db/reset.mts && pnpm db:migrate",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.4",

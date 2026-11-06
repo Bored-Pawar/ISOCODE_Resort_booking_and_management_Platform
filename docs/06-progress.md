@@ -22,7 +22,7 @@ Goal: deployed app where every module exists behind its contract and returns fix
 | C1 | Frozen service interfaces + fixtures | Claude Code | done |
 | C2 | Quote, hold, payment price contract | Claude Code | done |
 | F2 | Schema + migrations | Claude Code | done |
-| F3 | Seed data | Claude Code | todo |
+| F3 | Seed data | Claude Code | done |
 | F4 | Auth and roles | Claude Code | todo |
 | F5 | CI | Claude Code | todo |
 | F6 | Deploy to Vercel + Neon | Claude Code | todo |
