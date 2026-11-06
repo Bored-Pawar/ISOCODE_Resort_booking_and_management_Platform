@@ -80,3 +80,10 @@ Block new holds only. Existing bookings stand; admin sees a warning list.
 7. Hold on blackout date is rejected.
 8. GST slab correct on both sides of the boundary.
 9. Price changed between quote and hold: PRICE_CHANGED, no inventory taken.
+
+## Contract notes (C2)
+Clarifications added with the frozen interfaces. They restate decisions above; nothing new is decided.
+1. `Quote.quoteHash` = first 32 hex chars of SHA-256 over room type, plan, check-in, check-out, promo (code, kind, value) and per night (date, rate, discount, GST basis points). Occupancy is excluded. See `src/modules/pricing/hash.ts`.
+2. `booking.acquireHold({ stay, quoteHash, guestId })` recomputes the quote inside the transaction. Mismatch returns `{ ok: false, code: 'PRICE_CHANGED', quote }` and takes no inventory.
+3. `booking.confirmPayment` returns `ok: true` with `outcome` `CONFIRMED`, `ALREADY_CONFIRMED` (duplicate webhook) or `REFUND_PENDING` (late payment). A wrong amount returns `AMOUNT_MISMATCH`. It charges `bookings.total_paise` only.
+4. Business failures are returned as `{ ok: false, code }`, never thrown.
