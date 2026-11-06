@@ -1,6 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
+import { Button } from "@/components/ui/button";
+import { FieldNote, Input } from "@/components/ui/input";
 import type { FormState } from "./actions";
 
 type Field = {
@@ -11,7 +13,7 @@ type Field = {
   required?: boolean;
 };
 
-/** Plain accessible form for auth pages. Restyled with UI kit components in F7. */
+/** Auth form built from the UI kit. Server action errors render inline, never as alerts. */
 export function AuthForm({
   action,
   fields,
@@ -30,46 +32,38 @@ export function AuthForm({
     <form action={formAction} className="flex flex-col gap-4" noValidate>
       {next ? <input type="hidden" name="next" value={next} /> : null}
       {fields.map((f) => (
-        <label key={f.name} className="flex flex-col gap-1 text-sm">
-          {f.label}
-          <input
-            name={f.name}
-            type={f.type ?? "text"}
-            autoComplete={f.autoComplete}
-            required={f.required ?? true}
-            aria-invalid={Boolean(state?.fieldErrors?.[f.name])}
-            className="h-11 rounded-md border px-3"
-          />
-          {state?.fieldErrors?.[f.name] ? (
-            <span role="alert" className="text-red-700">
-              {state.fieldErrors[f.name]}
-            </span>
-          ) : null}
-        </label>
+        <Input
+          key={f.name}
+          name={f.name}
+          label={f.label}
+          type={f.type ?? "text"}
+          autoComplete={f.autoComplete}
+          required={f.required ?? true}
+          error={state?.fieldErrors?.[f.name]}
+        />
       ))}
       {consent ? (
-        <label className="flex items-start gap-2 text-sm">
-          <input type="checkbox" name="consent" className="mt-1" />
-          <span>{consent}</span>
-        </label>
-      ) : null}
-      {state?.fieldErrors?.consent ? (
-        <span role="alert" className="text-sm text-red-700">
-          {state.fieldErrors.consent}
-        </span>
+        <div className="flex flex-col gap-1">
+          <label className="flex items-start gap-3 text-small">
+            <input
+              type="checkbox"
+              name="consent"
+              className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]"
+              aria-invalid={state?.fieldErrors?.consent ? true : undefined}
+            />
+            <span>{consent}</span>
+          </label>
+          <FieldNote error={state?.fieldErrors?.consent} />
+        </div>
       ) : null}
       {state?.error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-small text-danger">
           {state.error}
         </p>
       ) : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="h-11 rounded-md bg-black px-4 text-white disabled:opacity-60"
-      >
-        {pending ? "Please wait…" : submitLabel}
-      </button>
+      <Button type="submit" loading={pending}>
+        {submitLabel}
+      </Button>
     </form>
   );
 }

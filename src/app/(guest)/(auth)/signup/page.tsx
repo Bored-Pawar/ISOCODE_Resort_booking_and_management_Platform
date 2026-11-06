@@ -1,13 +1,15 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { AuthLayout } from "@/components/layout/auth-layout";
 import { AuthForm } from "@/lib/auth/auth-form";
 import { guestSignUpAction } from "@/lib/auth/actions";
+
+export const metadata = { title: "Create account" };
 
 async function Content({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 p-6">
-      <h1 className="text-2xl font-semibold">Create your account</h1>
+    <AuthLayout title="Create your account">
       <AuthForm
         action={guestSignUpAction}
         next={next}
@@ -31,13 +33,13 @@ async function Content({ searchParams }: { searchParams: Promise<{ next?: string
         ]}
         consent="I agree that Company A may store my name, email and phone to manage my bookings, as described in the privacy notice (DPDP Act 2023). I can ask for my data to be deleted at any time."
       />
-      <p className="text-sm">
+      <p className="mt-4 text-small text-muted">
         Already have an account?{" "}
-        <Link href="/login" className="underline">
+        <Link href="/login" className="text-accent underline underline-offset-2">
           Sign in
         </Link>
       </p>
-    </main>
+    </AuthLayout>
   );
 }
 

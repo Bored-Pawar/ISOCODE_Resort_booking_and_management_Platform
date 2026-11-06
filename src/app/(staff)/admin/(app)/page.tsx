@@ -1,17 +1,15 @@
-import { signOutAction } from "@/lib/auth/actions";
-import { getSessionUser } from "@/lib/auth";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 
-export default async function AdminHome() {
-  const user = await getSessionUser();
+export const metadata = { title: "Overview" };
+
+export default function AdminHome() {
   return (
-    <main className="mx-auto max-w-xl space-y-4 p-6">
-      <h1 className="text-2xl font-semibold">Staff area</h1>
-      <p>
-        {user?.name} ({user?.role})
-      </p>
-      <form action={signOutAction}>
-        <button className="underline">Sign out</button>
-      </form>
-    </main>
+    <>
+      <h1 className="text-h1">Overview</h1>
+      <Card className="mt-6" padded={false}>
+        <EmptyState message="Rates, allotment and the enquiry inbox arrive in the next sprint." />
+      </Card>
+    </>
   );
 }

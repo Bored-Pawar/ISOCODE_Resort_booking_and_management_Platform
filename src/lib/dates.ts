@@ -31,3 +31,21 @@ export function eachNight(checkIn: DateStr, checkOut: DateStr): DateStr[] {
 export function todayIST(now: Date = new Date()): DateStr {
   return new Date(now.getTime() + 5.5 * 3_600_000).toISOString().slice(0, 10);
 }
+
+const dayFmt = new Intl.DateTimeFormat("en-IN", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+
+/** "Sat 14 Nov" */
+export function formatNightDate(date: DateStr): string {
+  return dayFmt.format(new Date(`${date}T00:00:00Z`)).replace(",", "");
+}
+
+/** "Sat 14 Nov to Mon 16 Nov · 2 nights" */
+export function formatStay(checkIn: DateStr, checkOut: DateStr): string {
+  const n = nightsBetween(checkIn, checkOut);
+  return `${formatNightDate(checkIn)} to ${formatNightDate(checkOut)} · ${n} night${n === 1 ? "" : "s"}`;
+}

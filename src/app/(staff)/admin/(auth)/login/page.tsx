@@ -1,12 +1,14 @@
 import { Suspense } from "react";
+import { AuthLayout } from "@/components/layout/auth-layout";
 import { AuthForm } from "@/lib/auth/auth-form";
 import { staffLoginAction } from "@/lib/auth/actions";
+
+export const metadata = { title: "Staff sign in" };
 
 async function Content({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 p-6">
-      <h1 className="text-2xl font-semibold">Staff sign in</h1>
+    <AuthLayout title="Staff sign in">
       <AuthForm
         action={staffLoginAction}
         next={next}
@@ -21,7 +23,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ next?: string
           },
         ]}
       />
-    </main>
+    </AuthLayout>
   );
 }
 
