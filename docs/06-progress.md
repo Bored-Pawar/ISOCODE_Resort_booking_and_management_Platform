@@ -18,7 +18,7 @@ Goal: deployed app where every module exists behind its contract and returns fix
 ## S0 tasks (see `07-backlog.md` for AC)
 | ID | Task | Owner | Status |
 |---|---|---|---|
-| F1 | Scaffold | Claude Code | todo |
+| F1 | Scaffold | Claude Code | done |
 | C1 | Frozen service interfaces + fixtures | Claude Code | todo |
 | C2 | Quote, hold, payment price contract | Claude Code | todo |
 | F2 | Schema + migrations | Claude Code | todo |
