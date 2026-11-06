@@ -70,3 +70,5 @@ Each module exposes only `index.ts`. UI and route handlers call module services,
 | `INBOUND_WEBHOOK_SECRET` | Simulated email/WhatsApp webhooks |
 | `CRON_SECRET` | Vercel Cron auth |
 | `HOLD_MINUTES` | Default 10 |
+| `TEST_DATABASE_URL` | Optional. Integration tests use it, else `DATABASE_URL_UNPOOLED` |
+| `DB_PROTECTED_HOSTS` | Comma separated host fragments `db:reset` refuses to touch (e.g. the production endpoint) |

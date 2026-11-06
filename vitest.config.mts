@@ -1,3 +1,9 @@
+try {
+  process.loadEnvFile(".env.local");
+} catch {
+  // CI provides env vars directly.
+}
+
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
