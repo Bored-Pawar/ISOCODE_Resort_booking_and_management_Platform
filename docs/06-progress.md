@@ -1,6 +1,6 @@
 # 06 Progress
 
-Scrum master: Abhishek. Deadline: 9 Nov 2026, 23:59 IST.
+Scrum master: Aditya Pawar. Deadline: 9 Nov 2026, 23:59 IST.
 Developers update this file after significant changes. Keep entries one line.
 
 ## Ownership of locked areas
