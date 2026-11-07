@@ -8,7 +8,7 @@ Requirements: Node 22+, pnpm, a Postgres 16 database (Docker or a Neon dev branc
 
 ```bash
 pnpm install
-cp .env.example .env.local        # then fill DATABASE_URL, DATABASE_URL_UNPOOLED, AUTH_SECRET
+cp .env.example .env.local        # fill DATABASE_URL, DATABASE_URL_UNPOOLED, AUTH_SECRET (and TEST_DATABASE_URL for integration tests)
 docker compose up -d              # optional local Postgres 16, see docker-compose.yml
 pnpm db:reset && pnpm db:seed     # drops everything, migrates, seeds demo data (repeatable)
 pnpm dev                          # http://localhost:3000
@@ -17,17 +17,17 @@ pnpm dev                          # http://localhost:3000
 Local Docker URL: `postgresql://resort:resort@localhost:5432/resort`.
 `AUTH_SECRET` can be any long random string (`openssl rand -base64 32`).
 
-`db:reset` and `db:seed` refuse to run in production and against any host listed in `DB_PROTECTED_HOSTS`.
+`db:reset` and `db:seed` target `DATABASE_URL_UNPOOLED` only, and refuse production, an unset URL and any host in `DB_PROTECTED_HOSTS` (guard: `src/db/safety.ts`).
 
 ## Scripts
 
-| Script                                                     | What it does                                                                                                                    |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev` / `build` / `start`                             | Next.js                                                                                                                         |
-| `pnpm typecheck` / `lint` / `format:check`                 | Static checks                                                                                                                   |
-| `pnpm test`                                                | Unit tests (no database)                                                                                                        |
-| `pnpm test:integration`                                    | Integration tests against `TEST_DATABASE_URL` or `DATABASE_URL_UNPOOLED`. They migrate, and the seed test re-seeds the database |
-| `pnpm db:generate` / `db:migrate` / `db:reset` / `db:seed` | Drizzle migrations and demo data                                                                                                |
+| Script                                                     | What it does                                                                                                         |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev` / `build` / `start`                             | Next.js                                                                                                              |
+| `pnpm typecheck` / `lint` / `format:check`                 | Static checks                                                                                                        |
+| `pnpm test`                                                | Unit tests (no database)                                                                                             |
+| `pnpm test:integration`                                    | Integration tests. They require `TEST_DATABASE_URL` (a separate database), migrate it, and the seed test re-seeds it |
+| `pnpm db:generate` / `db:migrate` / `db:reset` / `db:seed` | Drizzle migrations and demo data                                                                                     |
 
 ## Demo logins (seed data, development only)
 

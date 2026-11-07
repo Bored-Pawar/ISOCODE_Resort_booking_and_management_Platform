@@ -1,18 +1,8 @@
 import postgres from "postgres";
+import { assertSafeDestructiveTarget } from "@/db/safety";
 
-/** DESTRUCTIVE: drops every table. Development databases only. */
-const url = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
-if (!url) throw new Error("DATABASE_URL_UNPOOLED or DATABASE_URL is required");
-if (process.env.NODE_ENV === "production") throw new Error("Refusing to reset in production");
-
-const host = new URL(url).hostname;
-const protectedHosts = (process.env.DB_PROTECTED_HOSTS ?? "")
-  .split(",")
-  .map((h) => h.trim())
-  .filter(Boolean);
-if (protectedHosts.some((h) => host.includes(h))) {
-  throw new Error(`Refusing to reset protected host ${host}`);
-}
+/** DESTRUCTIVE: drops every table. Guarded by src/db/safety.ts. */
+const { url, host } = assertSafeDestructiveTarget(process.env);
 
 const sql = postgres(url, { max: 1, onnotice: () => {} });
 await sql.unsafe(

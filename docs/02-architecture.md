@@ -60,7 +60,7 @@ Each module exposes only `index.ts`. UI and route handlers call module services,
 | Name | Purpose |
 |---|---|
 | `DATABASE_URL` | Neon pooled connection |
-| `DATABASE_URL_UNPOOLED` | Migrations |
+| `DATABASE_URL_UNPOOLED` | Direct connection: migrations, `db:seed`, `db:reset` (development branch) |
 | `AUTH_SECRET` | Auth.js |
 | `AI_PROVIDER` | `google`, `anthropic`, `local`, or `rules` |
 | `AI_MODEL` | Model id for the provider |
@@ -70,5 +70,6 @@ Each module exposes only `index.ts`. UI and route handlers call module services,
 | `INBOUND_WEBHOOK_SECRET` | Simulated email/WhatsApp webhooks |
 | `CRON_SECRET` | Vercel Cron auth |
 | `HOLD_MINUTES` | Default 10 |
-| `TEST_DATABASE_URL` | Optional. Integration tests use it, else `DATABASE_URL_UNPOOLED` |
-| `DB_PROTECTED_HOSTS` | Comma separated host fragments `db:reset` refuses to touch (e.g. the production endpoint) |
+| `TEST_DATABASE_URL` | Required for `test:integration`. A separate Neon branch (direct string). No fallback; must not share a host with `DATABASE_URL*` |
+| `DB_PROTECTED_HOSTS` | Comma separated host fragments that `db:seed`, `db:reset` and the integration tests refuse to touch (e.g. the production endpoint) |
+| `DB_TARGET` | Internal. Set to `test` by the integration tests for the seed child process so it targets `TEST_DATABASE_URL`. Never set by hand |

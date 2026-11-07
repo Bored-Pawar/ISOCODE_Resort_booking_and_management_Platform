@@ -1,14 +1,18 @@
 import postgres from "postgres";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
+import { assertSafeDestructiveTarget } from "@/db/safety";
 
+let cachedUrl: string | undefined;
+
+/**
+ * The only database integration tests may write to: TEST_DATABASE_URL, no fallback.
+ * Validated once (before any test mutates process.env) and then cached.
+ */
 export function testUrl(): string {
-  const url =
-    process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
-  if (!url) throw new Error("Set DATABASE_URL (or TEST_DATABASE_URL) for integration tests");
-  return url;
+  cachedUrl ??= assertSafeDestructiveTarget({ ...process.env, DB_TARGET: "test" }).url;
+  return cachedUrl;
 }
-
 export function connect() {
   return postgres(testUrl(), { max: 4, prepare: false, onnotice: () => {} });
 }

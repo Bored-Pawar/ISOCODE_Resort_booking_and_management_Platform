@@ -5,15 +5,17 @@ import { users } from "@/db/schema";
 import { getDb } from "@/lib/db";
 import { verifyCredentials } from "@/lib/auth/credentials";
 import { STAFF_ROLES } from "@/lib/auth/types";
-import { connect, ensureMigrated } from "./helpers";
+import { connect, ensureMigrated, testUrl } from "./helpers";
 
-const sql = connect();
+const sql = connect(); // validates TEST_DATABASE_URL before DATABASE_URL is overridden
+const originalDatabaseUrl = process.env.DATABASE_URL;
 const stamp = Date.now();
 const guestEmail = `it-guest-${stamp}@test.example`;
 const gmEmail = `it-gm-${stamp}@test.example`;
 
 beforeAll(async () => {
-  process.env.DATABASE_URL ??= process.env.TEST_DATABASE_URL;
+  // getDb() reads DATABASE_URL: point it at the test database for this file, never at dev.
+  process.env.DATABASE_URL = testUrl();
   await ensureMigrated(sql);
   const passwordHash = await bcrypt.hash("Correct#Pass1", 4);
   await getDb()
@@ -27,6 +29,8 @@ afterAll(async () => {
   for (const email of [guestEmail, gmEmail])
     await getDb().delete(users).where(eq(users.email, email));
   await sql.end();
+  if (originalDatabaseUrl === undefined) delete process.env.DATABASE_URL;
+  else process.env.DATABASE_URL = originalDatabaseUrl;
 });
 
 describe("verifyCredentials", () => {

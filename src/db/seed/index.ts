@@ -1,6 +1,6 @@
 /**
  * Idempotent seed: truncates every app table, then rebuilds demo data.
- * Safe to run repeatedly on a development database. Refuses protected hosts.
+ * Safe to run repeatedly on a development database. Guarded by src/db/safety.ts.
  */
 import bcrypt from "bcryptjs";
 import path from "node:path";
@@ -10,6 +10,7 @@ import { createDb } from "@/lib/db";
 import { addDays, eachNight, todayIST } from "@/lib/dates";
 import { computeQuoteHash } from "@/modules/pricing";
 import * as t from "@/db/schema";
+import { assertSafeDestructiveTarget } from "@/db/safety";
 import {
   DEMO_PASSWORD,
   guestUsers,
@@ -22,16 +23,8 @@ import {
 import { labelledEnquiries } from "./enquiries.data";
 import { buildNights, rng, seedRatePaise } from "./pricing";
 
-const url = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
-if (!url) throw new Error("DATABASE_URL_UNPOOLED or DATABASE_URL is required");
-if (process.env.NODE_ENV === "production") throw new Error("Refusing to seed in production");
-const host = new URL(url).hostname;
-const protectedHosts = (process.env.DB_PROTECTED_HOSTS ?? "")
-  .split(",")
-  .map((h) => h.trim())
-  .filter(Boolean);
-if (protectedHosts.some((h) => host.includes(h)))
-  throw new Error(`Refusing to seed protected host ${host}`);
+// Throws unless the target is safe: DATABASE_URL_UNPOOLED, or TEST_DATABASE_URL when DB_TARGET=test.
+const { url, host } = assertSafeDestructiveTarget(process.env);
 
 const { db, client } = createDb(url, { max: 2 });
 const rand = rng(20261107);

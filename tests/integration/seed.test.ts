@@ -1,15 +1,18 @@
 import { execSync } from "node:child_process";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { childEnvForTests } from "@/db/safety";
 import { connect, ensureMigrated } from "./helpers";
 import { labelledEnquiries } from "@/db/seed/enquiries.data";
 
-const sql = connect();
+const sql = connect(); // validates TEST_DATABASE_URL first
+// The child seeds TEST_DATABASE_URL only; it never targets DATABASE_URL*.
+const seedEnv = childEnvForTests(process.env) as NodeJS.ProcessEnv;
 
 beforeAll(async () => {
   await ensureMigrated(sql);
   // Run twice: the seed must be idempotent.
-  execSync("pnpm db:seed", { stdio: "pipe" });
-  execSync("pnpm db:seed", { stdio: "pipe" });
+  execSync("pnpm db:seed", { stdio: "pipe", env: seedEnv });
+  execSync("pnpm db:seed", { stdio: "pipe", env: seedEnv });
 }, 180_000);
 afterAll(() => sql.end());
 
