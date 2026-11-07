@@ -54,8 +54,8 @@ B1+B2 review-fix exceptions: `inventory/index.ts` may call the internal booking-
 4. Inbound webhooks check a shared secret header.
 
 ## Performance budget (slow hill networks)
-1. Guest pages under 100 KB first load JS.
-2. LCP under 2.5 s on Lighthouse Slow 4G.
+1. Each guest page adds no more than 30 KB (gzip) of its own JS above the framework baseline (about 120 KB gzip: React DOM and the Next client). Decided by the scrum master after S1 G1 measured a 100 KB total as unreachable on this stack. The baseline is recorded in `tdd-notes.md`.
+2. Hard target: LCP under 2.5 s on Lighthouse Slow 4G, measured in H3.
 3. Hero image under 150 KB, AVIF/WebP via `next/image`, blur placeholders, lazy below the fold.
 4. One self hosted variable font or system fonts.
 5. Room pages render on the server; no client side data fetching.
