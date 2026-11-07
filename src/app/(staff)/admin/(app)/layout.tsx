@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { LayoutDashboard } from "lucide-react";
 import { StaffShell } from "@/components/layout/staff-shell";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,8 @@ import { signOutAction } from "@/lib/auth/actions";
 const nav = [{ href: "/admin", label: "Overview", icon: <LayoutDashboard strokeWidth={1.5} /> }];
 
 async function Gate({ children }: { children: React.ReactNode }) {
+  // Auth.js uses crypto.getRandomValues() inside auth(); render at request time first.
+  await connection();
   const user = await getSessionUser();
   if (!user || !(STAFF_ROLES as readonly string[]).includes(user.role)) redirect("/admin/login");
   return (

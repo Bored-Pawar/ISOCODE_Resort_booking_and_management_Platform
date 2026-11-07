@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -10,6 +11,8 @@ import { signOutAction } from "@/lib/auth/actions";
 export const metadata = { title: "Your account" };
 
 async function Content() {
+  // Auth.js uses crypto.getRandomValues() inside auth(); render at request time first.
+  await connection();
   const user = await getSessionUser();
   if (!user || user.role !== "guest") redirect("/login?next=/account");
   return (
