@@ -8,7 +8,7 @@ import sharp from "sharp";
 import { sql } from "drizzle-orm";
 import { createDb } from "@/lib/db";
 import { addDays, eachNight, todayIST } from "@/lib/dates";
-import { computeQuoteHash } from "@/modules/pricing";
+import { calculateQuote } from "@/modules/pricing/calculation";
 import * as t from "@/db/schema";
 import { assertSafeDestructiveTarget } from "@/db/safety";
 import {
@@ -225,18 +225,25 @@ async function main() {
       const rates = ds.map((d) => rateMap.get(`${room.id}|${plan.id}|${d}`)!);
       const promo = nightsCount >= 2 && rand() < 0.3 ? pick(activePromos) : null;
       const promoSpec = promo ? { kind: promo.kind as "pct" | "flat", value: promo.value } : null;
-      const nights = buildNights(ds, rates, promoSpec, slabs);
-      const subtotal = rates.reduce((a, b) => a + b, 0);
-      const discount = nights.reduce((a, n) => a + n.discountPaise, 0);
-      const gst = nights.reduce((a, n) => a + n.gstPaise, 0);
-      const quoteHash = computeQuoteHash({
-        roomTypeId: room.id,
-        ratePlanId: plan.id,
-        checkIn,
-        checkOut: addDays(checkIn, nightsCount),
-        promo: promo ? { code: promo.code, kind: promoSpec!.kind, value: promo.value } : null,
+      const q = calculateQuote(
+        {
+          roomTypeId: room.id,
+          ratePlanId: plan.id,
+          checkIn,
+          checkOut: addDays(checkIn, nightsCount),
+        },
+        ds,
+        rates,
+        promo ? { code: promo.code, kind: promoSpec!.kind, value: promo.value } : null,
+        slabs,
+      );
+      const {
         nights,
-      });
+        subtotalPaise: subtotal,
+        discountPaise: discount,
+        gstPaise: gst,
+        quoteHash,
+      } = q;
       const wasConfirmed = status === "CONFIRMED" || (status === "CANCELLED" && i % 5 < 2);
       const createdAt =
         status === "HELD"

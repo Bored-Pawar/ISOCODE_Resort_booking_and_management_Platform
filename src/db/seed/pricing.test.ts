@@ -4,8 +4,8 @@ import { taxSlabSeeds } from "./data";
 
 describe("seed pricing", () => {
   it("picks the GST slab on both sides of the boundary", () => {
-    expect(pickGstBp(750000, taxSlabSeeds)).toBe(500);
-    expect(pickGstBp(750001, taxSlabSeeds)).toBe(1800);
+    expect(pickGstBp(750000, taxSlabSeeds, "2026-11-14")).toBe(500);
+    expect(pickGstBp(750001, taxSlabSeeds, "2026-11-14")).toBe(1800);
   });
   it("charges more on weekends and in peak season", () => {
     const sat = seedRatePaise(6200, 0, "2026-11-14"); // Saturday
