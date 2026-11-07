@@ -43,6 +43,8 @@ docs/
 
 Each module exposes only `index.ts`. UI and route handlers call module services, never tables directly.
 
+S1 approved narrow exception (R01): the `booking` module, as transaction owner, may import `pricing/internal.ts` and `inventory/internal.ts` and pass a shared `Tx`. These internal helpers are not public service exports and never open/commit their own transaction. UI and route handlers continue to import public `index.ts` interfaces only. See `01-booking-core.md` § Contracts.
+
 ## Security
 1. Role checks inside every server action and route handler. Middleware only redirects.
 2. Guests can read only their own bookings.

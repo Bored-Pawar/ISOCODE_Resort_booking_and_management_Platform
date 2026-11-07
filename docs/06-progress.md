@@ -8,12 +8,26 @@ Coordination records, not enforcement. The scrum master assigns ownership in cha
 
 | Area | Paths | Owner | Since |
 |---|---|---|---|
-| Schema and migrations | `src/db/**` | Aditya Pawar (S0) | 2026-11-07 |
-| Booking core | `src/modules/{inventory,booking,payments}/**` | Aditya Pawar (S0) | 2026-11-07 |
+| Database schema, migrations and seed | `src/db/**` | Codex (S1; exclusive coordination lock, only B1–B5-required changes) | 2026-11-08 |
+| Booking and inventory core | `src/modules/{inventory,booking,payments}/**` | Codex (S1; B1–B5, not B7 gateway) | 2026-11-08 |
+| Pricing engine | `src/modules/pricing/**` | Codex (S1; B1 and transaction helper) | 2026-11-08 |
+| Guest browsing and catalog | `src/app/(guest)/**`, `src/modules/catalog/**` and guest-screen-local components | Claude Code (S1; G1–G3) | 2026-11-08 |
 
 ## Current sprint
-S0: walking skeleton, built by one developer (Aditya Pawar) so the frame is consistent before parallel work starts.
-Goal: deployed app where every module exists behind its contract and returns fixtures; schema, seed, auth, CI and UI kit in place.
+S1: Codex builds the real B1–B5 booking backbone while Claude Code builds G1–G3 guest screens against frozen contracts and fixtures.
+Goal: booking backbone real + guest screens on fixtures; merge B1/B2 early so guest screens can switch to real pricing and availability before B3–B5 finish. S0 history and unfinished F6 remain recorded below.
+
+## S1 coordinated start (2026-11-08)
+- Codex: B1–B5 in an isolated worktree, based on the agreed common commit containing S0 review fixes. Sole editor of `src/db/**`, `src/modules/pricing/**`, `src/modules/inventory/**`, `src/modules/booking/**`, and `src/modules/payments/**` until this lock is released; no unrelated database changes or B7 mock gateway.
+- Claude Code: G1–G3 on the same agreed base, separate worktree; consume frozen `pricing`, `inventory` and `catalog` public contracts and corrected fixtures. No edits to Codex-locked paths, including seed or payment files.
+- Shared infrastructure, auth, `src/components/ui/**`, routes outside assigned features, and documentation require coordination before overlapping edits. B6/B7 and administrative rate/allotment editors are not part of this initial parallel assignment.
+- Codex S0 reviews are retained **unchanged as dated evidence**; R01–R05 resolution is recorded in the existing follow-up below. Confirm fixes exist in the starting Git commit before implementation.
+- For complete instructions and test gates see `docs/s1-codex-handoff.md`. Git base SHA and actual confirmation of both locks must be recorded by the developers before edits. Do not treat this proposed assignment as proof that either developer confirmed it.
+- Next after G1–G3: Claude Code takes Q1–Q3 (enquiry backend and UI). R1–R2 go to whichever developer becomes available first, after explicit ownership assignment; they are not part of current B1–B5 or G1–G3 scope.
+- Review ownership: Claude Code (Opus) independently reviews B1–B5; Codex independently reviews G1–G3. Neither implementation owner self-approves a merge.
+- Integration: submit and review B1+B2 as an early PR; merge when green rather than waiting for B3–B5. Claude may then switch G1–G3 from fixtures to the real public services.
+- Progress-file coordination: each developer edits only their own `06-progress.md` rows; otherwise report updates to the scrum master for application on `main`. Avoid simultaneous edits to the shared table.
+- Scrum master name: retained as **Aditya Pawar** from the supplied project documentation; verify separately if the actual responsible person differs, before changing attribution.
 
 ## S0 tasks (see `07-backlog.md` for AC)
 | ID | Task | Owner | Status |
@@ -34,7 +48,7 @@ Goal: deployed app where every module exists behind its contract and returns fix
 2. S0 (except F6): scaffold, frozen contracts, schema, seed, auth, CI, UI kit, TDD notes. See the summary at the end of this file.
 
 ## Blockers
-1. Images: scrum master to supply `public/images/*` per shot list in `05`. Until then, use neutral placeholders of the right aspect ratio.
+No outstanding image blocker: the `public/images/*` assets have been supplied. Any new blocker must be logged when discovered.
 
 ## Decisions log
 | Date | Decision |

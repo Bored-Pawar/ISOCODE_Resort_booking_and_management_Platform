@@ -73,6 +73,8 @@ Points: 1 trivial, 2 small, 3 medium, 5 large, 8 hard.
 | B8 | As a guest, I get a confirmation | Ref, stay, price and GST breakdown, check-in note (passport at desk for foreign guests), mock email in outbox | 2 | P0 | B5 |
 | B9 | As a guest, I see and manage my bookings | List and detail, owner only, cancel a held booking | 2 | P1 | B8, F4 |
 
+**S1 sequencing note (does not change story AC):** Although B4's completed public release/cron feature depends on B3, B3 already calls internal `releaseExpiredHoldsInTx`; implement that helper early as a shared B3/B4 prerequisite. Keep B1–B5 under one Codex owner and test across hold, expiry and payment transactions. See `01-booking-core.md` and `s1-codex-handoff.md`.
+
 ## A Admin: rates and inventory
 | ID | Story | AC | Pts | P | Depends |
 |---|---|---|---|---|---|
