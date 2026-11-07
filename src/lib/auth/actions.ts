@@ -6,6 +6,7 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { z } from "zod";
 import { users } from "@/db/schema";
 import { getDb } from "@/lib/db";
+import { isDevToolsEnabled } from "@/lib/dev-tools";
 import { credentialsSchema } from "./credentials";
 import { signIn, signOut } from "./config";
 import { safeNext } from "./safe-next";
@@ -95,6 +96,12 @@ export async function guestSignUpAction(_: FormState, formData: FormData): Promi
     if (err instanceof AuthError) return { error: "Account created. Please sign in." };
     throw err;
   }
+}
+
+/** Same staff credentials as /admin; only the landing page differs. Off unless dev tools are on. */
+export async function devLoginAction(_: FormState, formData: FormData) {
+  if (!isDevToolsEnabled()) return { error: "Not available." };
+  return login("staff", formData, "/dev");
 }
 
 export async function signOutAction() {

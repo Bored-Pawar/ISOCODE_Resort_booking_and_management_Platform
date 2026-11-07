@@ -71,7 +71,8 @@ B1+B2 review-fix exceptions: `inventory/index.ts` may call the internal booking-
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini |
 | `ANTHROPIC_API_KEY` | Optional |
 | `LOCAL_AI_BASE_URL` | OpenAI compatible local server, e.g. Ollama |
-| `INBOUND_WEBHOOK_SECRET` | Simulated email/WhatsApp webhooks |
+| `INBOUND_WEBHOOK_SECRET` | Shared secret for `/api/inbound/email` and `/api/inbound/whatsapp`, sent in the `x-inbound-secret` header. Missing or wrong: 401 |
+| `DEV_TOOLS_ENABLED` | `true` turns on the hidden `/dev` area (UI kit, inbound simulator, dev login). Anything else, or unset: every `/dev` URL is a 404. Leave off in production |
 | `CRON_SECRET` | Vercel Cron auth |
 | `HOLD_MINUTES` | Default 10 |
 | `TEST_DATABASE_URL` | Required for `test:integration`. A separate Neon branch (direct string). No fallback; must not share a host with `DATABASE_URL*` |
