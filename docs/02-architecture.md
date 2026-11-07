@@ -78,3 +78,9 @@ B1+B2 review-fix exceptions: `inventory/index.ts` may call the internal booking-
 | `TEST_DATABASE_URL` | Required for `test:integration`. A separate Neon branch (direct string). No fallback; must not share a host with `DATABASE_URL*` |
 | `DB_PROTECTED_HOSTS` | Comma separated host fragments that `db:seed`, `db:reset` and the integration tests refuse to touch (e.g. the production endpoint) |
 | `DB_TARGET` | Internal. Set to `test` by the integration tests for the seed child process so it targets `TEST_DATABASE_URL`. Never set by hand |
+
+## Enquiry intake and the dev area (Q1–Q3)
+1. **One row, many doors.** Web form, email webhook and WhatsApp webhook all call `enquiries.ingestFrom()`; the row is saved with `ai_status='pending'` before any AI call. Contact is normalised (email lower-cased, phone digits with one leading `+`) and never logged.
+2. **Webhooks** (`/api/inbound/email`, `/api/inbound/whatsapp`): authenticated by the `x-inbound-secret` header against `INBOUND_WEBHOOK_SECRET` (constant-time, fails closed when unset), not by a session, so they do not call `requireRole()`. Payloads follow Postmark inbound JSON and the Meta Cloud API webhook. Idempotent on the provider message id; a repeat returns the original enquiry id.
+3. **`/dev`** exists only when `DEV_TOOLS_ENABLED=true`. `proxy.ts` answers 404 otherwise and redirects signed-out visitors to `/dev/login`; every page and server action also calls `requireDevStaff()` (flag plus `requireRole` for staff). Guests get a 404. All pages are `noindex` and nothing links to `/dev` from guest or staff navigation.
+4. **Web form** (`/enquire`) is a public entry point validated with Zod; spam control beyond a honeypot field (rate limiting) is deferred to H2.

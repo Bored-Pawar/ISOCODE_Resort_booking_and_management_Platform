@@ -12,6 +12,7 @@ Coordination records, not enforcement. The scrum master assigns ownership in cha
 | Booking and inventory core | `src/modules/{inventory,booking,payments}/**` | Codex (S1; B1–B5, not B7 gateway) | 2026-11-08 |
 | Pricing engine | `src/modules/pricing/**` | Codex (S1; B1 and transaction helper) | 2026-11-08 |
 | Guest browsing and catalog | `src/app/(guest)/**`, `src/modules/catalog/**` and guest-screen-local components | Claude Code (S1; G1–G3) | 2026-11-08 |
+| Enquiry intake and dev area | `src/modules/enquiries/**`, `src/app/api/inbound/**`, `src/app/dev/**`, `src/app/(guest)/(site)/enquire/**`, `src/lib/auth/{password-field,sign-up-schema}*` | Claude Code (S1; Q1–Q3, dev area, password UX) | 2026-11-08 |
 
 ## Current sprint
 S1: Codex builds the real B1–B5 booking backbone while Claude Code builds G1–G3 guest screens against frozen contracts and fixtures.
@@ -62,6 +63,15 @@ Goal: booking backbone real + guest screens on fixtures; merge B1/B2 early so gu
 | G1 | Home, story blocks, date and guests search, URL params | done, awaiting review (screenshots in `docs/screenshots/`) |
 | G2 | Available rooms with prices | done, awaiting review (real catalog, availability and quotes) |
 | G3 | Room detail | done, awaiting review. Reserve links to `/book` (B6, not built yet); param contract proposed in `tdd-notes.md` |
+
+## S1 enquiry intake (Claude Code)
+| ID | Task | Status |
+|---|---|---|
+| Q1 | `enquiries.ingest()` and `list()` on PostgreSQL, `ai_status='pending'` saved first | done, awaiting review |
+| Q2 | Guest enquiry form `/enquire`, prefill params, `mailto:` replaced on G1–G3 | done, awaiting review |
+| Q3 | `/api/inbound/email` and `/api/inbound/whatsapp`, simulator at `/dev/test` | done, awaiting review. No AI call; rows stay `pending` until R1/R2 |
+| Dev | `/dev` area behind `DEV_TOOLS_ENABLED`, `/dev/login`, staff-only pages | done, awaiting review |
+| Auth UX | Confirm password on sign up, show/hide toggle on all four password forms | done, awaiting review |
 
 ## Done
 1. Docs structure, backlog and design system.
@@ -149,3 +159,7 @@ Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
 
 ## Worktree sync (2026-11-08)
 1. Aditya Pawar: merged `claude/dev` at `23c0b10` into `codex/dev`, preserving the review reports and document attributions; typecheck and 68 unit tests pass; R04 allowlist and R06-R09 remain deferred as recorded above. No integration tests or database scripts run.
+
+## Claude Code S1 Q1–Q3 (2026-11-08)
+- Q1: `enquiries.ingest()` and `list()` are real; `ingestFrom()` and `list({ limit })` are additive (idempotency key, consent record, bounded list). Ids are `ENQ-XXXXX` from app code with retry on primary key conflict. No schema change. Needs sign-off: the webhook idempotency key lives in `extracted.source` (no column exists), so R3 must merge into `extracted`, never replace it.
+- Q2/Q3/dev area/password UX verified in `pnpm dev`; see `tdd-notes.md`. `test:integration` not run, as instructed; the DB paths (`store.ts`) have no automated test yet and were checked by hand against the development database (test rows removed afterwards).
