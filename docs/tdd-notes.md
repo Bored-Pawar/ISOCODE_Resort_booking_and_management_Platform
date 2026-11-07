@@ -2,6 +2,12 @@
 
 One short entry per merged story: what, why, tradeoffs.
 
+## S1 Codex B3 (local implementation; independent review pending)
+- **What:** real atomic hold creation, frozen nightly snapshots and an audit event; `HOLD_MINUTES` expiry uses the database clock. Business-result exceptions roll back the entire transaction, including lazy expiry; PostgreSQL deadlock/serialization failures retry the entire transaction once, then return `SOLD_OUT`.
+- **Identity and reads:** the guest server action validates only stay/hash from the browser and fills `guestId` from `requireRole('guest')`. The frozen `booking.get` service reads persisted snapshots and checks the verified actor's ownership; it never reprices a saved booking.
+- **Lock order:** when scoped expiry releases a longer stay, lock the union of expired and requested nights in room/date order before any adjustment. Batch inventory updates only after ordered row locks; missing rows or database failures abort the whole transaction. Pricing-owned transaction helpers resolve promo identity/usage without cross-module table access.
+- **Proof:** real PostgreSQL tests cover 20 simultaneous last-unit holds, overlapping stays, complete rollback (including an actual FK failure and a deliberately rejected audit insert), stale pricing, blackouts, allotment guards, occupancy/promo/rate revalidation and retry codes. Unit tests check verified-session identity and transaction configuration/error unwrapping.
+
 ## S1 Codex B1–B2 (reviewed; fixes implemented, awaiting merge approval)
 - **What:** database-backed pricing and transaction repricing share one pure calculation with seed snapshots; nightly effective GST, promo validation, occupancy, deterministic hash and whole-paise rounding; capped flat discounts redistribute fully (R09).
 - **Why:** the displayed quote and later hold recheck must use identical rules; frozen seed snapshots reconcile from their saved nightly rates, without comparing historical bookings to fresh rates.

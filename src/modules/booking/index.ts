@@ -4,10 +4,14 @@
  */
 import { z } from "zod";
 import type { Err, Ok } from "@/lib/result";
-import { pricing, quoteInputSchema, type Quote, type QuoteNight } from "@/modules/pricing";
+import { quoteInputSchema, type Quote, type QuoteNight } from "@/modules/pricing";
 import { bookingFixture } from "./fixtures";
 import { getDb } from "@/lib/db";
 import { releaseExpiredHoldsInTx } from "./internal";
+import { acquireHold as acquireHoldImpl } from "./hold";
+import { readBooking } from "./read";
+import { bookings } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export type BookingStatus = "HELD" | "CONFIRMED" | "EXPIRED" | "CANCELLED";
 
@@ -106,36 +110,7 @@ export const booking = {
   async acquireHold(input: AcquireHoldInput): Promise<AcquireHoldResult> {
     const parsed = acquireHoldInputSchema.safeParse(input);
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
-    // Stub: recompute the quote for the requested stay. A different hash means the price moved.
-    // guestId must come from the server session only, never from client input (see 01 Contract notes).
-    const { stay, quoteHash, guestId } = parsed.data;
-    const priced = await pricing.quote(stay);
-    if (!priced.ok) {
-      return { ok: false, code: priced.code };
-    }
-    const q = priced.quote;
-    if (q.quoteHash !== quoteHash) return { ok: false, code: "PRICE_CHANGED", quote: q };
-    return {
-      ok: true,
-      booking: {
-        ...bookingFixture,
-        guestId,
-        roomTypeId: q.roomTypeId,
-        ratePlanId: q.ratePlanId,
-        checkIn: q.checkIn,
-        checkOut: q.checkOut,
-        adults: stay.adults,
-        children: stay.children ?? 0,
-        quoteHash: q.quoteHash,
-        promoCode: q.promo?.code ?? null,
-        subtotalPaise: q.subtotalPaise,
-        discountPaise: q.discountPaise,
-        gstPaise: q.gstPaise,
-        totalPaise: q.totalPaise,
-        nights: q.nights,
-        holdExpiresAt: new Date(Date.now() + 10 * 60_000).toISOString(),
-      },
-    };
+    return acquireHoldImpl(parsed.data);
   },
 
   async confirmPayment(input: ConfirmPaymentInput): Promise<ConfirmPaymentResult> {
@@ -159,10 +134,24 @@ export const booking = {
   async get(input: GetBookingInput, actor: BookingActor): Promise<GetBookingResult> {
     const parsed = getBookingInputSchema.safeParse(input);
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
-    if (parsed.data.ref !== bookingFixture.ref) return { ok: false, code: "NOT_FOUND" };
-    if (actor.role === "guest" && actor.userId !== bookingFixture.guestId) {
+    if (
+      !z
+        .object({
+          userId: z.string().min(1),
+          role: z.enum(["guest", "reservations", "sales", "gm"]),
+        })
+        .safeParse(actor).success
+    )
       return { ok: false, code: "FORBIDDEN" };
-    }
-    return { ok: true, booking: bookingFixture };
+    return getDb().transaction(async (tx) => {
+      const [row] = await tx
+        .select({ id: bookings.id, guestId: bookings.guestId })
+        .from(bookings)
+        .where(eq(bookings.ref, parsed.data.ref));
+      if (!row) return { ok: false, code: "NOT_FOUND" } as const;
+      if (actor.role === "guest" && actor.userId !== row.guestId)
+        return { ok: false, code: "FORBIDDEN" } as const;
+      return { ok: true, booking: (await readBooking(tx, row.id))! } as const;
+    });
   },
 };

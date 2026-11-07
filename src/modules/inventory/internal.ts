@@ -71,19 +71,40 @@ export type AdjustNightsInput = {
   soldDelta: number;
 };
 
+/** Lock a batch across room types before an expiry batch changes any inventory. */
+export async function lockInventoryRows(
+  tx: Tx,
+  rows: { roomTypeId: string; date: string }[],
+): Promise<void> {
+  if (!rows.length) return;
+  const tuples = sql.join(
+    rows.map((r) => sql`(${r.roomTypeId}::uuid, ${r.date}::date)`),
+    sql`, `,
+  );
+  await tx.execute(sql`SELECT room_type_id, date FROM inventory
+    WHERE (room_type_id, date) IN (VALUES ${tuples})
+    ORDER BY room_type_id, date FOR UPDATE`);
+}
+
 /**
- * Applies the deltas with one UPDATE per date, in ascending order. The table CHECKs
+ * Locks in date order, then applies the deltas in one batch. The table CHECKs
  * (including sold + held <= allotment) are the last line of defence: a violation throws, which
  * rolls back the caller's transaction. Call lockNights first.
  */
 export async function adjustNights(tx: Tx, input: AdjustNightsInput): Promise<void> {
-  for (const date of [...new Set(input.dates)].sort()) {
-    const rows = await tx.execute(sql`
+  const dates = [...new Set(input.dates)].sort();
+  if (!dates.length) return;
+  const dateArray = sql`ARRAY[${sql.join(
+    dates.map((date) => sql`${date}::date`),
+    sql`, `,
+  )}]`;
+  await tx.execute(sql`SELECT date FROM inventory WHERE room_type_id = ${input.roomTypeId}::uuid
+    AND date = ANY(${dateArray}) ORDER BY date FOR UPDATE`);
+  const rows = await tx.execute(sql`
       UPDATE inventory SET held = held + ${input.heldDelta}, sold = sold + ${input.soldDelta},
         updated_at = clock_timestamp()
-      WHERE room_type_id = ${input.roomTypeId}::uuid AND date = ${date}::date RETURNING date
+      WHERE room_type_id = ${input.roomTypeId}::uuid AND date = ANY(${dateArray}) RETURNING date
     `);
-    if (rows.length !== 1)
-      throw new Error(`Missing inventory row for ${input.roomTypeId}: ${date}`);
-  }
+  if (rows.length !== dates.length)
+    throw new Error(`Missing inventory rows for ${input.roomTypeId}`);
 }

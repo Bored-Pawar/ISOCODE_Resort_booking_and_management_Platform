@@ -57,13 +57,12 @@ describe("stubs return discriminated results, never throw", () => {
     const good = await booking.confirmPayment({ ...base, amountPaise: quoteFixture.totalPaise });
     expect(good.ok && good.outcome).toBe("CONFIRMED");
   });
-  it("booking.get is owner only for guests", async () => {
-    expect((await booking.get({ ref: "CA-7K3P9" }, guest)).ok).toBe(true);
-    const other = await booking.get({ ref: "CA-7K3P9" }, { userId: "someone-else", role: "guest" });
-    expect(other).toEqual({ ok: false, code: "FORBIDDEN" });
-    expect(
-      (await booking.get({ ref: "CA-7K3P9" }, { userId: "staff", role: "reservations" })).ok,
-    ).toBe(true);
+  it("booking.get validates input and actor before database work", async () => {
+    expect(await booking.get({ ref: "" }, guest)).toEqual({ ok: false, code: "INVALID_INPUT" });
+    expect(await booking.get({ ref: "CA-X" }, { userId: "x", role: "invalid" } as never)).toEqual({
+      ok: false,
+      code: "FORBIDDEN",
+    });
   });
   it("enquiries.ingest and aiRouter.process", async () => {
     const r = await enquiries.ingest({
