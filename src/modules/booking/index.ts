@@ -6,6 +6,8 @@ import { z } from "zod";
 import type { Err, Ok } from "@/lib/result";
 import { pricing, quoteInputSchema, type Quote, type QuoteNight } from "@/modules/pricing";
 import { bookingFixture } from "./fixtures";
+import { getDb } from "@/lib/db";
+import { releaseExpiredHoldsInTx } from "./internal";
 
 export type BookingStatus = "HELD" | "CONFIRMED" | "EXPIRED" | "CANCELLED";
 
@@ -94,10 +96,11 @@ export type ReleaseExpiredHoldsResult = Ok<{ released: number }>;
 export const booking = {
   /**
    * Opens its own transaction and releases expired holds. Used by the daily cron route and by
-   * inventory.availability before it reads stock. Stub until B4. Additive to the C1 contract.
+   * inventory.availability before it reads stock. Additive to the C1 contract.
    */
   async releaseExpiredHolds(): Promise<ReleaseExpiredHoldsResult> {
-    return { ok: true, released: 0 };
+    const result = await getDb().transaction((tx) => releaseExpiredHoldsInTx(tx, {}));
+    return { ok: true, ...result };
   },
 
   async acquireHold(input: AcquireHoldInput): Promise<AcquireHoldResult> {
