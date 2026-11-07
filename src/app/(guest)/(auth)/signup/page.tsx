@@ -30,6 +30,12 @@ async function Content({ searchParams }: { searchParams: Promise<{ next?: string
             type: "password",
             autoComplete: "new-password",
           },
+          {
+            name: "confirmPassword",
+            label: "Confirm password",
+            type: "password",
+            autoComplete: "new-password",
+          },
         ]}
         consent="I agree that Company A may store my name, email and phone to manage my bookings, as described in the privacy notice (DPDP Act 2023). I can ask for my data to be deleted at any time."
       />

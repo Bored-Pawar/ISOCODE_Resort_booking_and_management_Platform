@@ -3,13 +3,14 @@
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
-import { z } from "zod";
 import { users } from "@/db/schema";
 import { getDb } from "@/lib/db";
+import { CONSENT_VERSION } from "@/lib/consent";
 import { isDevToolsEnabled } from "@/lib/dev-tools";
 import { credentialsSchema } from "./credentials";
 import { signIn, signOut } from "./config";
 import { safeNext } from "./safe-next";
+import { signUpSchema } from "./sign-up-schema";
 
 export type FormState = { error?: string; fieldErrors?: Record<string, string> } | undefined;
 
@@ -43,23 +44,6 @@ export async function guestLoginAction(_: FormState, formData: FormData) {
 export async function staffLoginAction(_: FormState, formData: FormData) {
   return login("staff", formData, "/admin");
 }
-
-const signUpSchema = z.object({
-  name: z.string().trim().min(2, "Enter your name").max(120),
-  email: z.string().trim().toLowerCase().email("Enter a valid email").max(254),
-  phone: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z
-      .string()
-      .trim()
-      .regex(/^\+?[0-9 ]{8,15}$/, "Enter a valid phone number")
-      .optional(),
-  ),
-  password: z.string().min(8, "Use at least 8 characters").max(100),
-  consent: z.literal("on", { error: "Please accept the privacy notice to continue" }),
-});
-
-const CONSENT_VERSION = "2026-11";
 
 export async function guestSignUpAction(_: FormState, formData: FormData): Promise<FormState> {
   const parsed = signUpSchema.safeParse(Object.fromEntries(formData));

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { FieldNote, Input } from "@/components/ui/input";
 import type { FormState } from "./actions";
+import { PasswordField } from "./password-field";
 
 type Field = {
   name: string;
@@ -31,17 +32,28 @@ export function AuthForm({
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
       {next ? <input type="hidden" name="next" value={next} /> : null}
-      {fields.map((f) => (
-        <Input
-          key={f.name}
-          name={f.name}
-          label={f.label}
-          type={f.type ?? "text"}
-          autoComplete={f.autoComplete}
-          required={f.required ?? true}
-          error={state?.fieldErrors?.[f.name]}
-        />
-      ))}
+      {fields.map((f) =>
+        f.type === "password" ? (
+          <PasswordField
+            key={f.name}
+            name={f.name}
+            label={f.label}
+            autoComplete={f.autoComplete}
+            required={f.required ?? true}
+            error={state?.fieldErrors?.[f.name]}
+          />
+        ) : (
+          <Input
+            key={f.name}
+            name={f.name}
+            label={f.label}
+            type={f.type ?? "text"}
+            autoComplete={f.autoComplete}
+            required={f.required ?? true}
+            error={state?.fieldErrors?.[f.name]}
+          />
+        ),
+      )}
       {consent ? (
         <div className="flex flex-col gap-1">
           <label className="flex items-start gap-3 text-small">
