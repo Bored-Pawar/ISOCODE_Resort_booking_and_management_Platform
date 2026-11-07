@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { assertSafeDestructiveTarget, childEnvForTests, dbHost } from "./safety";
 
@@ -113,5 +114,49 @@ describe("dbHost", () => {
   it("lower-cases and strips the Neon pooler suffix", () => {
     expect(dbHost("postgresql://u:p@EP-A-1-pooler.x.neon.tech/db")).toBe("ep-a-1.x.neon.tech");
     expect(dbHost("postgresql://u:p@localhost:5432/db")).toBe("localhost");
+  });
+});
+
+describe("target selection (R03/R04)", () => {
+  const all = { ...testEnv, DATABASE_URL: DEV_POOLED };
+
+  it("dev mode targets DATABASE_URL_UNPOOLED only, ignoring DATABASE_URL and TEST_DATABASE_URL", () => {
+    expect(assertSafeDestructiveTarget(all).url).toBe(DEV);
+  });
+
+  it("test mode targets TEST_DATABASE_URL only", () => {
+    expect(assertSafeDestructiveTarget({ ...all, DB_TARGET: "test" }).url).toBe(TEST);
+  });
+
+  it("reset and migrate resolve the same target from the same env", () => {
+    for (const env of [all, { ...all, DB_TARGET: "test" }]) {
+      expect(assertSafeDestructiveTarget(env)).toEqual(assertSafeDestructiveTarget({ ...env }));
+    }
+    // child env from the test suite keeps both steps on the test database
+    expect(assertSafeDestructiveTarget(childEnvForTests(all)).url).toBe(TEST);
+  });
+
+  it("reset.mts and migrate.mts both use the guard and never read a URL themselves", () => {
+    for (const file of ["src/db/reset.mts", "src/db/migrate.mts"]) {
+      const src = readFileSync(file, "utf8");
+      expect(src).toContain("assertSafeDestructiveTarget(process.env)");
+      expect(src).not.toMatch(/process\.env\.DATABASE_URL/);
+    }
+  });
+
+  it("matches protected fragments that include Neon's -pooler suffix", () => {
+    expect(() =>
+      assertSafeDestructiveTarget({ ...dev, DB_PROTECTED_HOSTS: "ep-dev-123-pooler" }),
+    ).toThrow("protected host");
+    expect(() =>
+      assertSafeDestructiveTarget({ ...dev, DB_PROTECTED_HOSTS: " EP-DEV-123 " }),
+    ).toThrow("protected host");
+  });
+});
+
+describe("pooler suffix handling", () => {
+  it("only strips -pooler before a dot or at the end of the host", () => {
+    expect(dbHost("postgresql://u:p@ep-a-pooler.x.neon.tech/db")).toBe("ep-a.x.neon.tech");
+    expect(dbHost("postgresql://u:p@ep-poolerx.neon.tech/db")).toBe("ep-poolerx.neon.tech");
   });
 });

@@ -4,8 +4,8 @@
  */
 import { z } from "zod";
 import type { Err, Ok } from "@/lib/result";
-import { quoteInputSchema, type Quote, type QuoteNight } from "@/modules/pricing";
-import { bookingFixture, changedQuoteForHold } from "./fixtures";
+import { pricing, quoteInputSchema, type Quote, type QuoteNight } from "@/modules/pricing";
+import { bookingFixture } from "./fixtures";
 
 export type BookingStatus = "HELD" | "CONFIRMED" | "EXPIRED" | "CANCELLED";
 
@@ -50,7 +50,8 @@ export type AcquireHoldInput = z.input<typeof acquireHoldInputSchema>;
 
 export type AcquireHoldResult =
   | Ok<{ booking: Booking }>
-  | Err<"INVALID_INPUT" | "SOLD_OUT" | "BLACKOUT" | "NO_RATE">
+  /** PROMO_INVALID and OVER_OCCUPANCY come from the price recheck (pricing.quote) inside the hold. */
+  | Err<"INVALID_INPUT" | "SOLD_OUT" | "BLACKOUT" | "NO_RATE" | "PROMO_INVALID" | "OVER_OCCUPANCY">
   /** No hold taken. UI shows "price updated" with the new quote. */
   | Err<"PRICE_CHANGED", { quote: Quote }>;
 
@@ -86,15 +87,52 @@ export type GetBookingInput = z.input<typeof getBookingInputSchema>;
 export type GetBookingResult =
   Ok<{ booking: Booking }> | Err<"INVALID_INPUT" | "NOT_FOUND" | "FORBIDDEN">;
 
+// ---- releaseExpiredHolds (cron, lazy expiry) --------------------------
+
+export type ReleaseExpiredHoldsResult = Ok<{ released: number }>;
+
 export const booking = {
+  /**
+   * Opens its own transaction and releases expired holds. Used by the daily cron route and by
+   * inventory.availability before it reads stock. Stub until B4. Additive to the C1 contract.
+   */
+  async releaseExpiredHolds(): Promise<ReleaseExpiredHoldsResult> {
+    return { ok: true, released: 0 };
+  },
+
   async acquireHold(input: AcquireHoldInput): Promise<AcquireHoldResult> {
     const parsed = acquireHoldInputSchema.safeParse(input);
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
-    // Stub: the literal hash "stale" lets UI exercise PRICE_CHANGED.
-    if (parsed.data.quoteHash === "stale") {
-      return { ok: false, code: "PRICE_CHANGED", quote: changedQuoteForHold };
+    // Stub: recompute the quote for the requested stay. A different hash means the price moved.
+    // guestId must come from the server session only, never from client input (see 01 Contract notes).
+    const { stay, quoteHash, guestId } = parsed.data;
+    const priced = await pricing.quote(stay);
+    if (!priced.ok) {
+      return { ok: false, code: priced.code };
     }
-    return { ok: true, booking: { ...bookingFixture, guestId: parsed.data.guestId } };
+    const q = priced.quote;
+    if (q.quoteHash !== quoteHash) return { ok: false, code: "PRICE_CHANGED", quote: q };
+    return {
+      ok: true,
+      booking: {
+        ...bookingFixture,
+        guestId,
+        roomTypeId: q.roomTypeId,
+        ratePlanId: q.ratePlanId,
+        checkIn: q.checkIn,
+        checkOut: q.checkOut,
+        adults: stay.adults,
+        children: stay.children ?? 0,
+        quoteHash: q.quoteHash,
+        promoCode: q.promo?.code ?? null,
+        subtotalPaise: q.subtotalPaise,
+        discountPaise: q.discountPaise,
+        gstPaise: q.gstPaise,
+        totalPaise: q.totalPaise,
+        nights: q.nights,
+        holdExpiresAt: new Date(Date.now() + 10 * 60_000).toISOString(),
+      },
+    };
   },
 
   async confirmPayment(input: ConfirmPaymentInput): Promise<ConfirmPaymentResult> {

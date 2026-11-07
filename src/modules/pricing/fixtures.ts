@@ -50,3 +50,20 @@ export const changedQuoteFixture: Quote = {
   totalPaise: 1675000,
   quoteHash: computeQuoteHash(changedBase),
 };
+
+/**
+ * Stub pricing (until B1): one fixed nightly rate per room type, whatever the plan or date.
+ * Not real prices; it only keeps stub quotes internally consistent for any valid stay.
+ */
+export const STUB_NIGHT_RATE_PAISE: Record<string, number> = {
+  "rt-plantation-room": 640000,
+  "rt-estate-suite": 950000,
+  "rt-garden-villa": 1450000,
+  "rt-pool-villa": 2400000,
+};
+
+/** Stub GST: 5% up to Rs 7,500 per night (inclusive), 18% above. Mirrors the seeded slabs. */
+export const STUB_SLAB_LIMIT_PAISE = 750000;
+
+/** The only promo the stub accepts: 10% off. */
+export const STUB_PROMO = { code: "WELCOME10", kind: "pct", value: 10 } as const;
