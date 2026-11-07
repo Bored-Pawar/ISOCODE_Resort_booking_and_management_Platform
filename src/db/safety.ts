@@ -11,6 +11,8 @@ export type Env = Record<string, string | undefined>;
 
 export type DbTarget = { url: string; host: string; mode: "dev" | "test" };
 
+const POOLER_SUFFIX = /-pooler(?=\.|$)/;
+
 /**
  * Lower-case hostname with Neon's "-pooler" suffix removed, so the pooled and direct
  * endpoints of one branch compare equal. Throws on an unparsable URL.
@@ -23,13 +25,13 @@ export function dbHost(url: string): string {
     throw new Error("Database URL is not a valid URL");
   }
   if (!host) throw new Error("Database URL has no host");
-  return host.replace(/-pooler(?=\.|$)/, "");
+  return host.replace(POOLER_SUFFIX, "");
 }
 
 function protectedFragments(env: Env): string[] {
   return (env.DB_PROTECTED_HOSTS ?? "")
     .split(",")
-    .map((h) => h.trim().toLowerCase())
+    .map((h) => h.trim().toLowerCase().replace(POOLER_SUFFIX, ""))
     .filter(Boolean);
 }
 
