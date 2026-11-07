@@ -95,8 +95,8 @@ export type ReleaseExpiredHoldsResult = Ok<{ released: number }>;
 
 export const booking = {
   /**
-   * Opens its own transaction and releases expired holds. Used by the daily cron route and by
-   * inventory.availability before it reads stock. Additive to the C1 contract.
+   * Site-wide sweep for cron/maintenance. Availability uses a separate scoped internal wrapper.
+   * Opens its own transaction. Additive to the C1 contract.
    */
   async releaseExpiredHolds(): Promise<ReleaseExpiredHoldsResult> {
     const result = await getDb().transaction((tx) => releaseExpiredHoldsInTx(tx, {}));

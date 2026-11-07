@@ -1,10 +1,11 @@
 /**
- * INTERNAL helper used by booking itself, the cron route and (through booking/index.ts)
- * inventory.availability for lazy expiry (R01). Never commits.
+ * INTERNAL expiry helpers. The scoped availability wrapper owns its transaction;
+ * releaseExpiredHoldsInTx only uses the transaction supplied by its caller.
  * See docs/01-booking-core.md, "Contracts".
  */
-import type { Tx } from "@/lib/db";
+import { getDb, type Tx } from "@/lib/db";
 import { sql } from "drizzle-orm";
+import { z } from "zod";
 import { eachNight } from "@/lib/dates";
 import { adjustNights } from "@/modules/inventory/internal";
 import { bookingEvents } from "@/db/schema";
@@ -19,6 +20,13 @@ export type ReleaseExpiredScope = {
   now?: Date;
 };
 
+/** Booking owns the lazy-expiry write transaction; availability must always supply a date range. */
+export async function releaseExpiredHoldsForAvailability(
+  scope: Pick<ReleaseExpiredScope, "roomTypeId"> & { checkIn: string; checkOut: string },
+): Promise<{ released: number }> {
+  return getDb().transaction((tx) => releaseExpiredHoldsInTx(tx, scope));
+}
+
 /**
  * Moves HELD bookings past hold_expires_at to EXPIRED (FOR UPDATE SKIP LOCKED), writes a
  * booking_events row for each and releases their nights through inventory.adjustNights, all in the
@@ -28,6 +36,8 @@ export async function releaseExpiredHoldsInTx(
   tx: Tx,
   scope: ReleaseExpiredScope,
 ): Promise<{ released: number }> {
+  if (scope.roomTypeId && !z.uuid().safeParse(scope.roomTypeId).success) return { released: 0 };
+  const roomFilter = scope.roomTypeId ? sql`AND room_type_id = ${scope.roomTypeId}::uuid` : sql``;
   const now = scope.now ? sql`${scope.now.toISOString()}::timestamptz` : sql`clock_timestamp()`;
   const expired = await tx.execute<{
     id: string;
@@ -39,7 +49,7 @@ export async function releaseExpiredHoldsInTx(
     UPDATE bookings SET status = 'EXPIRED'
     WHERE id IN (
       SELECT id FROM bookings WHERE status = 'HELD' AND hold_expires_at <= ${now}
-        AND (${scope.roomTypeId ?? null}::text IS NULL OR room_type_id::text = ${scope.roomTypeId ?? null})
+        ${roomFilter}
         AND (${scope.checkIn ?? null}::date IS NULL OR check_out > ${scope.checkIn ?? null}::date)
         AND (${scope.checkOut ?? null}::date IS NULL OR check_in < ${scope.checkOut ?? null}::date)
       ORDER BY id FOR UPDATE SKIP LOCKED

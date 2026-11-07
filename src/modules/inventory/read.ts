@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import { z } from "zod";
 import type { Db, Tx } from "@/lib/db";
 import { nightsBetween } from "@/lib/dates";
 import type { AvailabilityInput, RoomAvailability } from "./index";
@@ -8,6 +9,8 @@ export async function readAvailability(
   db: Db | Tx,
   input: AvailabilityInput,
 ): Promise<RoomAvailability[]> {
+  if (input.roomTypeId && !z.uuid().safeParse(input.roomTypeId).success) return [];
+  const roomFilter = input.roomTypeId ? sql`WHERE r.id = ${input.roomTypeId}::uuid` : sql``;
   const nights = nightsBetween(input.checkIn, input.checkOut);
   const rows = await db.execute<{
     room_type_id: string;
@@ -23,7 +26,7 @@ export async function readAvailability(
         AS blacked_out
     FROM room_types r LEFT JOIN inventory i ON i.room_type_id = r.id
       AND i.date >= ${input.checkIn}::date AND i.date < ${input.checkOut}::date
-    WHERE (${input.roomTypeId ?? null}::text IS NULL OR r.id::text = ${input.roomTypeId ?? null})
+    ${roomFilter}
     GROUP BY r.id ORDER BY r.sort, r.id
   `);
   return rows.map((r) => ({
