@@ -37,3 +37,6 @@ export const enquiries = {
     return listEnquiries(Math.min(Math.max(opts.limit ?? DEFAULT_LIST_LIMIT, 1), 500));
   },
 };
+
+export * from "./inbound";
+export { handleInbound } from "./inbound-route";

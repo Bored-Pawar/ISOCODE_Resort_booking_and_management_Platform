@@ -1,7 +1,7 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { enquiries as enquiriesTable, users } from "@/db/schema";
 import { getDb } from "@/lib/db";
-import type { Enquiry, EnquiryCategory, IngestInput } from "./types";
+import type { Enquiry, EnquiryCategory } from "./types";
 import { ingestInputSchema } from "./types";
 import { generateEnquiryId } from "./id";
 import { normaliseContact, tidyText } from "./normalise";

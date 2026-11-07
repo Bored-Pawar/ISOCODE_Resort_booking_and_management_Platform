@@ -44,5 +44,4 @@ export type IngestMetaInput = {
   consentVersion?: string;
 };
 export type IngestFromResult =
-  | Ok<{ enquiryId: string; aiStatus: "pending"; duplicate: boolean }>
-  | Err<"INVALID_INPUT">;
+  Ok<{ enquiryId: string; aiStatus: "pending"; duplicate: boolean }> | Err<"INVALID_INPUT">;
