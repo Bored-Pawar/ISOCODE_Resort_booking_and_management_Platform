@@ -2,17 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { Users } from "lucide-react";
 import { Skeleton } from "@/components/ui";
+import { connection } from "next/server";
 import { catalog } from "@/modules/catalog";
-
-function occupancy(adults: number, children: number): string {
-  const a = `${adults} adult${adults === 1 ? "" : "s"}`;
-  return children > 0
-    ? `Up to ${a}, ${children} child${children === 1 ? "" : "ren"}`
-    : `Up to ${a}`;
-}
+import { occupancyLabel } from "../_lib/format";
 
 /** Server component: reads the catalog and renders one card per room type. Photos load lazily. */
 export async function RoomHighlights() {
+  // Request time: the catalog comes from the database, which `next build` must not need.
+  await connection();
   const rooms = await catalog.listRoomTypes();
   return (
     <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -40,7 +37,7 @@ export async function RoomHighlights() {
               <p className="mt-1 text-small text-muted">{room.description}</p>
               <p className="mt-2 flex items-center gap-2 text-small text-muted">
                 <Users className="size-[18px]" strokeWidth={1.5} aria-hidden />
-                {occupancy(room.maxAdults, room.maxChildren)}
+                {occupancyLabel(room.maxAdults, room.maxChildren)}
               </p>
               <span className="mt-3 inline-flex h-11 items-center text-small font-semibold text-accent group-hover:underline">
                 View room

@@ -4,7 +4,7 @@ import { inventory } from "@/modules/inventory";
 import { booking } from "@/modules/booking";
 import { enquiries } from "@/modules/enquiries";
 import { aiRouter, classificationSchema } from "@/modules/ai-router";
-import { catalog } from "@/modules/catalog";
+import { roomTypesFixture } from "@/modules/catalog/fixtures";
 
 const stay = {
   roomTypeId: "rt-plantation-room",
@@ -34,9 +34,8 @@ describe("fixtures are internally consistent", () => {
       if (r.ok) expect(classificationSchema.safeParse(r.classification).success).toBe(true);
     }
   });
-  it("catalog matches assumption A9 (76 keys)", async () => {
-    const rooms = await catalog.listRoomTypes();
-    expect(rooms.reduce((s, r) => s + r.totalUnits, 0)).toBe(76);
+  it("catalog fixtures match assumption A9 (76 keys); the DB catalog is checked by seed.test", () => {
+    expect(roomTypesFixture.reduce((s, r) => s + r.totalUnits, 0)).toBe(76);
   });
 });
 

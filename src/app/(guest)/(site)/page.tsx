@@ -3,13 +3,12 @@ import Image, { type StaticImageData } from "next/image";
 import { Card, ButtonLink } from "@/components/ui";
 import { site } from "@/lib/site";
 import { RoomHighlights, RoomHighlightsSkeleton } from "../_components/room-highlights";
+import { enquiryHref } from "../_lib/enquiry";
 import { SearchSection, SearchSkeleton } from "../_components/search-section";
 import heroImg from "../../../../public/images/hero-estate.jpg";
 import estateImg from "../../../../public/images/story-estate.jpg";
 import roomsImg from "../../../../public/images/story-rooms.jpg";
 import eventsImg from "../../../../public/images/story-events.jpg";
-
-const ENQUIRY_EMAIL = "reservations@companya.example";
 
 const stories: {
   id: string;
@@ -127,7 +126,10 @@ export default function Home({
               Tell us the dates and the size of your group. We reply within a day.
             </p>
           </div>
-          <ButtonLink href={`mailto:${ENQUIRY_EMAIL}?subject=Enquiry`} variant="secondary">
+          <ButtonLink
+            href={enquiryHref({ subject: "Wedding or offsite enquiry" })}
+            variant="secondary"
+          >
             Send an enquiry
           </ButtonLink>
         </div>

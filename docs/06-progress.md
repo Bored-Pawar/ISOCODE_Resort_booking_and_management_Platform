@@ -60,7 +60,7 @@ Goal: booking backbone real + guest screens on fixtures; merge B1/B2 early so gu
 | ID | Task | Status |
 |---|---|---|
 | G1 | Home, story blocks, date and guests search, URL params | done, awaiting review (screenshots in `docs/screenshots/`) |
-| G2 | Available rooms with prices | todo (needs B1+B2 merged) |
+| G2 | Available rooms with prices | done, awaiting review (real catalog, availability and quotes) |
 | G3 | Room detail | todo |
 
 ## Done
