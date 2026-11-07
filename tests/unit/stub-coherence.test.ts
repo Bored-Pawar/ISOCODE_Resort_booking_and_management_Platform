@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computeQuoteHash, pricing } from "@/modules/pricing";
+import { booking } from "@/modules/booking";
 import { nightsBetween } from "@/lib/dates";
 
 const alt = [
@@ -78,6 +79,58 @@ describe("stub pricing is coherent for any valid stay (R05)", () => {
     expect(await pricing.quote({ ...alt[0], adults: 9 })).toEqual({
       ok: false,
       code: "OVER_OCCUPANCY",
+    });
+  });
+});
+
+describe("stub hold is coherent with the requested stay (R05) and carries quote failures (R02)", () => {
+  const guestId = "user-guest-asha";
+
+  it.each(alt)("hold echoes the stay and the quoted price: $roomTypeId", async (stay) => {
+    const priced = await pricing.quote(stay);
+    if (!priced.ok) throw new Error("stub quote failed");
+    const r = await booking.acquireHold({ stay, quoteHash: priced.quote.quoteHash, guestId });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const b = r.booking;
+    expect([b.roomTypeId, b.ratePlanId, b.checkIn, b.checkOut]).toEqual([
+      stay.roomTypeId,
+      stay.ratePlanId,
+      stay.checkIn,
+      stay.checkOut,
+    ]);
+    expect(b.guestId).toBe(guestId);
+    expect(b.adults).toBe(stay.adults);
+    expect(b.totalPaise).toBe(priced.quote.totalPaise);
+    expect(b.nights).toEqual(priced.quote.nights);
+    expect(b.quoteHash).toBe(priced.quote.quoteHash);
+    expect(b.status).toBe("HELD");
+  });
+
+  it("a stale hash returns PRICE_CHANGED with the fresh quote for that stay", async () => {
+    const r = await booking.acquireHold({ stay: alt[0], quoteHash: "stale", guestId });
+    expect(r.ok).toBe(false);
+    if (!r.ok && r.code === "PRICE_CHANGED") {
+      const fresh = await pricing.quote(alt[0]);
+      expect(fresh.ok && r.quote.quoteHash === fresh.quote.quoteHash).toBe(true);
+    } else throw new Error("expected PRICE_CHANGED");
+  });
+
+  it("returns PROMO_INVALID, OVER_OCCUPANCY, NO_RATE and INVALID_INPUT", async () => {
+    const hold = (stay: object) =>
+      booking.acquireHold({ stay: stay as (typeof alt)[0], quoteHash: "x", guestId });
+    expect(await hold({ ...alt[0], promoCode: "EXPIRED10" })).toEqual({
+      ok: false,
+      code: "PROMO_INVALID",
+    });
+    expect(await hold({ ...alt[0], adults: 9 })).toEqual({ ok: false, code: "OVER_OCCUPANCY" });
+    expect(await hold({ ...alt[0], roomTypeId: "rt-nope" })).toEqual({
+      ok: false,
+      code: "NO_RATE",
+    });
+    expect(await hold({ ...alt[0], checkOut: alt[0].checkIn })).toEqual({
+      ok: false,
+      code: "INVALID_INPUT",
     });
   });
 });

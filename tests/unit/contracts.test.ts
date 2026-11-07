@@ -54,16 +54,18 @@ describe("stubs return discriminated results, never throw", () => {
     expect((await inventory.availability({ checkIn: "bad", checkOut: "x" })).ok).toBe(false);
   });
   it("booking.acquireHold incl. PRICE_CHANGED", async () => {
+    const priced = await pricing.quote(stay);
+    if (!priced.ok) throw new Error("stub quote failed");
     const ok = await booking.acquireHold({
       stay,
-      quoteHash: quoteFixture.quoteHash,
+      quoteHash: priced.quote.quoteHash,
       guestId: guest.userId,
     });
     expect(ok.ok).toBe(true);
     const stale = await booking.acquireHold({ stay, quoteHash: "stale", guestId: guest.userId });
     expect(stale.ok).toBe(false);
     if (!stale.ok && stale.code === "PRICE_CHANGED")
-      expect(stale.quote.quoteHash).toBe(changedQuoteFixture.quoteHash);
+      expect(stale.quote.quoteHash).toBe(priced.quote.quoteHash);
   });
   it("booking.confirmPayment checks the amount", async () => {
     const base = { bookingId: "bk-0001", provider: "mock", providerPaymentId: "pay_1" };
