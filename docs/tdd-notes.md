@@ -47,3 +47,18 @@ One short entry per merged story: what, why, tradeoffs.
 
 ### D1
 - This file.
+
+## S0 fixes
+
+### Database safety
+- **What:** one pure guard, `assertSafeDestructiveTarget(env)`, used by seed, reset and the integration helpers. Integration tests require `TEST_DATABASE_URL`; the seed child process is started with `DB_TARGET=test` so it cannot aim at `DATABASE_URL*`.
+- **Why:** the old suite fell back to the development database and the seed truncates every table. Fail closed beats trusting the developer's env.
+- **Tradeoffs:** host comparison treats Neon's pooled and direct endpoints of a branch as equal. `DB_PROTECTED_HOSTS` is still opt-in, so production must set it. `migrate` is unchanged (not destructive).
+
+### Request-time auth rendering
+- **What:** `await connection()` before `auth()` in the account page and staff layout gate.
+- **Why:** Auth.js calls `crypto.getRandomValues()`; with `cacheComponents` that is an error during prerender. Session and role checks stay on the server inside `<Suspense>`.
+
+### Button contrast
+- **What:** `--accent-foreground` token; primary button uses it. Loading no longer applies the disabled opacity. A unit test computes the contrast from `globals.css`.
+- **Tradeoffs:** a genuinely disabled primary button keeps 50% opacity (WCAG exempts inactive controls).

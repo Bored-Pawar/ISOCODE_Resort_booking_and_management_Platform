@@ -53,6 +53,9 @@ Goal: deployed app where every module exists behind its contract and returns fix
 | 2026-11-07 | S0: GST slabs seeded as 5% up to Rs 7,500 per night and 18% above, bounds inclusive, effective 2025-09-22 (verify, A2) |
 | 2026-11-07 | S0: promo `value` is a percent for `pct` and paise for `flat` |
 | 2026-11-07 | S0: staff and guest logins are separate Auth.js providers; sessions are JWT |
+| 2026-11-07 | S0 fix: destructive DB scripts and integration tests go through `src/db/safety.ts`; tests need `TEST_DATABASE_URL` (separate Neon branch), no fallback |
+| 2026-11-07 | S0 fix: gated server components call `await connection()` before `auth()` (Auth.js uses `crypto.getRandomValues()`, which cacheComponents rejects while prerendering) |
+| 2026-11-07 | S0 fix: `--accent-foreground` token (white) for text on accent; loading buttons keep full opacity |
 
 ## S0 summary (Claude Code, 2026-11-07)
 
@@ -65,7 +68,7 @@ Goal: deployed app where every module exists behind its contract and returns fix
 6. Last run: typecheck, lint, format check, 31 unit tests, 13 integration tests and build all pass. The development branch was re-seeded after the final test run.
 
 **How to verify**
-1. `pnpm install`, make sure `.env.local` has `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `AUTH_SECRET`.
+1. `pnpm install`, make sure `.env.local` has `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `AUTH_SECRET`, and for integration tests `TEST_DATABASE_URL` (separate Neon branch).
 2. `pnpm typecheck && pnpm lint && pnpm test && pnpm test:integration`.
 3. `pnpm dev`, open `/dev/ui`, `/login`, `/admin/login`. Demo logins are in `README.md` (password `Demo@12345`).
 
@@ -77,3 +80,9 @@ Goal: deployed app where every module exists behind its contract and returns fix
 5. `acquireHold` takes `{ stay, quoteHash, guestId }` and returns the full `Booking`; `confirmPayment` returns `REFUND_PENDING` as an ok outcome. Both are documented in `01` (Contract notes) and need your sign-off since contracts are frozen.
 6. Mobile (375px) audit of `/dev/ui` is left to H4; the headless screenshot tooling could not emulate that width reliably.
 7. Auth rate limiting and security headers are deferred to H2.
+
+## S0 fixes (Claude Code, 2026-11-07)
+1. Database safety: `src/db/safety.ts` (`assertSafeDestructiveTarget`, `childEnvForTests`) guards seed, reset and the integration helpers. Fails closed on a missing URL, a host in `DB_PROTECTED_HOSTS`, `NODE_ENV=production`, or a test URL on the same host as `DATABASE_URL*` (Neon `-pooler` suffix ignored). Tests use `TEST_DATABASE_URL` only; the seed child gets `DB_TARGET=test`. CI sets only `TEST_DATABASE_URL`. 11 new unit tests.
+2. `/account` and `/admin` no longer crash in dev: `await connection()` before `auth()`.
+3. Primary button text uses the `--accent-foreground` token (white, 9.7:1 on accent); loading state no longer dimmed. 2 new token tests.
+4. Not run (by instruction): `test:integration`, seed, reset, migrations. Integration tests and the new CI env are therefore unverified against a real database.
