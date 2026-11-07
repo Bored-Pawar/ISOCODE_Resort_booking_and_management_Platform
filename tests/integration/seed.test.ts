@@ -3,6 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { childEnvForTests } from "@/db/safety";
 import { connect, ensureMigrated } from "./helpers";
 import { labelledEnquiries } from "@/db/seed/enquiries.data";
+import { calculateQuote, type Slab } from "@/modules/pricing/calculation";
+import type { Quote } from "@/modules/pricing";
 
 const sql = connect(); // validates TEST_DATABASE_URL first
 // The child seeds TEST_DATABASE_URL only; it never targets DATABASE_URL*.
@@ -85,5 +87,38 @@ describe("seed", () => {
     }
     const [c] = await sql`select count(*)::int n from notifications where kind = 'complaint'`;
     expect(c.n).toBe(5);
+  });
+
+  it("reconciles frozen seed snapshots and hashes through the runtime pricing calculation", async () => {
+    const slabs =
+      await sql`select min_paise as "minPaise", max_paise as "maxPaise", gst_bp as "gstBp", effective_from::text as "effectiveFrom" from tax_slabs`;
+    const rows = await sql`select b.*, b.check_in::text as check_in, b.check_out::text as check_out,
+      case when p.id is null then null else jsonb_build_object('code',p.code,'kind',p.kind,'value',p.value) end as promo,
+      (select jsonb_agg(jsonb_build_object('date', n.date, 'ratePaise',n.rate_paise, 'discountPaise',n.discount_paise,
+        'gstBp',n.gst_bp,'gstPaise',n.gst_paise) order by n.date) from booking_nights n where n.booking_id=b.id) as nights
+      from bookings b left join promo_codes p on p.id=b.promo_id`;
+    for (const b of rows) {
+      const nights = b.nights as Quote["nights"];
+      const q = calculateQuote(
+        {
+          roomTypeId: b.room_type_id,
+          ratePlanId: b.rate_plan_id,
+          checkIn: b.check_in,
+          checkOut: b.check_out,
+        },
+        nights.map((n) => n.date),
+        nights.map((n) => n.ratePaise),
+        b.promo as Quote["promo"],
+        slabs as unknown as Slab[],
+      );
+      expect(q.nights).toEqual(nights);
+      expect([q.subtotalPaise, q.discountPaise, q.gstPaise, q.totalPaise, q.quoteHash]).toEqual([
+        b.subtotal_paise,
+        b.discount_paise,
+        b.gst_paise,
+        b.total_paise,
+        b.quote_hash,
+      ]);
+    }
   });
 });

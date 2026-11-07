@@ -1,11 +1,13 @@
 /**
- * FROZEN CONTRACT (C1). LOCKED AREA. Stub returns fixtures until B2.
- * Availability is read-only here; holds are taken only through booking.acquireHold.
+ * FROZEN CONTRACT (C1). LOCKED AREA. Database availability with lazy expiry.
+ * Booking owns the scoped lazy-expiry transaction; availability then reads stock.
  */
 import { z } from "zod";
 import type { Err, Ok } from "@/lib/result";
 import { isDateStr } from "@/lib/dates";
-import { availabilityFixture } from "./fixtures";
+import { getDb } from "@/lib/db";
+import { releaseExpiredHoldsForAvailability } from "@/modules/booking/internal";
+import { readAvailability } from "./read";
 
 const dateStr = z.string().refine(isDateStr, "Expected a YYYY-MM-DD date");
 
@@ -34,10 +36,12 @@ export const inventory = {
   async availability(input: AvailabilityInput): Promise<AvailabilityResult> {
     const parsed = availabilityInputSchema.safeParse(input);
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
-    const { roomTypeId } = parsed.data;
-    const rooms = roomTypeId
-      ? availabilityFixture.filter((r) => r.roomTypeId === roomTypeId)
-      : availabilityFixture;
+    if (parsed.data.roomTypeId && !z.uuid().safeParse(parsed.data.roomTypeId).success) {
+      return { ok: true, rooms: [] };
+    }
+    const { roomTypeId, checkIn, checkOut } = parsed.data;
+    await releaseExpiredHoldsForAvailability({ roomTypeId, checkIn, checkOut });
+    const rooms = await readAvailability(getDb(), parsed.data);
     return { ok: true, rooms };
   },
 };

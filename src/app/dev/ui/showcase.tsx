@@ -26,7 +26,7 @@ import {
   type GridColumn,
   type GridRow,
 } from "@/components/ui";
-import { quoteFixture } from "@/modules/pricing";
+import type { Quote } from "@/modules/pricing";
 import { addDays, todayIST } from "@/lib/dates";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -47,7 +47,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-export function Showcase() {
+export function Showcase({ quoteFixture }: { quoteFixture: Quote }) {
   const { toast } = useToast();
   const today = useMemo(() => todayIST(), []);
   const [range, setRange] = useState<DateRangeValue>({

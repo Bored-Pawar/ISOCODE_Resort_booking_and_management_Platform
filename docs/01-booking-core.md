@@ -96,9 +96,12 @@ How the locked modules compose inside one database transaction (R01). Public con
 | `inventory/internal.ts` | `lockNights(tx, { roomTypeId, checkIn, checkOut, units }): Promise<Ok<{ nights: LockedNight[] }> \| Err<'SOLD_OUT' \| 'BLACKOUT'>>` | B2, B3 |
 | `inventory/internal.ts` | `adjustNights(tx, { roomTypeId, dates, heldDelta, soldDelta }): Promise<void>` | B3, B4, B5 |
 | `booking/internal.ts` | `releaseExpiredHoldsInTx(tx, { roomTypeId?, checkIn?, checkOut?, now? }): Promise<{ released: number }>` | B3, B4, B5 |
-| `booking/index.ts` | `booking.releaseExpiredHolds(): Promise<Ok<{ released: number }>>` (own transaction; cron and lazy expiry). Additive, stubbed | B4 |
+| `booking/internal.ts` | `releaseExpiredHoldsForAvailability({ roomTypeId?, checkIn, checkOut })` (booking-owned transaction; scoped lazy expiry) | B2 review fix |
+| `booking/index.ts` | `booking.releaseExpiredHolds(): Promise<Ok<{ released: number }>>` (own transaction; site-wide cron/maintenance sweep). Approved additive contract | B4 |
 
-`inventory.availability` calls `booking.releaseExpiredHolds()` first (lazy expiry). There is no import cycle: `booking/index` imports `inventory/internal`, and `inventory/index` imports `booking/index`; `inventory/internal` imports nothing from `booking`.
+Review-approved scoped lazy expiry (2026-11-08): `inventory.availability` calls the internal `booking/internal.releaseExpiredHoldsForAvailability({ roomTypeId?, checkIn, checkOut })` wrapper. Booking opens the transaction and calls `releaseExpiredHoldsInTx` with that scope; availability then reads stock on its own connection. With no room filter, expiry covers all room types only within the requested date range. `booking.releaseExpiredHolds()` remains the site-wide cron/maintenance sweep. This narrow additional internal import is approved by the scrum master's B1+B2 review-fix instruction; it changes no public contract and creates no cycle (`inventory/internal` imports nothing from booking).
+
+The seed may import the pure `pricing/calculation` implementation directly for snapshot assembly; tests may import it to verify the same rules. This review-approved exception keeps calculations shared without adding public service exports or exposing database internals to UI.
 
 ### Lock order
 1. Within one transaction: `bookings` rows first (only in expiry, `FOR UPDATE SKIP LOCKED`), then `inventory` rows.
