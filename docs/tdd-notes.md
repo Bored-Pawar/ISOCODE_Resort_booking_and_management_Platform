@@ -73,3 +73,8 @@ One short entry per merged story: what, why, tradeoffs.
 ### Coherent stubs (R05) and hold errors (R02)
 - **What:** stub `pricing.quote` builds nights from the requested dates with a fixed rate per room; the stub hold reprices and compares the hash. The hold result now includes `PROMO_INVALID` and `OVER_OCCUPANCY`.
 - **Why:** screens built on fixtures must show one consistent stay, price and hash.
+
+### Button text colour, real root cause
+- **What:** `cn()` now uses `extendTailwindMerge` with the custom type scale (`text-body`, `text-small`, ...).
+- **Why:** `tailwind-merge` did not know those sizes, read them as text colours, and silently removed `text-accent-foreground` from every primary button (and any `cn()` call mixing a colour with a custom size). The earlier token fix was correct but was stripped before render.
+- **Guard:** `src/lib/utils.test.ts` checks the merge, that every `--text-*` size in `globals.css` is registered, and that primary button classes keep white text at both sizes.
