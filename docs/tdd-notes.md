@@ -78,3 +78,12 @@ One short entry per merged story: what, why, tradeoffs.
 - **What:** `cn()` now uses `extendTailwindMerge` with the custom type scale (`text-body`, `text-small`, ...).
 - **Why:** `tailwind-merge` did not know those sizes, read them as text colours, and silently removed `text-accent-foreground` from every primary button (and any `cn()` call mixing a colour with a custom size). The earlier token fix was correct but was stripped before render.
 - **Guard:** `src/lib/utils.test.ts` checks the merge, that every `--text-*` size in `globals.css` is registered, and that primary button classes keep white text at both sizes.
+
+## S1 guest screens (Claude Code)
+
+### G1 Home and search
+- **What:** home page with hero, search card (dates, adults, children), three story blocks, room highlights from `catalog`, enquiry band. Search validates on submit and navigates to `/rooms?checkIn&checkOut&adults&children`. Shared pure helpers in `src/app/(guest)/_lib/search.ts` (validate, parse and build URL params) are reused by G2 and G3.
+- **Why:** server components load data; the only client code is the search form, which gets `today` and prefilled values as props. Validation is plain TypeScript (not Zod) to keep Zod out of the client bundle; limits: 14 nights, 8 adults, 4 children.
+- **Tradeoffs:** `cacheComponents` rejects the clock during prerender even when `searchParams` is empty, so `SearchSection` calls `await connection()` before `todayIST()` and sits in `<Suspense>` (found only by running `pnpm dev`, `pnpm build` passed). Hero and story images are static imports so they get blur placeholders; only the hero has `priority`. Default image quality is kept because `next.config.ts` configures only 75.
+- **Perf finding:** first-load JS on `/` is about 157 KB gzip (modern browsers; the 40 KB `noModule` polyfill chunk is excluded). A page with no G1 code (`/_not-found`) is about 142 KB, so G1 adds about 15 KB. React DOM plus the Next client already exceed the 100 KB target in `02-architecture.md`; needs a scrum master decision before H3.
+- **Until G2/G3 land:** `/rooms` and `/rooms/[slug]` links return 404. The enquiry band uses `mailto:` until the enquiry form exists.

@@ -43,6 +43,13 @@ Goal: booking backbone real + guest screens on fixtures; merge B1/B2 early so gu
 | F7 | UI kit from `05` | Claude Code | done |
 | D1 | Start `docs/tdd-notes.md` | Claude Code | done |
 
+## S1 guest screens (Claude Code)
+| ID | Task | Status |
+|---|---|---|
+| G1 | Home, story blocks, date and guests search, URL params | done, awaiting review (screenshots in `docs/screenshots/`) |
+| G2 | Available rooms with prices | todo (needs B1+B2 merged) |
+| G3 | Room detail | todo |
+
 ## Done
 1. Docs structure, backlog and design system.
 2. S0 (except F6): scaffold, frozen contracts, schema, seed, auth, CI, UI kit, TDD notes. See the summary at the end of this file.
