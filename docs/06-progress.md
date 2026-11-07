@@ -86,3 +86,25 @@ Goal: deployed app where every module exists behind its contract and returns fix
 2. `/account` and `/admin` no longer crash in dev: `await connection()` before `auth()`.
 3. Primary button text uses the `--accent-foreground` token (white, 9.7:1 on accent); loading state no longer dimmed. 2 new token tests.
 4. Not run (by instruction): `test:integration`, seed, reset, migrations. Integration tests and the new CI env are therefore unverified against a real database.
+
+## Codex S0 review follow-up (2026-11-07)
+Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
+
+**Fixed in S0:** R01 design in `01` "Contracts" plus internal helper stubs; R02 hold error codes; R03 migrate uses the same guarded target as reset and seed; R04 protected-host fragments normalised; R05 coherent stub quote and hold. Tests: 62 unit.
+
+**Deferred (log only)**
+| ID | Issue | Story | When |
+|---|---|---|---|
+| R04 (rest) | Opt-in protection only. Add an explicit disposable-target allowlist and operator-side production protection | F6, H2 | before F6 credentials exist |
+| R06 | `DataGrid` blur cancels the editor while an async commit is pending; a thrown commit callback is uncaught | A1, A2 | when the grids are wired |
+| R07 | `HoldTimer` resets its once-only guard when `onExpire` identity changes, so expiry can fire twice. Track by target timestamp | B6 | before B6 |
+| R08 | `classificationSchema` accepts garbage dates, reversed ranges, negative counts and budgets; route rejects to fallback | R3 | with R3 |
+| R09 | `seed/pricing.ts` `nightDiscounts` loses unused flat discount when a night is capped (rates [100,1000], value 600 gives 400). Do not copy into B1 unchanged | B1 | must be fixed when pricing is centralised |
+
+**Approved contract decisions**
+1. `booking.acquireHold({ stay, quoteHash, guestId })`: `guestId` comes from the server session only, never from client input.
+2. `confirmPayment` outcome `REFUND_PENDING` means the payment was handled (recorded for refund) and the booking is not confirmed. UI branches on `outcome`.
+3. The `catalog` module is kept (read-only addition to the C1 list).
+4. Additive: `booking.releaseExpiredHolds()` (stub) for cron and lazy expiry; internal tx helpers are not part of the public contract.
+
+**Note for F6:** `db:migrate` now refuses `NODE_ENV=production` and needs `DATABASE_URL_UNPOOLED`. Production migration needs its own explicit, reviewed step.

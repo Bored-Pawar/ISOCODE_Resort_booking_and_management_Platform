@@ -62,3 +62,14 @@ One short entry per merged story: what, why, tradeoffs.
 ### Button contrast
 - **What:** `--accent-foreground` token; primary button uses it. Loading no longer applies the disabled opacity. A unit test computes the contrast from `globals.css`.
 - **Tradeoffs:** a genuinely disabled primary button keeps 50% opacity (WCAG exempts inactive controls).
+
+## Codex review follow-up
+
+### Transaction composition (R01)
+- **What:** `booking` owns the transaction and calls internal `pricing.quoteInTx`, `inventory.lockNights`, `inventory.adjustNights` and its own `releaseExpiredHoldsInTx`. Lock order and rollback rules are in `01-booking-core.md`.
+- **Why:** the hold must reprice and take stock in one transaction, but modules may not touch each other's tables.
+- **Tradeoffs:** one sanctioned exception to "only through `index.ts`" (`internal.ts`, booking only). Stubs throw until B1 to B4.
+
+### Coherent stubs (R05) and hold errors (R02)
+- **What:** stub `pricing.quote` builds nights from the requested dates with a fixed rate per room; the stub hold reprices and compares the hash. The hold result now includes `PROMO_INVALID` and `OVER_OCCUPANCY`.
+- **Why:** screens built on fixtures must show one consistent stay, price and hash.
