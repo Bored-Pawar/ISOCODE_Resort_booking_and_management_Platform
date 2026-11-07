@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+/* Design tokens: docs/05-design-system.md. Light theme only for the MVP. */
+:root {
+  --bg: #faf8f4;
+  --surface: #ffffff;
+  --surface-2: #f3efe8;
+  --text: #1f1b16;
+  --muted: #6b645a;
+  --border: #e4ded3;
+  --accent: #2f4a3a;
+  --accent-hover: #253b2e;
+  --accent-soft: #e6ede8;
+  --accent-foreground: #ffffff;
+  --coffee: #7a4e2d;
+  --success: #2e7d4f;
+  --warning: #a86a12;
+  --danger: #b3261e;
+  --shadow-pop: 0 8px 24px rgba(31, 27, 22, 0.08);
+  --ease: 150ms ease-out;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-coffee: var(--coffee);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+
+  /* Type scale: size / line height */
+  --text-display: 40px;
+  --text-display--line-height: 48px;
+  --text-display-sm: 28px;
+  --text-display-sm--line-height: 36px;
+  --text-h1: 28px;
+  --text-h1--line-height: 36px;
+  --text-h2: 20px;
+  --text-h2--line-height: 28px;
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+  --text-small: 14px;
+  --text-small--line-height: 20px;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+
+  --radius-control: 6px;
+  --radius-card: 10px;
+  --shadow-pop: 0 8px 24px rgba(31, 27, 22, 0.08);
+
+  --container-page: 1120px;
+  --container-read: 640px;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 500;
+}
+
+/* 2px accent focus ring everywhere */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

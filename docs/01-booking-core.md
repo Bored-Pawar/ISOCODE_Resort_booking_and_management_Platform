@@ -80,3 +80,51 @@ Block new holds only. Existing bookings stand; admin sees a warning list.
 7. Hold on blackout date is rejected.
 8. GST slab correct on both sides of the boundary.
 9. Price changed between quote and hold: PRICE_CHANGED, no inventory taken.
+
+## Contracts
+How the locked modules compose inside one database transaction (R01). Public contracts in each `index.ts` stay frozen; the helpers below are internal and sit in `internal.ts` next to them. They are not exported from `index.ts` and UI never imports them. Rule 4 (modules talk only through `index.ts`) has this one exception: `booking` may import `pricing/internal` and `inventory/internal`. Signatures exist as stubs that throw "not implemented".
+
+### Transaction owner
+1. **`booking` owns every transaction** that spans modules: `acquireHold`, `confirmPayment`, `releaseExpiredHolds`. It opens it with `db.transaction`, and passes the `Tx` (from `@/lib/db`) to helpers. Helpers never open or commit a transaction.
+2. `pricing` and `inventory` read and write only their own tables, using the `tx` they are given. This is the "shared transaction passed in as `tx`" exception in CLAUDE.md rule 4.
+3. Public reads (`pricing.quote`, `inventory.availability`) use their own connection, no transaction.
+
+### Helper signatures (stubs in the repo)
+| Module | Helper | Needed by |
+|---|---|---|
+| `pricing/internal.ts` | `quoteInTx(tx, input: QuoteInput): Promise<QuoteResult>` | B1, B3 |
+| `inventory/internal.ts` | `lockNights(tx, { roomTypeId, checkIn, checkOut, units }): Promise<Ok<{ nights: LockedNight[] }> \| Err<'SOLD_OUT' \| 'BLACKOUT'>>` | B2, B3 |
+| `inventory/internal.ts` | `adjustNights(tx, { roomTypeId, dates, heldDelta, soldDelta }): Promise<void>` | B3, B4, B5 |
+| `booking/internal.ts` | `releaseExpiredHoldsInTx(tx, { roomTypeId?, checkIn?, checkOut?, now? }): Promise<{ released: number }>` | B3, B4, B5 |
+| `booking/index.ts` | `booking.releaseExpiredHolds(): Promise<Ok<{ released: number }>>` (own transaction; cron and lazy expiry). Additive, stubbed | B4 |
+
+`inventory.availability` calls `booking.releaseExpiredHolds()` first (lazy expiry). There is no import cycle: `booking/index` imports `inventory/internal`, and `inventory/index` imports `booking/index`; `inventory/internal` imports nothing from `booking`.
+
+### Lock order
+1. Within one transaction: `bookings` rows first (only in expiry, `FOR UPDATE SKIP LOCKED`), then `inventory` rows.
+2. Inventory rows are always locked and updated ordered by `(room_type_id, date)` ascending. The MVP is one room type per booking, so this is date ascending.
+3. Never lock `inventory` rows out of order, and never take a lock on `payments` before `bookings`. A conditional `UPDATE bookings ... WHERE status='HELD'` is the only booking write in `confirmPayment`.
+4. A deadlock or serialization failure (`40P01`, `40001`) retries the whole transaction once, then `acquireHold` returns `SOLD_OUT` (01 step 6).
+
+### `acquireHold` sequence
+1. Zod parse, `requireGuestOwner`-style guest check by the caller (guestId comes from the server session only, never the client).
+2. `db.transaction`: `releaseExpiredHoldsInTx` (scoped to room type and dates) -> `lockNights` -> `quoteInTx` -> compare `quoteHash` -> `adjustNights(heldDelta: +1)` -> insert `bookings`, `booking_nights`, `booking_events`.
+3. Results: `lockNights` error -> `SOLD_OUT` / `BLACKOUT`; `quoteInTx` error -> `NO_RATE` / `PROMO_INVALID` / `OVER_OCCUPANCY` / `INVALID_INPUT`; hash mismatch -> `PRICE_CHANGED` with the new quote. These are the codes in `AcquireHoldResult`.
+
+### Rollback rules
+1. Any non-ok helper result, hash mismatch or thrown error **rolls the whole transaction back**. Nothing is half applied, including the expiry release done at the start. That is safe because expiry is lazy and repeated.
+2. Business failures are returned (`{ ok: false, code }`), never thrown out of `booking`. Inside, an internal sentinel error triggers the rollback and is mapped to the returned code.
+3. Infrastructure errors (connection lost, CHECK violation that should be impossible after `lockNights`) are thrown to the caller after rollback.
+4. `confirmPayment`: insert `payments` (unique `provider_payment_id`), conditional update to CONFIRMED, `adjustNights(heldDelta: -1, soldDelta: +1)`, `booking_events`, promo `used_count` increment, in one transaction. A unique violation on `provider_payment_id` is the duplicate-webhook no-op (`ALREADY_CONFIRMED`).
+
+### Which story implements what
+B1: `quoteInTx` and public `quote` share one implementation. B2: `availability` plus `lockNights` read logic. B3: `acquireHold`, `adjustNights`. B4: `releaseExpiredHoldsInTx`, `releaseExpiredHolds`, cron route. B5: `confirmPayment`.
+
+## Contract notes (C2)
+Clarifications added with the frozen interfaces. They restate decisions above; nothing new is decided.
+1. `Quote.quoteHash` = first 32 hex chars of SHA-256 over room type, plan, check-in, check-out, promo (code, kind, value) and per night (date, rate, discount, GST basis points). Occupancy is excluded. See `src/modules/pricing/hash.ts`.
+2. `booking.acquireHold({ stay, quoteHash, guestId })` recomputes the quote inside the transaction. Mismatch returns `{ ok: false, code: 'PRICE_CHANGED', quote }` and takes no inventory.
+3. `booking.confirmPayment` returns `ok: true` with `outcome` `CONFIRMED`, `ALREADY_CONFIRMED` (duplicate webhook) or `REFUND_PENDING` (late payment). A wrong amount returns `AMOUNT_MISMATCH`. It charges `bookings.total_paise` only.
+4. Business failures are returned as `{ ok: false, code }`, never thrown.
+5. `acquireHold` can also return `PROMO_INVALID` and `OVER_OCCUPANCY` (from the price recheck) besides `SOLD_OUT`, `BLACKOUT`, `NO_RATE`, `INVALID_INPUT` and `PRICE_CHANGED`. `guestId` is taken from the server session only.
+6. `confirmPayment` `REFUND_PENDING` means the payment was handled (recorded for refund) and the booking is **not** confirmed. UI must branch on `outcome`, not only `ok`.

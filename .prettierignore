@@ -1,0 +1,8 @@
+.next
+node_modules
+pnpm-lock.yaml
+src/db/migrations
+coverage
+docs
+AGENTS.md
+CLAUDE.md
