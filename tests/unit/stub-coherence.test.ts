@@ -134,3 +134,24 @@ describe("stub hold is coherent with the requested stay (R05) and carries quote 
     });
   });
 });
+
+describe("transaction helpers are internal stubs (R01)", () => {
+  it("are not part of the public module contracts", async () => {
+    const [p, i] = await Promise.all([import("@/modules/pricing"), import("@/modules/inventory")]);
+    expect(Object.keys(p)).not.toContain("quoteInTx");
+    expect(Object.keys(i)).not.toContain("lockNights");
+    expect(Object.keys(i)).not.toContain("adjustNights");
+  });
+  it("throw until implemented, and booking exposes the cron/lazy-expiry entry", async () => {
+    const internal = await import("@/modules/inventory/internal");
+    await expect(
+      internal.lockNights({} as never, {
+        roomTypeId: "x",
+        checkIn: "2026-12-01",
+        checkOut: "2026-12-02",
+        units: 1,
+      }),
+    ).rejects.toThrow("not implemented");
+    expect(await booking.releaseExpiredHolds()).toEqual({ ok: true, released: 0 });
+  });
+});

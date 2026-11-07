@@ -87,7 +87,19 @@ export type GetBookingInput = z.input<typeof getBookingInputSchema>;
 export type GetBookingResult =
   Ok<{ booking: Booking }> | Err<"INVALID_INPUT" | "NOT_FOUND" | "FORBIDDEN">;
 
+// ---- releaseExpiredHolds (cron, lazy expiry) --------------------------
+
+export type ReleaseExpiredHoldsResult = Ok<{ released: number }>;
+
 export const booking = {
+  /**
+   * Opens its own transaction and releases expired holds. Used by the daily cron route and by
+   * inventory.availability before it reads stock. Stub until B4. Additive to the C1 contract.
+   */
+  async releaseExpiredHolds(): Promise<ReleaseExpiredHoldsResult> {
+    return { ok: true, released: 0 };
+  },
+
   async acquireHold(input: AcquireHoldInput): Promise<AcquireHoldResult> {
     const parsed = acquireHoldInputSchema.safeParse(input);
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
