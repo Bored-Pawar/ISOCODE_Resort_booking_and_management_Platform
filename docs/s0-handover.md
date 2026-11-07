@@ -34,7 +34,7 @@ ea52d11 feat(ui): design tokens, Fraunces, layout shells, component kit and /dev
 b03fbf4 docs: S0 summary, decisions log and TDD notes                                     D1
 ```
 
-F6 (deploy to Vercel + Neon) is **NOT BUILT** (`06-progress.md`: todo). `docs/06-progress.md` lists everyone in the Locks table as "Aditya Pawar (S0)". That ownership should be handed back before S1 starts.
+F6 (deploy to Vercel + Neon) is **NOT BUILT** (`06-progress.md`: todo). `docs/06-progress.md` lists everyone in the Locks table as "Claude Code (S0)". That ownership should be handed back before S1 starts.
 
 ## 2. Command results
 

@@ -1,4 +1,4 @@
-# Independent S0 review — Aditya Pawar
+# Independent S0 review — Codex
 
 Reviewed 7 Nov 2026 (IST), `codex/dev`, HEAD `acebd3b`. Scope: source inspection against P0 acceptance criteria; no implementation changes.
 

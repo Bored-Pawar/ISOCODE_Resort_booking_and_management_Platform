@@ -40,7 +40,7 @@ export async function readQuote(db: Db | Tx, input: QuoteInput): Promise<QuoteRe
       (SELECT jsonb_build_object('code', c.code, 'kind', c.kind, 'value', c.value,
         'active', c.active, 'validFrom', c.valid_from, 'validTo', c.valid_to,
         'minNights', c.min_nights, 'maxUses', c.max_uses, 'usedCount', c.used_count)
-        FROM promo_codes c WHERE c.code = ${p.promoCode?.toUpperCase() ?? null}) AS promo
+        FROM promo_codes c WHERE upper(c.code) = ${p.promoCode?.toUpperCase() ?? null}) AS promo
     FROM room_types r JOIN rate_plans p ON p.room_type_id = r.id AND p.active
     WHERE r.id = ${p.roomTypeId}::uuid AND p.id = ${p.ratePlanId}::uuid
   `);

@@ -103,6 +103,15 @@ describe("B1 database pricing", () => {
     expect(r.ok && r.quote.nights.map((n) => n.discountPaise)).toEqual([100, 500]);
     expect(r.ok && r.quote.totalPaise).toBe(525);
   });
+  it("matches a lowercase stored promo regardless of the guest input's case", async () => {
+    const promo = await f.promo({ code: `lower-${f.room.slug.slice(0, 8)}` });
+    const lower = await pricing.quote({ ...f.stay, promoCode: promo.code });
+    const upper = await pricing.quote({ ...f.stay, promoCode: promo.code.toUpperCase() });
+    expect(lower.ok).toBe(true);
+    expect(upper).toEqual(lower);
+    expect(lower.ok && lower.quote.promo?.code).toBe(promo.code);
+    expect(lower.ok && lower.quote.discountPaise).toBeGreaterThan(0);
+  });
   it("uses a different slab effective date on the second night", async () => {
     const [s] = await db
       .insert(t.taxSlabs)

@@ -1,4 +1,4 @@
-﻿/** FROZEN CONTRACT (C1/C2). All prices are read from the database through the shared engine. */
+/** FROZEN CONTRACT (C1/C2). All prices are read from the database through the shared engine. */
 import { getDb } from "@/lib/db";
 import { readQuote } from "./read";
 import { quoteInputSchema, type QuoteInput, type QuoteResult } from "./types";

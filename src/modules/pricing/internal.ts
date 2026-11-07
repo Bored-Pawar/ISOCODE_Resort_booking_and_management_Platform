@@ -1,4 +1,4 @@
-﻿/** INTERNAL: transaction-scoped repricing, imported only by booking. Never commits. */
+/** INTERNAL: transaction-scoped repricing, imported only by booking. Never commits. */
 import type { Tx } from "@/lib/db";
 import { readQuote } from "./read";
 import type { QuoteInput, QuoteResult } from "./types";

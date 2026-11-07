@@ -1,4 +1,4 @@
-﻿export { buildNights, nightDiscounts, pickGstBp } from "@/modules/pricing/calculation";
+export { buildNights, nightDiscounts, pickGstBp } from "@/modules/pricing/calculation";
 import { seasonMultiplier } from "./data";
 
 /** Demo rate generation only. Booking calculations live in modules/pricing. */

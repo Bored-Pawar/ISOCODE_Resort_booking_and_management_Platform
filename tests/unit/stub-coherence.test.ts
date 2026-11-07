@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { pricing } from "@/modules/pricing";
 import { inventory } from "@/modules/inventory";
 import { booking } from "@/modules/booking";
