@@ -1,11 +1,11 @@
 /**
- * FROZEN CONTRACT (C1/C2). LOCKED AREA. Stub returns fixtures until B3/B5.
+ * FROZEN CONTRACT (C1/C2). LOCKED AREA. Persisted booking lifecycle and frozen snapshots.
  * State machine and rules: docs/01-booking-core.md.
  */
 import { z } from "zod";
 import type { Err, Ok } from "@/lib/result";
 import { quoteInputSchema, type Quote, type QuoteNight } from "@/modules/pricing";
-import { bookingFixture } from "./fixtures";
+import { confirmPayment as confirmPaymentImpl } from "./confirmation";
 import { getDb } from "@/lib/db";
 import { releaseExpiredHoldsInTx } from "./internal";
 import { acquireHold as acquireHoldImpl } from "./hold";
@@ -116,19 +116,7 @@ export const booking = {
   async confirmPayment(input: ConfirmPaymentInput): Promise<ConfirmPaymentResult> {
     const parsed = confirmPaymentInputSchema.safeParse(input);
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
-    if (parsed.data.amountPaise !== bookingFixture.totalPaise) {
-      return { ok: false, code: "AMOUNT_MISMATCH" };
-    }
-    return {
-      ok: true,
-      outcome: "CONFIRMED",
-      booking: {
-        ...bookingFixture,
-        status: "CONFIRMED",
-        holdExpiresAt: null,
-        confirmedAt: "2026-11-07T10:05:00.000Z",
-      },
-    };
+    return confirmPaymentImpl(parsed.data);
   },
 
   async get(input: GetBookingInput, actor: BookingActor): Promise<GetBookingResult> {
@@ -149,7 +137,7 @@ export const booking = {
         .from(bookings)
         .where(eq(bookings.ref, parsed.data.ref));
       if (!row) return { ok: false, code: "NOT_FOUND" } as const;
-      if (actor.role === "guest" && actor.userId !== row.guestId)
+      if (actor.role === "guest" && actor.userId.toLowerCase() !== row.guestId)
         return { ok: false, code: "FORBIDDEN" } as const;
       return { ok: true, booking: (await readBooking(tx, row.id))! } as const;
     });

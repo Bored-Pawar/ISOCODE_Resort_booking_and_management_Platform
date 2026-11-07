@@ -58,15 +58,13 @@ export async function acquireHold(input: AcquireHoldInput): Promise<AcquireHoldR
         await tx
           .insert(bookingNights)
           .values(q.nights.map((night) => ({ bookingId: b.id, ...night })));
-        await tx
-          .insert(bookingEvents)
-          .values({
-            bookingId: b.id,
-            fromStatus: null,
-            toStatus: "HELD",
-            actor: `guest:${input.guestId}`,
-            note: "Hold acquired",
-          });
+        await tx.insert(bookingEvents).values({
+          bookingId: b.id,
+          fromStatus: null,
+          toStatus: "HELD",
+          actor: `guest:${input.guestId}`,
+          note: "Hold acquired",
+        });
         return { ok: true, booking: (await readBooking(tx, b.id))! };
       });
     } catch (error) {

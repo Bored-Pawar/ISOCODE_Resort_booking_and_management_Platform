@@ -50,12 +50,15 @@ describe("stubs return discriminated results, never throw", () => {
   it("inventory.availability", async () => {
     expect((await inventory.availability({ checkIn: "bad", checkOut: "x" })).ok).toBe(false);
   });
-  it("booking.confirmPayment checks the amount", async () => {
-    const base = { bookingId: "bk-0001", provider: "mock", providerPaymentId: "pay_1" };
-    const bad = await booking.confirmPayment({ ...base, amountPaise: 100 });
-    expect(bad).toEqual({ ok: false, code: "AMOUNT_MISMATCH" });
-    const good = await booking.confirmPayment({ ...base, amountPaise: quoteFixture.totalPaise });
-    expect(good.ok && good.outcome).toBe("CONFIRMED");
+  it("booking.confirmPayment validates input before database work", async () => {
+    expect(
+      await booking.confirmPayment({
+        bookingId: "bad",
+        provider: "mock",
+        providerPaymentId: "pay",
+        amountPaise: 0,
+      }),
+    ).toEqual({ ok: false, code: "INVALID_INPUT" });
   });
   it("booking.get validates input and actor before database work", async () => {
     expect(await booking.get({ ref: "" }, guest)).toEqual({ ok: false, code: "INVALID_INPUT" });
