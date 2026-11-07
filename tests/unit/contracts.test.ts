@@ -42,30 +42,13 @@ describe("fixtures are internally consistent", () => {
 
 describe("stubs return discriminated results, never throw", () => {
   it("pricing.quote", async () => {
-    expect((await pricing.quote(stay)).ok).toBe(true);
     expect(await pricing.quote({ ...stay, checkOut: "2026-11-14" })).toEqual({
       ok: false,
       code: "INVALID_INPUT",
     });
   });
   it("inventory.availability", async () => {
-    const r = await inventory.availability({ checkIn: "2026-11-14", checkOut: "2026-11-16" });
-    expect(r.ok && r.rooms.some((x) => x.soldOut)).toBe(true);
     expect((await inventory.availability({ checkIn: "bad", checkOut: "x" })).ok).toBe(false);
-  });
-  it("booking.acquireHold incl. PRICE_CHANGED", async () => {
-    const priced = await pricing.quote(stay);
-    if (!priced.ok) throw new Error("stub quote failed");
-    const ok = await booking.acquireHold({
-      stay,
-      quoteHash: priced.quote.quoteHash,
-      guestId: guest.userId,
-    });
-    expect(ok.ok).toBe(true);
-    const stale = await booking.acquireHold({ stay, quoteHash: "stale", guestId: guest.userId });
-    expect(stale.ok).toBe(false);
-    if (!stale.ok && stale.code === "PRICE_CHANGED")
-      expect(stale.quote.quoteHash).toBe(priced.quote.quoteHash);
   });
   it("booking.confirmPayment checks the amount", async () => {
     const base = { bookingId: "bk-0001", provider: "mock", providerPaymentId: "pay_1" };

@@ -29,19 +29,32 @@ Goal: booking backbone real + guest screens on fixtures; merge B1/B2 early so gu
 - Progress-file coordination: each developer edits only their own `06-progress.md` rows; otherwise report updates to the scrum master for application on `main`. Avoid simultaneous edits to the shared table.
 - Scrum master name: retained as **Aditya Pawar** from the supplied project documentation; verify separately if the actual responsible person differs, before changing attribution.
 
+## Codex S1 execution (2026-11-08)
+- Codex M0: confirmed B1–B5 ownership from the scrum master's pasted assignment; clean isolated `resort-codex` / `codex/dev` at `bf62c90`, fetched `origin/main` (`e506cfd`) already incorporated; R01–R05 fixes verified in ancestry and source; baseline typecheck/lint, 68 unit and 13 PostgreSQL integration tests passed; guarded test endpoint verified distinct from development before writes.
+- Codex B1: database-backed public/transaction quotes share pricing-owned nightly calculation with seed snapshots; R09 capped flat discounts redistributed; nightly effective GST, promo validity/usage, occupancy, totals and deterministic hash covered; public contracts and schema unchanged; Claude Opus review approved with required fixes, tracked below.
+- Codex B2: database availability and ordered nightly locks respect missing stock, website allotment and inclusive blackouts; lazy expiry requires the early B3/B4 adjustment/helper/public-wrapper prerequisite, included here with atomic audit events and concurrent double-release coverage; cron, atomic acquisition and payment confirmation remain B3–B5 work.
+- Codex integration: hidden `/dev/ui` passes its quote fixture from the server to avoid importing the new database-backed pricing barrel into the browser; Claude's G1–G3 paths and catalog are untouched; fixture IDs remain demo-only until Claude's catalog uses database UUIDs.
+- Codex B1+B2 verification: typecheck, lint, 67 unit tests, 26 real PostgreSQL integration tests and build passed; all-file Prettier check passes with `--end-of-line auto`, while raw `format:check` flags existing Windows CRLF checkouts; test database alone was migrated/reseeded, development was untouched; mandatory expiry/GST tests covered, full nine-test gate awaits B3–B5.
+- Codex review fixes: authoritative report `docs/resort-review-b1-b2.md` retained unchanged; availability now calls a booking-owned internal wrapper with mandatory date range and optional room UUID, keeping the public site-wide sweep for cron/maintenance; no public contract/schema changes and no B3–B5 implementation started.
+- Codex review tests: added room/range exclusion including checkout boundaries, injected `now` equality and +1 ms expiry, all-room availability, invalid/unknown room filters and isolation from corrupt expired holds outside the request; lowercase-stored promo lookup also covered against PostgreSQL.
+- Codex quick minors: promo lookup compares uppercase on both sides; inventory/expiry predicates compare validated UUIDs without casting indexed columns to text; reviewed BOMs removed; pure seed/test pricing imports and the scoped availability-to-booking internal import are documented in `01`/`02`; dated S0 report/handover restored to `main` content to remove unrelated attribution edits from this PR while retaining Git history; shared `/dev/ui` fixture-prop fix retained as accepted by review.
+- Codex remaining minors: promo validity still means the whole stay-night window (unchanged reviewed behavior); scrum master to clarify stay validity versus booking-date validity before A4. Date-range caps narrow frozen schemas and need approval. A4 must normalise promo codes and prevent case-only duplicates; existing ambiguous stored duplicates fail rather than choosing a promotion arbitrarily.
+- Codex deferred performance/integration: Codex B3/B4 owns batching ordered inventory writes after the concurrency gate (current per-night updates retained); Claude G1–G3 must use DB UUIDs, keep service values out of client bundles and make availability request-time (`connection()`/`Suspense`). No development reseed performed; historical snapshots stay frozen. Hold-lock/rate-edit races and accepted promo-usage overshoot remain later-story tests.
+- Codex review-fix proof: fresh guarded read-only preflight verified the separate test endpoint (PostgreSQL 18.6); typecheck, lint, all 67 unit tests, all 32 real PostgreSQL integration tests and build passed. Whole-repository Prettier check passes with `--end-of-line auto`; existing Windows CRLF checkout limitation remains. PR is prepared directly from `codex/dev`, preserving reviewed commits/history; B3–B5 wait for the scrum master's next instruction and no merge is authorised.
+
 ## S0 tasks (see `07-backlog.md` for AC)
 | ID | Task | Owner | Status |
 |---|---|---|---|
-| F1 | Scaffold | Claude Code | done |
-| C1 | Frozen service interfaces + fixtures | Claude Code | done |
-| C2 | Quote, hold, payment price contract | Claude Code | done |
-| F2 | Schema + migrations | Claude Code | done |
-| F3 | Seed data | Claude Code | done |
-| F4 | Auth and roles | Claude Code | done |
-| F5 | CI | Claude Code | done |
-| F6 | Deploy to Vercel + Neon | Claude Code | todo |
-| F7 | UI kit from `05` | Claude Code | done |
-| D1 | Start `docs/tdd-notes.md` | Claude Code | done |
+| F1 | Scaffold | Aditya Pawar | done |
+| C1 | Frozen service interfaces + fixtures | Aditya Pawar | done |
+| C2 | Quote, hold, payment price contract | Aditya Pawar | done |
+| F2 | Schema + migrations | Aditya Pawar | done |
+| F3 | Seed data | Aditya Pawar | done |
+| F4 | Auth and roles | Aditya Pawar | done |
+| F5 | CI | Aditya Pawar | done |
+| F6 | Deploy to Vercel + Neon | Aditya Pawar | todo |
+| F7 | UI kit from `05` | Aditya Pawar | done |
+| D1 | Start `docs/tdd-notes.md` | Aditya Pawar | done |
 
 ## S1 guest screens (Claude Code)
 | ID | Task | Status |
@@ -60,6 +73,7 @@ No outstanding image blocker: the `public/images/*` assets have been supplied. A
 ## Decisions log
 | Date | Decision |
 |---|---|
+| 2026-11-08 | B1 GST schedules are complete sets grouped by `effective_from`: use the latest schedule effective on each stay night, after allocated discount, with inclusive bounds and no fallback to older schedules. A missing matching slab returns `NO_RATE`; A6 must validate and save each complete, non-overlapping schedule atomically. This documents the reviewed implementation, without changing tax values or public contracts. |
 | 2026-11-06 | Modular monolith on Next.js + TypeScript, Drizzle, Neon, Vercel |
 | 2026-11-06 | Booking state machine and inventory rules per `01` |
 | 2026-11-06 | AI default provider Gemini free tier; local and rules fallbacks |
@@ -78,7 +92,7 @@ No outstanding image blocker: the `public/images/*` assets have been supplied. A
 | 2026-11-07 | S0 fix: gated server components call `await connection()` before `auth()` (Auth.js uses `crypto.getRandomValues()`, which cacheComponents rejects while prerendering) |
 | 2026-11-07 | S0 fix: `--accent-foreground` token (white) for text on accent; loading buttons keep full opacity |
 
-## S0 summary (Claude Code, 2026-11-07)
+## S0 summary (Aditya Pawar, 2026-11-07)
 
 **What works**
 1. Frozen contracts and fixtures for pricing, inventory, booking, enquiries, ai-router (plus read-only catalog); stubs return fixtures; `quoteHash` implemented and tested.
@@ -102,11 +116,14 @@ No outstanding image blocker: the `public/images/*` assets have been supplied. A
 6. Mobile (375px) audit of `/dev/ui` is left to H4; the headless screenshot tooling could not emulate that width reliably.
 7. Auth rate limiting and security headers are deferred to H2.
 
-## S0 fixes (Claude Code, 2026-11-07)
+## S0 fixes (Aditya Pawar, 2026-11-07)
 1. Database safety: `src/db/safety.ts` (`assertSafeDestructiveTarget`, `childEnvForTests`) guards seed, reset and the integration helpers. Fails closed on a missing URL, a host in `DB_PROTECTED_HOSTS`, `NODE_ENV=production`, or a test URL on the same host as `DATABASE_URL*` (Neon `-pooler` suffix ignored). Tests use `TEST_DATABASE_URL` only; the seed child gets `DB_TARGET=test`. CI sets only `TEST_DATABASE_URL`. 11 new unit tests.
 2. `/account` and `/admin` no longer crash in dev: `await connection()` before `auth()`.
 3. Primary button text uses the `--accent-foreground` token (white, 9.7:1 on accent); loading state no longer dimmed. 2 new token tests.
 4. Not run (by instruction): `test:integration`, seed, reset, migrations. Integration tests and the new CI env are therefore unverified against a real database.
+
+## Attribution update
+1. 2026-11-07: Author and ownership attributions standardized to Aditya Pawar at the project owner's request.
 
 ## Codex S0 review follow-up (2026-11-07)
 Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
@@ -129,3 +146,6 @@ Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
 4. Additive: `booking.releaseExpiredHolds()` (stub) for cron and lazy expiry; internal tx helpers are not part of the public contract.
 
 **Note for F6:** `db:migrate` now refuses `NODE_ENV=production` and needs `DATABASE_URL_UNPOOLED`. Production migration needs its own explicit, reviewed step.
+
+## Worktree sync (2026-11-08)
+1. Aditya Pawar: merged `claude/dev` at `23c0b10` into `codex/dev`, preserving the review reports and document attributions; typecheck and 68 unit tests pass; R04 allowlist and R06-R09 remain deferred as recorded above. No integration tests or database scripts run.
