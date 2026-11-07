@@ -8,7 +8,7 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-accent text-white hover:bg-accent-hover",
+        primary: "bg-accent text-accent-foreground hover:bg-accent-hover",
         secondary: "border border-border bg-surface text-text hover:bg-surface-2",
         ghost: "text-text hover:bg-surface-2",
       },
@@ -36,7 +36,12 @@ export function Button({
   return (
     <button
       type={type}
-      className={cn(buttonVariants({ variant, size }), className)}
+      // Loading is not "disabled" visually: keep full contrast so text and spinner stay readable.
+      className={cn(
+        buttonVariants({ variant, size }),
+        loading && "disabled:cursor-wait disabled:opacity-100",
+        className,
+      )}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...props}

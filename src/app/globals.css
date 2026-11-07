@@ -11,6 +11,7 @@
   --accent: #2f4a3a;
   --accent-hover: #253b2e;
   --accent-soft: #e6ede8;
+  --accent-foreground: #ffffff;
   --coffee: #7a4e2d;
   --success: #2e7d4f;
   --warning: #a86a12;
@@ -29,6 +30,7 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-foreground: var(--accent-foreground);
   --color-coffee: var(--coffee);
   --color-success: var(--success);
   --color-warning: var(--warning);
