@@ -61,7 +61,7 @@ Goal: booking backbone real + guest screens on fixtures; merge B1/B2 early so gu
 |---|---|---|
 | G1 | Home, story blocks, date and guests search, URL params | done, awaiting review (screenshots in `docs/screenshots/`) |
 | G2 | Available rooms with prices | done, awaiting review (real catalog, availability and quotes) |
-| G3 | Room detail | todo |
+| G3 | Room detail | done, awaiting review. Reserve links to `/book` (B6, not built yet); param contract proposed in `tdd-notes.md` |
 
 ## Done
 1. Docs structure, backlog and design system.
