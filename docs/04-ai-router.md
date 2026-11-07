@@ -44,3 +44,6 @@ Provider is chosen in one place, `modules/ai-router/provider.ts`. Model id comes
 
 ## Evaluation
 Seeded 30 labelled enquiries. `pnpm eval:ai` reports accuracy per category and the unsorted rate. Tests mock the provider and cover: invalid JSON goes unsorted, complaint creates notification, draft contains no number not present in the quote.
+
+## Note for R1 to R3 (from Q1)
+`enquiries.extracted` already holds `source` (webhook idempotency key) and, for web enquiries, `consent`. The classifier must merge its output into `extracted` (for example `{ ...existing, ...result }`), never replace the column, or repeated webhook deliveries would create duplicates. Web enquiries put dates, party size and room into `raw_text` as plain lines after the guest message; contact details are never in `raw_text`.

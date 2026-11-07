@@ -1,6 +1,7 @@
 export { Button, ButtonLink, buttonVariants } from "./button";
 export { Input, FieldNote } from "./input";
 export { Select } from "./select";
+export { Textarea } from "./textarea";
 export { Stepper } from "./stepper";
 export { DateRange, type DateRangeValue } from "./date-range";
 export { Card } from "./card";

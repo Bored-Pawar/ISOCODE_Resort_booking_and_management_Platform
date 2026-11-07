@@ -3,8 +3,9 @@ import { pricing, quoteFixture, computeQuoteHash, changedQuoteFixture } from "@/
 import { inventory } from "@/modules/inventory";
 import { booking } from "@/modules/booking";
 import { enquiries } from "@/modules/enquiries";
+import { enquiriesFixture } from "@/modules/enquiries/fixtures";
 import { aiRouter, classificationSchema } from "@/modules/ai-router";
-import { catalog } from "@/modules/catalog";
+import { roomTypesFixture } from "@/modules/catalog/fixtures";
 
 const stay = {
   roomTypeId: "rt-plantation-room",
@@ -34,9 +35,8 @@ describe("fixtures are internally consistent", () => {
       if (r.ok) expect(classificationSchema.safeParse(r.classification).success).toBe(true);
     }
   });
-  it("catalog matches assumption A9 (76 keys)", async () => {
-    const rooms = await catalog.listRoomTypes();
-    expect(rooms.reduce((s, r) => s + r.totalUnits, 0)).toBe(76);
+  it("catalog fixtures match assumption A9 (76 keys); the DB catalog is checked by seed.test", () => {
+    expect(roomTypesFixture.reduce((s, r) => s + r.totalUnits, 0)).toBe(76);
   });
 });
 
@@ -67,14 +67,8 @@ describe("stubs return discriminated results, never throw", () => {
       code: "FORBIDDEN",
     });
   });
-  it("enquiries.ingest and aiRouter.process", async () => {
-    const r = await enquiries.ingest({
-      channel: "web",
-      senderName: "A",
-      senderContact: "a@example.com",
-      rawText: "Is a villa free?",
-    });
-    expect(r).toMatchObject({ ok: true, aiStatus: "pending" });
+  it("enquiries.ingest rejects bad input before any database call; aiRouter.process", async () => {
+    // Success paths write to PostgreSQL (Q1) and are covered by the integration suite.
     expect(
       (await enquiries.ingest({ channel: "web", senderName: "", senderContact: "", rawText: "" }))
         .ok,
@@ -82,7 +76,7 @@ describe("stubs return discriminated results, never throw", () => {
     expect(await aiRouter.process({ enquiryId: "nope" })).toEqual({ ok: false, code: "NOT_FOUND" });
   });
   it("the three brief enquiries are verbatim", async () => {
-    const list = await enquiries.list();
+    const list = enquiriesFixture;
     expect(list.map((e) => e.id)).toEqual(["ENQ-4410", "ENQ-4411", "ENQ-4412"]);
     expect(list[1].rawText).toBe("Is a villa free 14-16 Nov for 2 adults and a child?");
   });
