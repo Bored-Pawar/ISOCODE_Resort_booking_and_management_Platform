@@ -2,6 +2,15 @@
 
 One short entry per merged story: what, why, tradeoffs.
 
+## S1 Codex B1–B2 (implemented; awaiting independent review)
+- **What:** database-backed pricing and transaction repricing share one pure calculation with seed snapshots; nightly effective GST, promo validation, occupancy, deterministic hash and whole-paise rounding; capped flat discounts redistribute fully (R09).
+- **Why:** the displayed quote and later hold recheck must use identical rules; frozen seed snapshots reconcile from their saved nightly rates, without comparing historical bookings to fresh rates.
+- **Availability:** every night must have website stock; room/global blackouts include their end date and exclude checkout. `lockNights` holds ordered row locks without taking stock. Availability first calls the booking-owned expiry transaction.
+- **Prerequisite moved forward:** B2 requires real lazy expiry, so the internal expiry helper, ordered inventory adjustment and public release wrapper are implemented ahead of the remaining B3/B4 work. Expiry uses `SKIP LOCKED`, releases each transitioned booking once, and writes audit events atomically; overlapping releases aggregate stock changes in room/date order.
+- **Integration:** `/dev/ui` receives its quote fixture as a server prop, keeping the database dependency out of the browser. Public service signatures, fixtures and schema are unchanged. Claude's catalog must supply real database UUIDs before guest screens use the real services.
+- **Remaining:** atomic acquisition/retries, cron authentication and exactly-once payment handling remain B3–B5; the full nine-test booking gate is not claimed by this early PR.
+- **Local proof:** typecheck, lint, 67 unit tests, 26 PostgreSQL integration tests and production build passed. Integration runs only after `assertSafeDestructiveTarget` and a read-only query verify the separate test endpoint; tests include seed snapshot/hash reconciliation, missing nightly stock, promo limits, both blackout scopes, lazy expiry and concurrent double release. Windows CRLF checkout causes the raw format check to fail; the whole-repository check with `--end-of-line auto` passes without unrelated file rewrites.
+
 
 ## S0 walking skeleton
 

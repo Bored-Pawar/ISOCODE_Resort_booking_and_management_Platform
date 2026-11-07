@@ -29,6 +29,13 @@ Goal: booking backbone real + guest screens on fixtures; merge B1/B2 early so gu
 - Progress-file coordination: each developer edits only their own `06-progress.md` rows; otherwise report updates to the scrum master for application on `main`. Avoid simultaneous edits to the shared table.
 - Scrum master name: retained as **Aditya Pawar** from the supplied project documentation; verify separately if the actual responsible person differs, before changing attribution.
 
+## Codex S1 execution (2026-11-08)
+- Codex M0: confirmed B1–B5 ownership from the scrum master's pasted assignment; clean isolated `resort-codex` / `codex/dev` at `bf62c90`, fetched `origin/main` (`e506cfd`) already incorporated; R01–R05 fixes verified in ancestry and source; baseline typecheck/lint, 68 unit and 13 PostgreSQL integration tests passed; guarded test endpoint verified distinct from development before writes.
+- Codex B1: database-backed public/transaction quotes share pricing-owned nightly calculation with seed snapshots; R09 capped flat discounts redistributed; nightly effective GST, promo validity/usage, occupancy, totals and deterministic hash covered; public contracts and schema unchanged; awaiting independent review.
+- Codex B2: database availability and ordered nightly locks respect missing stock, website allotment and inclusive blackouts; lazy expiry requires the early B3/B4 adjustment/helper/public-wrapper prerequisite, included here with atomic audit events and concurrent double-release coverage; cron, atomic acquisition and payment confirmation remain B3–B5 work.
+- Codex integration: hidden `/dev/ui` passes its quote fixture from the server to avoid importing the new database-backed pricing barrel into the browser; Claude's G1–G3 paths and catalog are untouched; fixture IDs remain demo-only until Claude's catalog uses database UUIDs.
+- Codex B1+B2 verification: typecheck, lint, 67 unit tests, 26 real PostgreSQL integration tests and build passed; all-file Prettier check passes with `--end-of-line auto`, while raw `format:check` flags existing Windows CRLF checkouts; test database alone was migrated/reseeded, development was untouched; mandatory expiry/GST tests covered, full nine-test gate awaits B3–B5.
+
 ## S0 tasks (see `07-backlog.md` for AC)
 | ID | Task | Owner | Status |
 |---|---|---|---|

@@ -1,11 +1,13 @@
 /**
- * FROZEN CONTRACT (C1). LOCKED AREA. Stub returns fixtures until B2.
+ * FROZEN CONTRACT (C1). LOCKED AREA. Database availability with lazy expiry.
  * Availability is read-only here; holds are taken only through booking.acquireHold.
  */
 import { z } from "zod";
 import type { Err, Ok } from "@/lib/result";
 import { isDateStr } from "@/lib/dates";
-import { availabilityFixture } from "./fixtures";
+import { getDb } from "@/lib/db";
+import { booking } from "@/modules/booking";
+import { readAvailability } from "./read";
 
 const dateStr = z.string().refine(isDateStr, "Expected a YYYY-MM-DD date");
 
@@ -34,10 +36,8 @@ export const inventory = {
   async availability(input: AvailabilityInput): Promise<AvailabilityResult> {
     const parsed = availabilityInputSchema.safeParse(input);
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
-    const { roomTypeId } = parsed.data;
-    const rooms = roomTypeId
-      ? availabilityFixture.filter((r) => r.roomTypeId === roomTypeId)
-      : availabilityFixture;
+    await booking.releaseExpiredHolds();
+    const rooms = await readAvailability(getDb(), parsed.data);
     return { ok: true, rooms };
   },
 };
