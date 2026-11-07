@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { roomTypesFixture } from "@/modules/catalog/fixtures";
 import { quoteFixture } from "@/modules/pricing";
 import { classifyRoom, needsQuote, partyFitsNoRoom, type PlanQuote } from "./rooms";
-import { enquiryHref } from "./enquiry";
 
 const [plantation, , , pool] = roomTypesFixture; // 2 adults + 1 child, 4 adults + 2 children
 const free = { availableUnits: 3, soldOut: false, blackedOut: false };
@@ -87,14 +86,5 @@ describe("needsQuote and partyFitsNoRoom", () => {
     expect(partyFitsNoRoom(roomTypesFixture, { adults: 5, children: 0 })).toBe(true);
     expect(partyFitsNoRoom(roomTypesFixture, { adults: 4, children: 2 })).toBe(false);
     expect(pool.maxAdults).toBe(4);
-  });
-});
-
-describe("enquiryHref", () => {
-  it("encodes spaces as %20 and includes the body", () => {
-    const href = enquiryHref({ subject: "Group enquiry", body: "8 adults" });
-    expect(href).toBe(
-      "mailto:reservations@companya.example?subject=Group%20enquiry&body=8%20adults",
-    );
   });
 });

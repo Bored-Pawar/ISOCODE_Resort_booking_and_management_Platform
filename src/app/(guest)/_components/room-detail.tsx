@@ -156,8 +156,11 @@ async function stayPanel(room: RoomType, values: SearchValues, listHref: string)
         </p>
         <ButtonLink
           href={enquiryHref({
-            subject: `Group enquiry: ${room.name}`,
-            body: `We are ${guestsLabel(values.adults, values.children)}, ${values.checkIn} to ${values.checkOut}.`,
+            room: room.slug,
+            checkIn: values.checkIn,
+            checkOut: values.checkOut,
+            adults: values.adults,
+            children: values.children,
           })}
         >
           Send a group enquiry

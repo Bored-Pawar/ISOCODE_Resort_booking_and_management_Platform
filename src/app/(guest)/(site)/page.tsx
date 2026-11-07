@@ -126,10 +126,7 @@ export default function Home({
               Tell us the dates and the size of your group. We reply within a day.
             </p>
           </div>
-          <ButtonLink
-            href={enquiryHref({ subject: "Wedding or offsite enquiry" })}
-            variant="secondary"
-          >
+          <ButtonLink href={enquiryHref()} variant="secondary">
             Send an enquiry
           </ButtonLink>
         </div>

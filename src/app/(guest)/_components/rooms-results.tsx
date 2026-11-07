@@ -47,7 +47,12 @@ export async function RoomsResults({ searchParams }: { searchParams: Params }) {
           action={
             group ? (
               <ButtonLink
-                href={enquiryHref({ subject: "Group or long stay enquiry" })}
+                href={enquiryHref({
+                  checkIn: values.checkIn,
+                  checkOut: values.checkOut,
+                  adults: values.adults,
+                  children: values.children,
+                })}
                 variant="secondary"
               >
                 Send an enquiry
@@ -140,8 +145,10 @@ export async function RoomsResults({ searchParams }: { searchParams: Params }) {
           action={
             <ButtonLink
               href={enquiryHref({
-                subject: "Group enquiry",
-                body: `We are ${guests}, ${values.checkIn} to ${values.checkOut}.`,
+                checkIn: values.checkIn,
+                checkOut: values.checkOut,
+                adults: values.adults,
+                children: values.children,
               })}
             >
               Send a group enquiry

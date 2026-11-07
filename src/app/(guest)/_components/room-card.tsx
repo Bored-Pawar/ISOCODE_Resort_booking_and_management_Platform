@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CircleSlash, Users } from "lucide-react";
 import { Badge, ButtonLink, PriceBlock } from "@/components/ui";
 import { cn } from "@/lib/utils";
-import { enquiryHref } from "../_lib/enquiry";
+import { enquiryHrefFromQuery } from "../_lib/enquiry";
 import { occupancyLabel, plural } from "../_lib/format";
 import type { RoomListItem } from "../_lib/rooms";
 
@@ -99,9 +99,7 @@ export function RoomCard({
                 Too many guests for this room. Booking for a group?
               </p>
               <ButtonLink
-                href={enquiryHref({
-                  subject: `Group enquiry: ${room.name}`,
-                })}
+                href={enquiryHrefFromQuery(query, room.slug)}
                 variant="secondary"
                 className="self-start"
               >
