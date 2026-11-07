@@ -1,6 +1,6 @@
 # 06 Progress
 
-Scrum master: Abhishek. Deadline: 9 Nov 2026, 23:59 IST.
+Scrum master: Aditya Pawar. Deadline: 9 Nov 2026, 23:59 IST.
 Developers update this file after significant changes. Keep entries one line.
 
 ## Ownership of locked areas
@@ -8,26 +8,26 @@ Coordination records, not enforcement. The scrum master assigns ownership in cha
 
 | Area | Paths | Owner | Since |
 |---|---|---|---|
-| Schema and migrations | `src/db/**` | Claude Code (S0) | 2026-11-07 |
-| Booking core | `src/modules/{inventory,booking,payments}/**` | Claude Code (S0) | 2026-11-07 |
+| Schema and migrations | `src/db/**` | Aditya Pawar (S0) | 2026-11-07 |
+| Booking core | `src/modules/{inventory,booking,payments}/**` | Aditya Pawar (S0) | 2026-11-07 |
 
 ## Current sprint
-S0: walking skeleton, built by one developer (Claude Code) so the frame is consistent before parallel work starts.
+S0: walking skeleton, built by one developer (Aditya Pawar) so the frame is consistent before parallel work starts.
 Goal: deployed app where every module exists behind its contract and returns fixtures; schema, seed, auth, CI and UI kit in place.
 
 ## S0 tasks (see `07-backlog.md` for AC)
 | ID | Task | Owner | Status |
 |---|---|---|---|
-| F1 | Scaffold | Claude Code | done |
-| C1 | Frozen service interfaces + fixtures | Claude Code | done |
-| C2 | Quote, hold, payment price contract | Claude Code | done |
-| F2 | Schema + migrations | Claude Code | done |
-| F3 | Seed data | Claude Code | done |
-| F4 | Auth and roles | Claude Code | done |
-| F5 | CI | Claude Code | done |
-| F6 | Deploy to Vercel + Neon | Claude Code | todo |
-| F7 | UI kit from `05` | Claude Code | done |
-| D1 | Start `docs/tdd-notes.md` | Claude Code | done |
+| F1 | Scaffold | Aditya Pawar | done |
+| C1 | Frozen service interfaces + fixtures | Aditya Pawar | done |
+| C2 | Quote, hold, payment price contract | Aditya Pawar | done |
+| F2 | Schema + migrations | Aditya Pawar | done |
+| F3 | Seed data | Aditya Pawar | done |
+| F4 | Auth and roles | Aditya Pawar | done |
+| F5 | CI | Aditya Pawar | done |
+| F6 | Deploy to Vercel + Neon | Aditya Pawar | todo |
+| F7 | UI kit from `05` | Aditya Pawar | done |
+| D1 | Start `docs/tdd-notes.md` | Aditya Pawar | done |
 
 ## Done
 1. Docs structure, backlog and design system.
@@ -57,7 +57,7 @@ Goal: deployed app where every module exists behind its contract and returns fix
 | 2026-11-07 | S0 fix: gated server components call `await connection()` before `auth()` (Auth.js uses `crypto.getRandomValues()`, which cacheComponents rejects while prerendering) |
 | 2026-11-07 | S0 fix: `--accent-foreground` token (white) for text on accent; loading buttons keep full opacity |
 
-## S0 summary (Claude Code, 2026-11-07)
+## S0 summary (Aditya Pawar, 2026-11-07)
 
 **What works**
 1. Frozen contracts and fixtures for pricing, inventory, booking, enquiries, ai-router (plus read-only catalog); stubs return fixtures; `quoteHash` implemented and tested.
@@ -81,8 +81,11 @@ Goal: deployed app where every module exists behind its contract and returns fix
 6. Mobile (375px) audit of `/dev/ui` is left to H4; the headless screenshot tooling could not emulate that width reliably.
 7. Auth rate limiting and security headers are deferred to H2.
 
-## S0 fixes (Claude Code, 2026-11-07)
+## S0 fixes (Aditya Pawar, 2026-11-07)
 1. Database safety: `src/db/safety.ts` (`assertSafeDestructiveTarget`, `childEnvForTests`) guards seed, reset and the integration helpers. Fails closed on a missing URL, a host in `DB_PROTECTED_HOSTS`, `NODE_ENV=production`, or a test URL on the same host as `DATABASE_URL*` (Neon `-pooler` suffix ignored). Tests use `TEST_DATABASE_URL` only; the seed child gets `DB_TARGET=test`. CI sets only `TEST_DATABASE_URL`. 11 new unit tests.
 2. `/account` and `/admin` no longer crash in dev: `await connection()` before `auth()`.
 3. Primary button text uses the `--accent-foreground` token (white, 9.7:1 on accent); loading state no longer dimmed. 2 new token tests.
 4. Not run (by instruction): `test:integration`, seed, reset, migrations. Integration tests and the new CI env are therefore unverified against a real database.
+
+## Attribution update
+1. 2026-11-07: Author and ownership attributions standardized to Aditya Pawar at the project owner's request.
