@@ -2,12 +2,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth/config", () => ({ auth: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-const retryEnquiry = vi.hoisted(() => vi.fn(async () => ({ ok: true })));
-vi.mock("@/modules/enquiries", () => ({ retryEnquiry }));
+const svc = vi.hoisted(() => ({
+  retryEnquiry: vi.fn(async () => ({ ok: true })),
+  saveFields: vi.fn(async () => ({ ok: true, changed: ["dates"], requote: true, draft: "ok" })),
+  reroute: vi.fn(async () => ({ ok: true, changed: true })),
+}));
+vi.mock("@/modules/enquiries", () => ({
+  retryEnquiry: svc.retryEnquiry,
+  inbox: { saveFields: svc.saveFields, reroute: svc.reroute },
+}));
 
 import { auth } from "@/lib/auth/config";
 import type { Role } from "@/lib/auth";
-import { retryFailedEnquiry } from "./actions";
+import { rerouteAction, retryFailedEnquiry, saveFieldsAction } from "./actions";
 
 const session = (role: Role | null) =>
   vi
@@ -24,20 +31,46 @@ const form = () => {
   return f;
 };
 
-beforeEach(() => retryEnquiry.mockClear());
+beforeEach(() => Object.values(svc).forEach((f) => f.mockClear()));
 
-describe("unsorted queue retry is GM only (enquiries.unsorted)", () => {
+describe("Retry AI is GM only (enquiries.unsorted)", () => {
   it.each(["reservations", "sales", "guest", null] as const)(
     "%s cannot retry and nothing is queued",
     async (role) => {
       session(role);
       expect(await retryFailedEnquiry("", form())).toBe("Your role cannot retry enquiries.");
-      expect(retryEnquiry).not.toHaveBeenCalled();
+      expect(svc.retryEnquiry).not.toHaveBeenCalled();
     },
   );
   it("gm queues the retry", async () => {
     session("gm");
     expect(await retryFailedEnquiry("", form())).toMatch(/Retry queued/);
-    expect(retryEnquiry).toHaveBeenCalledOnce();
+    expect(svc.retryEnquiry).toHaveBeenCalledOnce();
+  });
+});
+
+describe("inbox actions check the permission before the service", () => {
+  const actions = [
+    ["saveFieldsAction", () => saveFieldsAction({ enquiryId: "ENQ-1" }), svc.saveFields],
+    ["rerouteAction", () => rerouteAction({ enquiryId: "ENQ-1" }), svc.reroute],
+  ] as const;
+  it.each(actions)("%s: guests and signed out are refused, nothing called", async (_, run, fn) => {
+    for (const role of ["guest", null] as const) {
+      session(role);
+      expect(await run()).toEqual({ ok: false, message: "Your role cannot do this." });
+    }
+    expect(fn).not.toHaveBeenCalled();
+  });
+  it.each(actions)("%s: staff reach the service with their own actor", async (_, run, fn) => {
+    for (const role of ["reservations", "sales", "gm"] as const) {
+      session(role);
+      expect(await run()).toMatchObject({ ok: true });
+    }
+    expect(fn).toHaveBeenCalledTimes(3);
+    expect(fn.mock.calls.map((c) => (c as unknown[])[1])).toEqual([
+      { userId: "u1", role: "reservations" },
+      { userId: "u1", role: "sales" },
+      { userId: "u1", role: "gm" },
+    ]);
   });
 });

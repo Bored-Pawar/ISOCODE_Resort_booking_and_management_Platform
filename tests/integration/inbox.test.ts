@@ -1,0 +1,278 @@
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { and, eq } from "drizzle-orm";
+import * as dbModule from "@/lib/db";
+import * as t from "@/db/schema";
+import { inbox, type Lane } from "@/modules/enquiries";
+import { connect, ensureMigrated, testUrl } from "./helpers";
+import { inboxFixture } from "./inbox-fixture";
+
+vi.mock("next/server", async (orig) => ({
+  ...(await orig<typeof import("next/server")>()),
+  after: () => undefined,
+}));
+
+const sql = connect();
+const { db, client } = dbModule.createDb(testUrl(), { max: 6 });
+let f: Awaited<ReturnType<typeof inboxFixture>>;
+
+beforeAll(async () => {
+  await ensureMigrated(sql);
+});
+beforeEach(async () => {
+  vi.spyOn(dbModule, "getDb").mockReturnValue(db);
+  f = await inboxFixture(db);
+});
+afterEach(async () => {
+  await f?.clean();
+  vi.restoreAllMocks();
+});
+afterAll(async () => {
+  await client.end();
+  await sql.end();
+});
+
+/** Fixture ids a role sees across all its lanes. */
+async function seen(role: "reservations" | "sales" | "gm", lanes: Lane[]) {
+  const out = new Set<string>();
+  for (const lane of lanes) {
+    const res = await inbox.list({ lane, q: f.tag }, f.actor(role));
+    if (!res.ok) throw new Error(res.code);
+    res.rows.forEach((r) => out.add(r.id));
+  }
+  return out;
+}
+const ALL: Lane[] = ["room", "wedding", "offsite", "other", "complaints", "unsorted", "failed"];
+
+describe("inbox visibility in SQL (test 1)", () => {
+  it("sales never gets room or complaint rows, reservations never wedding, GM gets all", async () => {
+    const room = await f.enquiry({ category: "room", ownerId: f.by.reservations.id });
+    const other = await f.enquiry({ category: "other", ownerId: f.by.reservations.id });
+    const wedding = await f.enquiry({ category: "wedding", ownerId: f.by.sales.id });
+    const offsite = await f.enquiry({ category: "offsite", ownerId: f.by.sales.id });
+    const complaint = await f.enquiry({
+      category: "complaint",
+      isComplaint: true,
+      ownerId: f.by.gm.id,
+    });
+    const roomComplaint = await f.enquiry({ category: "room", isComplaint: true });
+    const unsorted = await f.enquiry({
+      category: null,
+      lane: "unsorted",
+      status: "new",
+      confidence: "0.40",
+    });
+    const failed = await f.enquiry({
+      category: null,
+      lane: "unsorted",
+      aiStatus: "failed",
+      status: "new",
+    });
+
+    const sales = await seen("sales", ["mine", "wedding", "offsite"]);
+    expect([...sales].sort()).toEqual([wedding, offsite].sort());
+    const res = await seen("reservations", ["mine", "room", "other", "attention"]);
+    expect([...res].sort()).toEqual([room, other].sort());
+    const gm = await seen("gm", ALL);
+    expect([...gm].sort()).toEqual(
+      [room, other, wedding, offsite, complaint, roomComplaint, unsorted, failed].sort(),
+    );
+    // A lane outside the role is refused, not filtered to empty.
+    expect(await inbox.list({ lane: "room" }, f.actor("sales"))).toEqual({
+      ok: false,
+      code: "FORBIDDEN",
+    });
+    expect(await inbox.list({ lane: "unsorted" }, f.actor("reservations"))).toEqual({
+      ok: false,
+      code: "FORBIDDEN",
+    });
+    // Detail answers not found across roles.
+    expect((await inbox.detail(room, f.actor("sales"))).ok).toBe(false);
+    expect((await inbox.detail(roomComplaint, f.actor("reservations"))).ok).toBe(false);
+    expect((await inbox.detail(roomComplaint, f.actor("gm"))).ok).toBe(true);
+  });
+
+  it("filters by status, channel and search, and pages 25 at a time by keyset", async () => {
+    for (let i = 0; i < 27; i++) await f.enquiry({ ownerId: f.by.reservations.id });
+    await f.enquiry({ ownerId: f.by.reservations.id, channel: "whatsapp", status: "replied" });
+    const a = await inbox.list({ lane: "room", q: f.tag }, f.actor("reservations"));
+    if (!a.ok) throw new Error();
+    expect(a.rows).toHaveLength(25);
+    const b = await inbox.list(
+      { lane: "room", q: f.tag, cursor: a.nextCursor! },
+      f.actor("reservations"),
+    );
+    if (!b.ok) throw new Error();
+    expect(b.rows).toHaveLength(3);
+    expect(b.nextCursor).toBeNull();
+    expect(new Set([...a.rows, ...b.rows].map((r) => r.id)).size).toBe(28);
+    const w = await inbox.list(
+      { lane: "room", q: f.tag, channel: "whatsapp", status: "replied" },
+      f.actor("reservations"),
+    );
+    expect(w.ok && w.rows.length).toBe(1);
+  });
+
+  it("count badges count open items only", async () => {
+    await f.enquiry({ category: null, lane: "unsorted", status: "new" });
+    await f.enquiry({ category: null, lane: "unsorted", status: "closed" });
+    const counts = await inbox.counts(f.actor("gm"));
+    const before = counts.unsorted ?? 0;
+    await f.enquiry({ category: null, lane: "unsorted", status: "new" });
+    expect((await inbox.counts(f.actor("gm"))).unsorted).toBe(before + 1);
+    expect(await inbox.counts(f.actor("sales"))).toEqual({});
+  });
+});
+
+describe("re-route and field edits (tests 2, 4, 6)", () => {
+  it("sales re-routing or editing a room enquiry is FORBIDDEN and writes nothing", async () => {
+    const id = await f.enquiry({ category: "room", ownerId: f.by.reservations.id });
+    expect(
+      await inbox.reroute(
+        { enquiryId: id, category: "wedding", ownerId: f.by.sales.id },
+        f.actor("sales"),
+      ),
+    ).toEqual({ ok: false, code: "FORBIDDEN" });
+    expect(
+      await inbox.saveFields(
+        { enquiryId: id, dates: null, guests: null, budgetInr: 5, room: null, language: null },
+        f.actor("sales"),
+      ),
+    ).toMatchObject({ ok: false, code: "FORBIDDEN" });
+    const [row] = await db.select().from(t.enquiries).where(eq(t.enquiries.id, id));
+    expect(row.category).toBe("room");
+    expect(row.ownerId).toBe(f.by.reservations.id);
+    const events = await db.select().from(t.enquiryEvents).where(eq(t.enquiryEvents.enquiryId, id));
+    expect(events).toHaveLength(0);
+  });
+
+  it("re-route logs one event and updates category, owner and lane together", async () => {
+    const id = await f.enquiry({ category: null, lane: "unsorted", status: "new" });
+    expect(
+      await inbox.reroute(
+        { enquiryId: id, category: "wedding", ownerId: f.by.sales.id },
+        f.actor("gm"),
+      ),
+    ).toEqual({ ok: true, changed: true });
+    const [row] = await db.select().from(t.enquiries).where(eq(t.enquiries.id, id));
+    expect(row).toMatchObject({
+      category: "wedding",
+      ownerId: f.by.sales.id,
+      lane: "sorted",
+      status: "assigned",
+    });
+    const events = await db.select().from(t.enquiryEvents).where(eq(t.enquiryEvents.enquiryId, id));
+    expect(events).toEqual([
+      expect.objectContaining({
+        action: "rerouted",
+        fromValue: "unsorted",
+        toValue: "wedding",
+        actor: f.by.gm.id,
+      }),
+    ]);
+    // The owner's role must be able to see the new category.
+    expect(
+      await inbox.reroute(
+        { enquiryId: id, category: "room", ownerId: f.by.sales.id },
+        f.actor("gm"),
+      ),
+    ).toEqual({ ok: false, code: "INVALID_OWNER" });
+    // Reservations may move its own room enquiry to sales (it leaves their list).
+    const own = await f.enquiry({ category: "room", ownerId: f.by.reservations.id });
+    expect(
+      await inbox.reroute(
+        { enquiryId: own, category: "offsite", ownerId: f.by.sales.id },
+        f.actor("reservations"),
+      ),
+    ).toMatchObject({ ok: true });
+    expect((await inbox.detail(own, f.actor("reservations"))).ok).toBe(false);
+  });
+
+  it("a complaint re-routed to rooms keeps its GM notification and stays GM only", async () => {
+    const id = await f.enquiry({ category: "complaint", isComplaint: true, ownerId: f.by.gm.id });
+    await db
+      .insert(t.notifications)
+      .values({ userId: f.by.gm.id, enquiryId: id, kind: "complaint" });
+    expect(
+      await inbox.reroute(
+        { enquiryId: id, category: "room", ownerId: f.by.reservations.id },
+        f.actor("gm"),
+      ),
+    ).toEqual({ ok: false, code: "INVALID_OWNER" });
+    expect(
+      await inbox.reroute({ enquiryId: id, category: "room", ownerId: f.by.gm.id }, f.actor("gm")),
+    ).toMatchObject({ ok: true });
+    const [row] = await db.select().from(t.enquiries).where(eq(t.enquiries.id, id));
+    expect(row).toMatchObject({ category: "room", isComplaint: true });
+    const notes = await db
+      .select()
+      .from(t.notifications)
+      .where(and(eq(t.notifications.enquiryId, id), eq(t.notifications.kind, "complaint")));
+    expect(notes).toHaveLength(1);
+    expect((await inbox.detail(id, f.actor("reservations"))).ok).toBe(false);
+    // Making something a complaint alerts the GM.
+    const plain = await f.enquiry({ category: "room", ownerId: f.by.reservations.id });
+    await inbox.reroute(
+      { enquiryId: plain, category: "complaint", ownerId: f.by.gm.id },
+      f.actor("gm"),
+    );
+    const alerts = await db
+      .select()
+      .from(t.notifications)
+      .where(eq(t.notifications.enquiryId, plain));
+    expect(alerts.map((a) => a.kind)).toEqual(["complaint"]);
+  });
+
+  it("field edits merge into extracted, log edited and rebuild only the unsent draft", async () => {
+    const id = await f.enquiry({ category: "wedding", ownerId: f.by.sales.id });
+    await db.insert(t.replyDrafts).values({
+      enquiryId: id,
+      body: "Old draft",
+      provider: "rules",
+      promptVersion: "v",
+    });
+    const res = await inbox.saveFields(
+      {
+        enquiryId: id,
+        dates: { from: "2027-02-10", to: "2027-02-12" },
+        guests: { adults: 200, children: 0 },
+        budgetInr: 2000000,
+        room: null,
+        language: "en",
+      },
+      f.actor("sales"),
+    );
+    // 200 adults is over the 40 limit for the room quote path: invalid input, nothing written.
+    expect(res).toMatchObject({ ok: false, code: "INVALID_INPUT" });
+    const ok = await inbox.saveFields(
+      {
+        enquiryId: id,
+        dates: { from: "2027-02-10", to: "2027-02-12" },
+        guests: { adults: 30, children: 0 },
+        budgetInr: 2000000,
+        room: null,
+        language: "en",
+      },
+      f.actor("sales"),
+    );
+    expect(ok).toMatchObject({ ok: true, requote: true, draft: "ok" });
+    const [row] = await db.select().from(t.enquiries).where(eq(t.enquiries.id, id));
+    expect(row.extracted).toMatchObject({
+      summary: `${f.tag} wedding enquiry`,
+      dates: { from: "2027-02-10", to: "2027-02-12" },
+      guests: { adults: 30, children: 0, total: 30 },
+      budget: { amountInr: 2000000 },
+      staffEdited: expect.arrayContaining(["dates", "guests", "budget"]),
+    });
+    const [draft] = await db.select().from(t.replyDrafts).where(eq(t.replyDrafts.enquiryId, id));
+    expect(draft.body).not.toBe("Old draft");
+    expect(draft.body).not.toMatch(/₹/);
+    const events = await db.select().from(t.enquiryEvents).where(eq(t.enquiryEvents.enquiryId, id));
+    expect(events).toEqual([
+      expect.objectContaining({
+        action: "edited",
+        fromValue: "fields",
+        toValue: "dates,guests,budget",
+      }),
+    ]);
+  });
+});
