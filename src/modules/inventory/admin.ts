@@ -291,6 +291,25 @@ async function lockBlackoutEdits(tx: Tx) {
   await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended('admin:blackout_dates', 0))`);
 }
 
+/**
+ * Creates the missing stock rows of a blackout range (allotment, sold, held 0; they sell nothing,
+ * like a missing row) in (room_type_id, date) order, the same insert A2 does. A row created here is
+ * not visible to others until commit, and A2's insert of the same key waits on it, so A2 cannot
+ * make a date sellable between our lock step and the blackout commit (audit M02).
+ */
+async function ensureRange(tx: Tx, roomTypeId: string | null, from: string, to: string) {
+  const scope = roomTypeId ? sql`WHERE r.id = ${roomTypeId}::uuid` : sql``;
+  await tx.execute(sql`
+    INSERT INTO inventory (room_type_id, date, allotment, sold, held)
+    SELECT r.id, d::date, 0, 0, 0
+    FROM room_types r
+    CROSS JOIN generate_series(${from}::date, ${to}::date, interval '1 day') AS d
+    ${scope}
+    ORDER BY r.id, d
+    ON CONFLICT (room_type_id, date) DO NOTHING
+  `);
+}
+
 /** Locks the stock rows a blackout change covers, ordered like the hold path. */
 async function lockRange(tx: Tx, roomTypeId: string | null, from: string, to: string) {
   const scope = roomTypeId ? sql`AND room_type_id = ${roomTypeId}::uuid` : sql``;
@@ -313,14 +332,20 @@ export type SetOfflineResult =
 /**
  * Takes a room type (or all rooms, `roomTypeId: null`) offline from `from` to `to` inclusive by
  * writing a blackout with a reason. Blackouts of the same scope that overlap or touch the range
- * are merged into one row (their reasons kept). Stock rows in the range are locked first in
- * (room_type_id, date) order, so a hold already past its blackout check commits before this,
- * and every later hold sees the blackout (BLACKOUT). Existing bookings stand.
+ * are merged into one row (their reasons kept). Missing stock rows in the range are created
+ * (allotment 0) and every stock row in the range is locked first, in (room_type_id, date) order,
+ * so a hold already past its blackout check commits before this, and every later hold (also on a
+ * date A2 creates meanwhile) sees the blackout (BLACKOUT). Existing bookings stand.
  */
 export async function setOffline(
   input: SetOfflineInput,
   actor: AdminActor,
-  opts: { db?: Db; now?: Date } = {},
+  opts: {
+    db?: Db;
+    now?: Date;
+    /** Test seam: runs after the range is locked, before the blackout is written. */
+    afterLock?: () => Promise<void>;
+  } = {},
 ): Promise<SetOfflineResult> {
   if (!can(actor.role, "availability.toggle")) return { ok: false, code: "FORBIDDEN" };
   const parsed = setOfflineInputSchema.safeParse(input);
@@ -336,7 +361,9 @@ export async function setOffline(
       const known = await tx.execute(sql`SELECT 1 FROM room_types WHERE id = ${roomTypeId}::uuid`);
       if (!known.length) return { ok: false, code: "NOT_FOUND" } as const;
     }
+    await ensureRange(tx, roomTypeId, from, to);
     await lockRange(tx, roomTypeId, from, to);
+    await opts.afterLock?.();
     const touching = await tx.execute<BlackoutRow>(sql`
       SELECT ${BLACKOUT_COLUMNS} FROM blackout_dates
       WHERE ${sameScope(roomTypeId)}

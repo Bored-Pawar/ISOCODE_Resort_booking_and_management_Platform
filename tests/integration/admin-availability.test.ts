@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { eq, or } from "drizzle-orm";
+import { eq, or, sql as dsql } from "drizzle-orm";
 import * as dbModule from "@/lib/db";
 import * as t from "@/db/schema";
 import { admin } from "@/modules/admin";
@@ -184,6 +184,63 @@ describe("A3 online / offline (PostgreSQL)", () => {
       [DAYS14[6], DAYS14[13]],
     ]);
   });
+
+  it("a date with no stock row: A2 cannot make it sellable while offline is mid-way (audit M02)", async () => {
+    const day = DAYS14[10];
+    const after = DAYS14[11];
+    await db.execute(
+      dsql`DELETE FROM inventory WHERE room_type_id = ${f.room.id}::uuid AND date = ${day}::date`,
+    );
+    const heldOn = () =>
+      db.execute<{ id: string; created_at: Date }>(dsql`
+        SELECT b.id, b.created_at FROM bookings b JOIN booking_rooms r ON r.booking_id = b.id
+        WHERE r.room_type_id = ${f.room.id}::uuid AND b.status = 'HELD'`);
+
+    let locked!: () => void;
+    const isLocked = new Promise<void>((r) => (locked = r));
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    let offlineReturned = 0;
+    const offline = admin
+      .setOffline({ roomTypeId: f.room.id, from: day, to: day, reason: "Pipe" }, f.reservations, {
+        afterLock: async () => {
+          locked();
+          await gate;
+        },
+      })
+      .then((res) => {
+        offlineReturned = Date.now();
+        return res;
+      });
+    await isLocked;
+
+    // Offline holds the range (and its new stock row). A2 creating that row must wait for it.
+    let a2Settled = false;
+    const a2 = admin
+      .setAllotment(
+        { mode: "cells", cells: [{ roomTypeId: f.room.id, date: day, allotment: 1 }] },
+        f.reservations,
+      )
+      .finally(() => (a2Settled = true));
+    let early: ReturnType<typeof hold>;
+    try {
+      // Without the stock row created and locked by offline, A2 finishes here in about 3 s.
+      for (let i = 0; i < 15 && !a2Settled; i++) await new Promise((r) => setTimeout(r, 1_000));
+      expect(a2Settled).toBe(false);
+      // A guest trying the date meanwhile never gets it (it may wait for offline, then BLACKOUT).
+      early = hold(day, after);
+      await new Promise((r) => setTimeout(r, 1_000));
+    } finally {
+      release(); // never leave the offline transaction open, even when an assertion fails
+    }
+    expect((await early).ok).toBe(false);
+    expect(await offline).toMatchObject({ ok: true, blackout: { startDate: day, endDate: day } });
+    expect(await a2).toMatchObject({ ok: true, updated: 1, rejected: [] });
+    expect(await hold(day, after)).toMatchObject({ ok: false, code: "BLACKOUT" });
+    for (const b of await heldOn())
+      expect(new Date(b.created_at).getTime()).toBeLessThan(offlineReturned);
+    expect(await heldOn()).toEqual([]);
+  }, 90_000);
 
   it("requires a reason and stays inside the window", async () => {
     expect(
