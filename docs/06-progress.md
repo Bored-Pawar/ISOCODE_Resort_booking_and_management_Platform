@@ -93,6 +93,7 @@ No outstanding image blocker: the `public/images/*` assets have been supplied. A
 ## Decisions log
 | Date | Decision |
 |---|---|
+| 2026-11-08 | Three month online booking window (A10): check-in at most today IST + 3 calendar months, one constant in `src/lib/booking-window.ts`. Enforced in the guest search, `/rooms`, room detail, `/book/details` and rechecked in `acquireBookingHold` (`OUTSIDE_WINDOW`, guest action type only; `booking` service contract unchanged) |
 | 2026-11-08 | B10 approved: a booking is one order with 1 to 4 room lines (`booking_rooms`), one hold, one payment, one total. Supersedes the 2026-11-07 one-room-per-booking rule. Design: `s2-multiroom-change.md` |
 | 2026-11-08 | Occupancy rule: `1 <= adults <= max_adults` and `adults + children <= max_occupancy`; `max_children` stays in the schema, not enforced |
 | 2026-11-08 | S2 lock holder: Claude Code holds `src/db/**`, pricing, inventory, booking, payments, guest and catalog, on branch `claude/multiroom` only (overnight runbook); Codex idle |

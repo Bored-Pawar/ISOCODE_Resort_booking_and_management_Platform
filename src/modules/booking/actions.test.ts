@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/auth", () => ({ requireRole: vi.fn() }));
 import { requireRole } from "@/lib/auth";
 import { booking } from "./index";
@@ -15,7 +15,13 @@ const input = {
   },
   quoteHash: "hash",
 };
+beforeEach(() => {
+  // Inside the 3 month online window for the 2099-11-14 check-in.
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2099-10-01T06:00:00Z"));
+});
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.mocked(requireRole).mockReset();
 });
@@ -61,6 +67,22 @@ describe("hold server action", () => {
     expect(await acquireBookingHold({ ...input, quoteHash: "" })).toEqual({
       ok: false,
       code: "INVALID_INPUT",
+    });
+    expect(service).not.toHaveBeenCalled();
+  });
+  it("refuses a check-in more than 3 months ahead before calling the service", async () => {
+    vi.setSystemTime(new Date("2099-08-13T06:00:00Z")); // last online check-in 2099-11-13
+    vi.mocked(requireRole).mockResolvedValue({
+      id: "guest",
+      role: "guest",
+      email: "g@test.example",
+      name: "Guest",
+    });
+    const service = vi.spyOn(booking, "acquireHold");
+    expect(await acquireBookingHold(input)).toEqual({
+      ok: false,
+      code: "OUTSIDE_WINDOW",
+      message: "Online booking opens 3 months ahead. For later dates, send us an enquiry.",
     });
     expect(service).not.toHaveBeenCalled();
   });

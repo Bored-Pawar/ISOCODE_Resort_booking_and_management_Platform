@@ -10,7 +10,7 @@ import { parseCartParams } from "../_lib/cart";
 import { enquiryHref } from "../_lib/enquiry";
 import { guestsLabel } from "../_lib/format";
 import { partyFitsNoRoom } from "../_lib/rooms";
-import { parseSearchParams, validateSearch } from "../_lib/search";
+import { needsEnquiry, parseSearchParams, validateSearch } from "../_lib/search";
 import { roomsForEnquiry, suggestCart } from "../_lib/stay";
 import { RestoreStay } from "./restore-stay";
 import { RetryError } from "./retry-error";
@@ -36,7 +36,7 @@ export async function StayBuilder({ searchParams }: { searchParams: Params }) {
   const issue = validateSearch(values, today);
 
   if (issue) {
-    const group = issue.code === "too-many-guests" || issue.code === "too-long";
+    const group = needsEnquiry(issue);
     let rooms = 1;
     if (group) {
       try {
@@ -66,7 +66,7 @@ export async function StayBuilder({ searchParams }: { searchParams: Params }) {
                   rooms,
                 })}
               >
-                Send a group enquiry
+                {issue.code === "too-far" ? "Send us an enquiry" : "Send a group enquiry"}
               </ButtonLink>
             ) : undefined
           }

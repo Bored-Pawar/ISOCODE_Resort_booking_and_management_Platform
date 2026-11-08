@@ -66,3 +66,4 @@ Direct share 12% to 20% in 12 months; median first reply under 30 min in working
 | A7 | The brand is shown as "Company A" and is configurable. |
 | A8 | Photos are generated or free stock placeholders, not the real property. |
 | A9 | Room types: Plantation Room 40, Estate Suite 24, Garden Villa 8, Pool Villa 4 (76 keys). |
+| A10 | Direct online booking takes a check-in no later than today (IST) plus 3 calendar months (month end clamps, e.g. 30 Nov to 28 Feb); the stay may end later. Later dates go to an enquiry. Guest channel rule only (`src/lib/booking-window.ts`); staff, enquiries and service contracts are unaffected. |
