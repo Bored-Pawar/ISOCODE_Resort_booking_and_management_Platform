@@ -17,7 +17,8 @@
     "db:migrate": "tsx --tsconfig tsconfig.json --env-file-if-exists=.env.local src/db/migrate.mts",
     "db:seed": "tsx --tsconfig tsconfig.json --env-file-if-exists=.env.local src/db/seed/index.ts",
     "db:reset": "tsx --tsconfig tsconfig.json --env-file-if-exists=.env.local src/db/reset.mts && pnpm db:migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -34,6 +35,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "1.56.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
