@@ -20,15 +20,18 @@ DB guard: `TEST_DATABASE_URL` host differs from Codex's test host and from both 
 | 2.4 `enquiryVisibility`, `canSeeEnquiry` (tested); Codex inbox lines and attention-request decision in `06` | done | be7a06e |
 | 2.8 A4 `/admin/promos`: list, create (uppercase, no case-only duplicates), switch off | done | 5c216d7 |
 | 4 Chrome walkthrough (sales, gm, reservations; desktop and 375px), 375px fix, docs 01/02/07/tdd-notes | done | 62428e0 |
-| 4 Review fix, major 1: blackout edits serialised by one advisory lock (+ concurrency test) | done | (this commit) |
+| 4 Review fix, major 1: blackout edits serialised by one advisory lock (+ concurrency test) | done | 72ee70c |
+| 5 Final gates, dev reseed, PR | done | (this commit) |
 
-Last finished: review fix. Next: final gates, dev reseed, PR.
+Last finished: hand off. Next: scrum master review of the PR; Codex wires the inbox to `permissions.ts` (see `06`).
 
 ## Review (independent subagent, no context: runbook, `01`, `git diff main...HEAD`)
 No blockers. Major 1: a concurrent offline and online edit on the same blackout could lose the online part (one merged the row away while the other's `FOR UPDATE` skipped it). Fixed: `pg_advisory_xact_lock` first in `setOffline` and `setOnline`; holds never take it. Checked and found correct: permission on every entry point, stock invariants, lock order with holds, Zod, paise, window, parameterised SQL.
 
-## Gates (latest)
-After 2.5: typecheck, lint pass; unit 386/386 (47 files); integration `admin-rates` 8/8, `admin-allotment` 9/9, `admin-availability` 7/7 (with the review concurrency test), `admin-promos` 8/8 on test-claude. Full `pnpm test:integration` (before the review fix): 118/119 in 16 files, 1986 s; the one failure was the existing `booking.test.ts` "honours HOLD_MINUTES" timing out at 34.9 s of 30 s, and it passes when re-run alone (race test repeated 5x, stable).
+## Gates (latest, at 72ee70c)
+typecheck, lint, `format:check` (raw), build: pass. Unit 420/420 (48 files).
+Integration on test-claude: full run 118/119 (16 files, before the review fix; the 1 is the HOLD_MINUTES timeout below, passes alone). New admin files: `admin-rates` 8, `admin-allotment` 9 (race repeated 5x), `admin-availability` 7, `admin-promos` 8, all pass.
+Chrome (Playwright, installed Chrome) as sales, gm, reservations at desktop and 375px: see `tdd-notes.md`; screenshots `docs/screenshots/{a1,a2,a3,a4,rbac}-*`. Dev DB reseeded afterwards.
 
 ## Deviations
 1. `main` is checked out in another worktree, so the branch was cut from `origin/main` instead of `git switch main`.
