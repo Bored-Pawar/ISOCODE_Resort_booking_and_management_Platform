@@ -30,4 +30,4 @@ The inbound route handlers export `maxDuration=60`; five workers run concurrentl
 
 Automatic estimates cover EP base plans, at most four room lines and stays up to 180 nights (bounded work, not a three-month booking horizon). Missing details, unsupported plans/longer stays, or short stock go to staff for clarification. Quotes are indicative and never reserve inventory. PII scrubbing is conservative pattern-based minimization, not a general-purpose entity-recognition system; production privacy assurance remains part of H2.
 
-SDK reference: [structured output](https://ai-sdk.dev/cookbook/node/generate-object). Next execution-duration behavior was checked in the installed Next 16.4.5 docs (`after.md`, `maxDuration.md`).
+References: [structured SDK output](https://ai-sdk.dev/cookbook/node/generate-object), [Ollama Windows setup](https://docs.ollama.com/windows), [qwen3:4b](https://ollama.com/library/qwen3:4b). Next execution-duration behavior was checked in the installed Next 16.4.5 docs (`after.md`, `maxDuration.md`) and both inbound duration exports are present in `.next/server/functions-config-manifest.json`.

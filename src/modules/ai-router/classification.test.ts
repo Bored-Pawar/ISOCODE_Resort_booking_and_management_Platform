@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { executeStructured } from "@/modules/ai-provider";
 import { classificationFixtures } from "./fixtures";
-import { classificationSchema } from "./schema";
+import { classificationSchema, modelResponseSchema } from "./schema";
 import { redactPii } from "./pii";
 import { route } from "./routing";
 import { rulesClassify } from "./fallback";
@@ -17,6 +17,21 @@ const input = {
 const villa = classificationFixtures["ENQ-4411"].classification;
 afterEach(() => vi.resetAllMocks());
 describe("classification and routing", () => {
+  it("malformed draft fields don't invalidate a successful classification", () => {
+    expect(modelResponseSchema.parse({ ...villa, draftText: { unsafe: "payload" } })).toMatchObject(
+      { category: "room", draftText: null },
+    );
+    expect(
+      classificationSchema.parse({ ...villa, ownerRole: "gm", action: "send" }),
+    ).not.toHaveProperty("ownerRole");
+  });
+  it("redacts forwarded headers and embedded social/contact IDs", () => {
+    expect(
+      redactPii(
+        "From: Alice Nair <alice@example.test>\nContact @alice123 or ID: ignored. Link https://example.test/alice\nNeed a villa.",
+      ),
+    ).not.toMatch(/Alice|alice/);
+  });
   it.each([
     ["ENQ-4410", "sales"],
     ["ENQ-4411", "reservations"],
@@ -96,6 +111,9 @@ describe("classification and routing", () => {
     expect(route(r.classification, r.status)).toMatchObject({ lane: "unsorted", notifyGm: true });
   });
   it("rules extracts critical villa details without inventing vague dates", () => {
+    expect(
+      rulesClassify("Need 2 rooms for 3 nights from 26 Dec, family of 5 (2 kids).", date).category,
+    ).toBe("room");
     expect(rulesClassify(input.rawText, date)).toMatchObject({
       category: "room",
       confidence: 0.5,

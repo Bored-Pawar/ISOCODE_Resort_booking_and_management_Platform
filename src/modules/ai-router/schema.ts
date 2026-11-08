@@ -30,4 +30,6 @@ export const classificationSchema = z.object({
 });
 export type Classification = z.infer<typeof classificationSchema>;
 // Draft safety is checked independently after classification, so unsafe prose doesn't downgrade ok.
-export const modelResponseSchema = classificationSchema.extend({ draftText: z.string().nullish() });
+export const modelResponseSchema = classificationSchema.extend({
+  draftText: z.string().nullish().catch(null),
+});

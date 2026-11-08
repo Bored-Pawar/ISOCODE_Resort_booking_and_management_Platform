@@ -4,6 +4,7 @@
  * `ingestFrom()` is an additive sibling (same row, plus webhook idempotency and consent record).
  */
 import { saveEnquiry, listEnquiries, type IngestMeta } from "./store";
+import { scheduleProcessing } from "./scheduling";
 import {
   ingestInputSchema,
   type Enquiry,
@@ -21,6 +22,7 @@ async function ingestWith(input: IngestInput, meta: IngestMeta): Promise<IngestF
   const parsed = ingestInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
   const { enquiryId, duplicate } = await saveEnquiry(parsed.data, meta);
+  scheduleProcessing(duplicate ? undefined : enquiryId);
   return { ok: true, enquiryId, aiStatus: "pending", duplicate };
 }
 
@@ -35,6 +37,7 @@ export const enquiries = {
   },
   /** Newest first. `limit` is optional and additive; the default keeps the inbox bounded. */
   list(opts: { limit?: number } = {}): Promise<Enquiry[]> {
+    scheduleProcessing();
     return listEnquiries(Math.min(Math.max(opts.limit ?? DEFAULT_LIST_LIMIT, 1), 500));
   },
 };

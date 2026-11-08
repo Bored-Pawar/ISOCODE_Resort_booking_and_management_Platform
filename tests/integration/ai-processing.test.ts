@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { createDb } from "@/lib/db";
 import * as t from "@/db/schema";
@@ -8,6 +8,7 @@ import {
   claimEnquiry,
   settleEnquiry,
   sweepCandidates,
+  queueEligibility,
   type Claim,
   type Settlement,
 } from "@/modules/enquiries/internal";
@@ -35,17 +36,15 @@ const result: Settlement = {
 async function enquiry(over: Partial<typeof t.enquiries.$inferInsert> = {}) {
   const id = `ENQ-test-${randomUUID()}`;
   ids.push(id);
-  await db
-    .insert(t.enquiries)
-    .values({
-      id,
-      channel: "web",
-      senderName: "Synthetic",
-      senderContact: "synthetic@example.test",
-      rawText: "Synthetic complaint about service",
-      extracted: { source: { provider: "test", messageId: id }, consent: { version: "test" } },
-      ...over,
-    });
+  await db.insert(t.enquiries).values({
+    id,
+    channel: "web",
+    senderName: "Synthetic",
+    senderContact: "synthetic@example.test",
+    rawText: "Synthetic complaint about service",
+    extracted: { source: { provider: "test", messageId: id }, consent: { version: "test" } },
+    ...over,
+  });
   return id;
 }
 async function claim(id: string): Promise<Claim> {
@@ -88,6 +87,19 @@ afterAll(async () => {
 });
 
 describe("persistent AI queue", () => {
+  it("the actual queue predicate includes exactly two minutes and excludes one millisecond younger", async () => {
+    const id = await enquiry({
+      aiStatus: "processing",
+      aiUpdatedAt: new Date("2000-01-01T00:00:00Z"),
+    });
+    const queryAt = (now: string) =>
+      db
+        .select({ id: t.enquiries.id })
+        .from(t.enquiries)
+        .where(and(eq(t.enquiries.id, id), queueEligibility(sql`${now}::timestamptz`)));
+    expect(await queryAt("2000-01-01T00:02:00Z")).toHaveLength(1);
+    expect(await queryAt("2000-01-01T00:01:59.999Z")).toHaveLength(0);
+  });
   it("two concurrent claims have one winner and one increment", async () => {
     const id = await enquiry();
     const r = await Promise.all([claimEnquiry(id, db), claimEnquiry(id, db)]);
@@ -118,9 +130,6 @@ describe("persistent AI queue", () => {
       aiUpdatedAt: new Date(Date.now() - 60_000),
     });
     expect(await claimEnquiry(id, db)).toEqual({ kind: "busy" });
-    expect(
-      await db.execute(sql`SELECT interval '2 minutes' <= interval '2 minutes' AS inclusive`),
-    ).toMatchObject([{ inclusive: true }]);
   });
   it("sweep is bounded to five and excludes terminal/failed/owned rows", async () => {
     for (let i = 0; i < 7; i++) await enquiry({ aiUpdatedAt: new Date("1700-01-01") });
@@ -215,16 +224,14 @@ describe("persistent AI queue", () => {
   it("does not overwrite an edited/approved draft", async () => {
     const id = await enquiry();
     const c = await claim(id);
-    await db
-      .insert(t.replyDrafts)
-      .values({
-        enquiryId: id,
-        body: "Human content",
-        provider: "staff",
-        promptVersion: "human",
-        edited: true,
-        approvedBy: staff[0].id,
-      });
+    await db.insert(t.replyDrafts).values({
+      enquiryId: id,
+      body: "Human content",
+      provider: "staff",
+      promptVersion: "human",
+      edited: true,
+      approvedBy: staff[0].id,
+    });
     expect(await settleEnquiry(c, result, db)).toBeNull();
     expect(
       (await db.select().from(t.replyDrafts).where(eq(t.replyDrafts.enquiryId, id)))[0].body,

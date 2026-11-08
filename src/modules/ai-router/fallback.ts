@@ -11,7 +11,7 @@ export function rulesClassify(text: string, receivedAt: Date): Classification {
         ? "wedding"
         : /offsite|conference|corporate|team (?:outing|retreat)|employees|meeting room/i.test(text)
           ? "offsite"
-          : /\b(room|villa|suite|stay|book|breakfast)\b/i.test(text)
+          : /\b(rooms?|villas?|suites?|stays?|book(?:ing)?|breakfast)\b/i.test(text)
             ? "room"
             : "other";
   const dates: Classification["dates"] = {};

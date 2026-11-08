@@ -1,5 +1,5 @@
 /** Approved R2 transaction bridge. Only ai-router may consume this internal entry point. */
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql, type SQL } from "drizzle-orm";
 import { enquiries, users } from "@/db/schema";
 import { getDb, type Db, type Tx } from "@/lib/db";
 import type { EnquiryCategory } from "./types";
@@ -44,6 +44,11 @@ const untouched = sql`NOT EXISTS (SELECT 1 FROM enquiry_events ev WHERE ev.enqui
   AND NOT EXISTS (SELECT 1 FROM reply_drafts d WHERE d.enquiry_id = ${enquiries.id}
     AND (d.edited OR d.approved_by IS NOT NULL OR d.sent_at IS NOT NULL))`;
 
+export function queueEligibility(now: SQL = sql`clock_timestamp()`) {
+  return sql`(${enquiries.aiStatus} = 'pending' OR (${enquiries.aiStatus} = 'processing'
+    AND ${enquiries.aiUpdatedAt} <= ${now} - interval '2 minutes'))`;
+}
+
 export async function claimEnquiry(id: string, db: Db = getDb()): Promise<ClaimResult> {
   return db.transaction(async (tx) => {
     const [row] = await tx.select().from(enquiries).where(eq(enquiries.id, id)).for("update");
@@ -60,8 +65,7 @@ export async function claimEnquiry(id: string, db: Db = getDb()): Promise<ClaimR
       .where(
         and(
           eq(enquiries.id, id),
-          sql`(${enquiries.aiStatus} = 'pending' OR
-        (${enquiries.aiStatus} = 'processing' AND ${enquiries.aiUpdatedAt} <= clock_timestamp() - interval '2 minutes'))`,
+          queueEligibility(),
           eq(enquiries.status, "new"),
           sql`${enquiries.ownerId} IS NULL`,
           sql`${enquiries.firstReplyAt} IS NULL`,
@@ -85,8 +89,7 @@ export async function sweepCandidates(db: Db = getDb()): Promise<string[]> {
     .from(enquiries)
     .where(
       and(
-        sql`(${enquiries.aiStatus} = 'pending' OR (${enquiries.aiStatus} = 'processing'
-      AND ${enquiries.aiUpdatedAt} <= clock_timestamp() - interval '2 minutes'))`,
+        queueEligibility(),
         eq(enquiries.status, "new"),
         sql`${enquiries.ownerId} IS NULL`,
         untouched,
@@ -139,6 +142,7 @@ export async function settleEnquiry(
       row.rawText !== claim.row.rawText ||
       JSON.stringify(row.extracted) !== JSON.stringify(claim.row.extracted) ||
       row.category !== claim.row.category ||
+      row.confidence !== claim.row.confidence ||
       row.isComplaint !== claim.row.isComplaint
     ) {
       await tx
