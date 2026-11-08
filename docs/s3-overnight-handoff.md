@@ -18,13 +18,14 @@ Worktree: `../resort-inbox`. Memory: integration only with `--no-file-parallelis
 | 9 Wrap up | main | todo | |
 
 ## Last done
-Runbook committed on claude/inbox (3af242d). Stopped two leftover dev servers (resort-claude, resort-inbox :3100). Free RAM ~1.2 GB.
+Phase 1: main merged into claude/inbox (cbe521f). test-claude had 0 leftover fixture rows (users `inbox-*`, `ENQ-T*`), nothing deleted; Codex uses a different test DB. Overview counts wired (faa0e7f): `inbox.counts(actor, lanes)` cut to `lanesFor(role)`, one query per page, rows link to the inbox lane. Review subagent running.
 
 ## Next
-Phase 1: merge main into claude/inbox, clean test-claude fixtures, overview counts, integration file by file, review, merge.
+Phase 1: act on the review, merge into main. Then Phase 2.
 
 ## Gates (last run)
 Phase 0 on claude/s3-groq: typecheck, lint, format:check, unit 639/639, build ok.
+Phase 1 on claude/inbox (faa0e7f, main merged): typecheck, lint, format:check, build ok; unit 698/698 (70 files); integration on test-claude, one file at a time: inbox 16/16 (includes the review-fix "sending unsaved edits"), ai-processing 17/17, ai-routing 17/17.
 
 ## Open items
 - None yet.
