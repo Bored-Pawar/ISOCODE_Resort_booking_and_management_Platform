@@ -9,6 +9,7 @@ import { formatInr } from "@/lib/money";
 import { booking } from "@/modules/booking";
 import { catalog } from "@/modules/catalog";
 import { confirmationLines } from "@/app/(guest)/_lib/confirmation";
+import { PageGate } from "../../_components/page-gate";
 import { requireBookingStaff } from "../_lib/access";
 import { STATUS_TONE } from "../_lib/filters";
 
@@ -140,17 +141,19 @@ async function Detail({ params }: { params: Params }) {
 
 export default function StaffBookingPage({ params }: { params: Params }) {
   return (
-    <>
-      <Link
-        href="/admin/bookings"
-        className="inline-flex h-11 items-center gap-2 text-small font-semibold text-accent hover:underline"
-      >
-        <ArrowLeft className="size-[18px]" strokeWidth={1.5} aria-hidden />
-        All bookings
-      </Link>
-      <Suspense fallback={<Skeleton className="mt-4 h-96 rounded-card" />}>
-        <Detail params={params} />
-      </Suspense>
-    </>
+    <Suspense fallback={<Skeleton className="mt-4 h-96 rounded-card" />}>
+      <PageGate cap="bookings.view">
+        <Link
+          href="/admin/bookings"
+          className="inline-flex h-11 items-center gap-2 text-small font-semibold text-accent hover:underline"
+        >
+          <ArrowLeft className="size-[18px]" strokeWidth={1.5} aria-hidden />
+          All bookings
+        </Link>
+        <Suspense fallback={<Skeleton className="mt-4 h-96 rounded-card" />}>
+          <Detail params={params} />
+        </Suspense>
+      </PageGate>
+    </Suspense>
   );
 }

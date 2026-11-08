@@ -10,6 +10,7 @@ import { booking } from "@/modules/booking";
 import { catalog } from "@/modules/catalog";
 import { RetryError } from "@/app/(guest)/_components/retry-error";
 import { roomsSummary } from "@/app/(guest)/_lib/account";
+import { PageGate } from "../_components/page-gate";
 import { requireBookingStaff } from "./_lib/access";
 import { parseFilters, STATUS_TONE, STATUSES, type BookingFilters } from "./_lib/filters";
 
@@ -253,12 +254,14 @@ async function Content({ searchParams }: { searchParams: Params }) {
 /** A5: staff bookings, read only. Reservations and gm (sales has no booking authority). */
 export default function StaffBookingsPage({ searchParams }: { searchParams: Params }) {
   return (
-    <>
-      <h1 className="text-h1">Bookings</h1>
-      <p className="mt-1 text-small text-muted">Read only. Newest first, up to 100 rows.</p>
-      <Suspense fallback={<TableSkeleton cols={7} />}>
-        <Content searchParams={searchParams} />
-      </Suspense>
-    </>
+    <Suspense fallback={<TableSkeleton cols={7} />}>
+      <PageGate cap="bookings.view">
+        <h1 className="text-h1">Bookings</h1>
+        <p className="mt-1 text-small text-muted">Read only. Newest first, up to 100 rows.</p>
+        <Suspense fallback={<TableSkeleton cols={7} />}>
+          <Content searchParams={searchParams} />
+        </Suspense>
+      </PageGate>
+    </Suspense>
   );
 }

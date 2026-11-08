@@ -47,7 +47,8 @@ Coordination records, not enforcement. The scrum master assigns ownership in cha
 
 | Area | Paths | Owner | Since |
 |---|---|---|---|
-| S2 booking flow (runbook `s2-booking-runbook.md`) | `src/modules/{booking,payments}/**`, `src/app/(guest)/**`, `src/app/api/payments/**`, `src/app/(staff)/admin/bookings/**`, `src/components/ui/hold-timer.tsx` | Claude Code, branch `claude/booking-flow` only. Read only: `src/db/**`, pricing, inventory. Codex keeps `src/modules/{enquiries,ai-router}/**` (R1 to R4) | 2026-11-08 17:45 IST |
+| S2 admin and RBAC (runbook `s2-admin-rbac-runbook.md`) | `src/lib/auth/permissions.ts`, `src/app/(staff)/admin/(app)/{layout.tsx,page.tsx,rates/**,allotment/**,promos/**}`, `src/modules/admin/**`, `src/modules/{pricing,inventory}/admin.ts`, `src/components/ui/data-grid.tsx` | Claude Code, branch `claude/admin` only. Read only: `src/db/**` (no schema change), booking, payments. Codex keeps `src/modules/{enquiries,ai-router}/**`, the inbox pages and `/enquire` | 2026-11-08 21:55 IST |
+| S2 booking flow (runbook `s2-booking-runbook.md`) | `src/modules/{booking,payments}/**`, `src/app/(guest)/**`, `src/app/api/payments/**`, `src/app/(staff)/admin/bookings/**`, `src/components/ui/hold-timer.tsx` | Released: merged into `main` as PR #5 (`444840d`). Was Claude Code, branch `claude/booking-flow` | 2026-11-08 17:45 IST |
 | Database schema, migrations and seed | `src/db/**` | Read only in S2 booking flow (no schema change). Was Codex S1 | 2026-11-08 |
 | Booking and inventory core | `src/modules/inventory/**` | Read only in S2 booking flow. Booking and payments: see the first row. Was Codex S1 | 2026-11-08 |
 | Pricing engine | `src/modules/pricing/**` | Read only in S2 booking flow. Was Codex S1 | 2026-11-08 |
@@ -132,8 +133,11 @@ No outstanding image blocker: the `public/images/*` assets have been supplied. A
 ## Decisions log
 | Date | Decision |
 |---|---|
+| 2026-11-08 | Staff roles (S2 admin runbook section 1): one capability table in `src/lib/auth/permissions.ts` (`PERMISSIONS`, `can`, `requirePermission`, `navFor`). Sales has no rate, allotment, availability, promo or booking authority; GM holds everything. Every staff page loader, server action and route handler calls `requirePermission`; hiding nav is never the check |
+| 2026-11-08 | Sales attention request (for Codex Q4 to Q7): one button on an enquiry, "Ask reservations and GM to look", with a short note (`attention.request`: sales, gm). Stored as an `enquiry_events` row, action `rerouted`, with the note (no schema change). Reservations and GM see a "Needs attention" list with a count badge and mark it seen with a reply note (`attention.resolve`: reservations, gm; also an `enquiry_events` row) |
 | 2026-11-08 | S2 review M1 and M2 (scrum master): the double-hold guard moves into the `acquireHold` transaction. First statement is a per-guest `pg_advisory_xact_lock(hashtextextended('hold:' || guestId, 0))`; lock order is guest advisory lock, bookings rows, inventory `(room_type_id, date)`. Then one query for a live hold of the same guest and exact stay (dates, `quote_hash`, identical lines in `line_no` order): match returns it with no stock and no event (`01` Contract note 7). The `listForGuest` prechecks in `holdStay` and `refreshHold` are deleted; `listForGuest` is batched (at most 4 data queries) |
 | 2026-11-08 | B8 mock email: no outbox table, so the outbox is derived. `/booking/[ref]/email` renders the confirmation email for its owner; `/dev/outbox` (staff, `DEV_TOOLS_ENABLED`) lists the last 20 confirmed bookings with their rendered emails. Nothing is sent |
+| 2026-11-09 | S2 admin audit (`docs/reviews/s2-admin-rbac-implementation-audit.md`, FIX MAJORS, 0 blockers, 3 majors), scrum master approved: additive staff read `booking.listOverlappingForStaff({ roomTypeId?, from, to, limit, cursor }, actor)` (overlap and room filter in SQL before the limit, HELD live and CONFIRMED, ordered by check_in, id, `nextCursor`), recorded in `01` Contracts; Claude Code may add it in `src/modules/booking/{index,staff}.ts` on `claude/admin` (no other booking edit). The A3 warning pages it up to 1,000 and says when it is incomplete. Offline creates missing stock rows before locking (M02). Rates grid saved prices are an optimistic overlay only (M01) |
 | 2026-11-08 | Contract additions (S2 runbook): `booking.cancelHeld` (owner only) and `payments.MockProvider` plus the signed `/api/payments/mock` webhook (`PAYMENT_WEBHOOK_SECRET`, no new table). Additive staff read `booking.listForStaff` (reservations, gm). Failed and timed out payment attempts are not stored (no contract for it) |
 | 2026-11-08 | Three month online booking window (A10): check-in at most today IST + 3 calendar months, one constant in `src/lib/booking-window.ts`. Enforced in the guest search, `/rooms`, room detail, `/book/details` and rechecked in `acquireBookingHold` (`OUTSIDE_WINDOW`, guest action type only; `booking` service contract unchanged) |
 | 2026-11-08 | B10 approved: a booking is one order with 1 to 4 room lines (`booking_rooms`), one hold, one payment, one total. Supersedes the 2026-11-07 one-room-per-booking rule. Design: `s2-multiroom-change.md` |
@@ -223,7 +227,7 @@ Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
 ## Claude Code S2 B10 multi-room (overnight 2026-11-08, branch `claude/multiroom`)
 - B10 built per `s2-multiroom-change.md` sections 1 to 6 on `claude/multiroom` (from `codex/dev` `c8c8b76` + `claude/dev` `da56069`); details and evidence in `s2-multiroom-handoff.md`. Not merged; see that file for the morning merge order.
 - Development and test Neon branches were reset, migrated (`0001`) and reseeded through the guarded scripts; production untouched.
-- Mandatory test 6 (allotment cut below committed is rejected) is **provisional until A2**: today it proves the database CHECK and the conditional update only; the A2 allotment editor must re-prove it through its own entry point (minor fix 4).
+- Mandatory test 6 (allotment cut below committed is rejected) is **provisional until A2**: today it proves the database CHECK and the conditional update only; the A2 allotment editor must re-prove it through its own entry point (minor fix 4). **Final (2026-11-08, `claude/admin`):** re-proved through `admin.setAllotment` (`tests/integration/admin-allotment.test.ts`): refused dates only, others apply, real hold untouched.
 - Known limit (minor fix 5): the lazy and cron expiry sweep is one statement over every matching expired hold, not batched. Fine at seed scale; batch it before real traffic.
 - Codex review of HEAD `370fd34` (APPROVE WITH FIXES) fixed on the branch, one commit each: F1 `/dev/test` simulator calls the inbound handlers in-process (no request-derived URL); F2 `typecheck` runs `next typegen` first, proven on a fresh clone; F3 search counts are no longer clamped (valid party: up to 24 guests that fit 4 rooms of any mix, else message plus enquiry link with the requested counts); F4 enquiry contact must be a valid email or a phone with 10+ digits (form and ingest); F5 `NO_RATE` from a missing tax slab carries `lineIndex`; F6 prefilled `/enquire` link wherever stock cannot fit the party.
 - B6 steps 2 and 3 (details, hold, pay) are next; `/book/details` is a placeholder and takes no hold.
@@ -256,3 +260,17 @@ Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
 | B9 | My bookings link to the booking; Resume payment and Cancel for a live hold | done on `claude/booking-flow`, awaiting review |
 | A5 | `/admin/bookings` list, filters, detail timeline, Refund pending (reservations, gm) | done on `claude/booking-flow`, awaiting review |
 | H1 | Playwright booking happy path (`pnpm test:e2e`, needs `E2E_BASE_URL`) | booking path done and passing locally; the staff draft approval path waits for Q6 |
+
+## Claude Code S2 admin and RBAC (2026-11-08, branch `claude/admin`)
+- Built per `s2-admin-rbac-runbook.md`; evidence, test counts, deviations and open items in `s2-admin-handoff.md`. Not merged.
+- **For Codex (inbox, Q4 to Q7), from `@/lib/auth/permissions`:**
+  1. Q4 inbox lists only what `enquiryVisibility(role)` returns (reservations: room and other; sales: wedding and offsite; GM: all, plus complaints and the unsorted lane) and checks each enquiry with `canSeeEnquiry(role, enquiry)`. Every inbox page loader and server action calls `requirePermission` (`enquiries.room`, `enquiries.events`, `enquiries.complaints`, `enquiries.unsorted`, `attention.request`, `attention.resolve`, `notifications.gm`) first.
+  2. Sales attention request: see the decisions log (2026-11-08). Built by Codex with Q4 to Q7; the `/admin` overview already shows "Needs attention from sales" and the enquiry counts as "Coming with the inbox".
+  3. Add the inbox to `navFor` (one entry in `NAV`, capability any of the `enquiries.*`) when Q4 lands; until then the staff nav has no inbox link.
+
+| ID | Task | Status |
+|---|---|---|
+| RBAC | `permissions.ts`, staff nav and overview by role, 403 screen, `enquiryVisibility` | done on `claude/admin`, awaiting review |
+| Audit fix | M01 rates overlay, M02 offline stock rows, M03 complete booking warning (`booking.listOverlappingForStaff`), allotment labels; merged main (PR #6) | done on `claude/admin`, awaiting review |
+| R06 | DataGrid keeps the pending cell stable, catches failed commits, ignores stale completions | done on `claude/admin`, awaiting review |
+
