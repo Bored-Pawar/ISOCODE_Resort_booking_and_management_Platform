@@ -1,0 +1,2195 @@
+[
+  {
+    "evidence": "baseline",
+    "model": "qwen3:4b-instruct",
+    "operations": 30,
+    "httpRequests": 30,
+    "rawClassification": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "validatedClassification": {
+      "n": 28,
+      "d": 30,
+      "rate": 0.9333333333333333
+    },
+    "applicationCategory": {
+      "n": 29,
+      "d": 30,
+      "rate": 0.9666666666666667
+    },
+    "acceptableIntent": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "complaintPriority": {
+      "n": 4,
+      "d": 4,
+      "rate": 1
+    },
+    "ambiguityUnsorted": {
+      "n": 1,
+      "d": 3,
+      "rate": 0.3333333333333333
+    },
+    "wireSchema": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "zodSchema": {
+      "n": 28,
+      "d": 30,
+      "rate": 0.9333333333333333
+    },
+    "extractionZodSchema": {
+      "n": 28,
+      "d": 30,
+      "rate": 0.9333333333333333
+    },
+    "extraction": {
+      "n": 157,
+      "d": 198,
+      "rate": 0.7929292929292929
+    },
+    "extractionByField": {
+      "dates.from": {
+        "n": 27,
+        "d": 30,
+        "rate": 0.9
+      },
+      "dates.to": {
+        "n": 24,
+        "d": 28,
+        "rate": 0.8571428571428571
+      },
+      "guests.adults": {
+        "n": 21,
+        "d": 25,
+        "rate": 0.84
+      },
+      "guests.children": {
+        "n": 20,
+        "d": 25,
+        "rate": 0.8
+      },
+      "guests.total": {
+        "n": 9,
+        "d": 30,
+        "rate": 0.3
+      },
+      "budget.amountInr": {
+        "n": 29,
+        "d": 30,
+        "rate": 0.9666666666666667
+      },
+      "language": {
+        "n": 27,
+        "d": 30,
+        "rate": 0.9
+      }
+    },
+    "guardSafety": {
+      "n": 6,
+      "d": 30,
+      "rate": 0.2
+    },
+    "guardAmongGenerated": {
+      "n": 6,
+      "d": 30,
+      "rate": 0.2
+    },
+    "normativeRawGuard": {
+      "n": 6,
+      "d": 30,
+      "rate": 0.2
+    },
+    "unsafeAcceptedByGuard": 0,
+    "quoteByModelCategory": {
+      "n": 28,
+      "d": 30,
+      "rate": 0.9333333333333333
+    },
+    "quoteAll": {
+      "n": 28,
+      "d": 30,
+      "rate": 0.9333333333333333
+    },
+    "quoteRoom": {
+      "n": 19,
+      "d": 20,
+      "rate": 0.95
+    },
+    "fallback": {
+      "n": 2,
+      "d": 30,
+      "rate": 0.06666666666666667
+    },
+    "templateFallback": {
+      "n": 24,
+      "d": 30,
+      "rate": 0.8
+    },
+    "unsorted": {
+      "n": 3,
+      "d": 30,
+      "rate": 0.1
+    },
+    "timeouts": 0,
+    "errors": [
+      {
+        "id": "T21",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      },
+      {
+        "id": "T23",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      }
+    ],
+    "medianLatencyMs": 2932.9942999999985,
+    "p95LatencyMs": 4815.291400000002,
+    "minLatencyMs": 1458.8764999999985,
+    "maxLatencyMs": 9833.3511,
+    "tokens": {
+      "input": 10752,
+      "output": 5027,
+      "reportedRequests": 30,
+      "unknownRequests": 0
+    },
+    "humanReviewCoverage": 30,
+    "generatedDrafts": 30,
+    "humanUnsafe": 7,
+    "humanQualityMean": 2.6333333333333333,
+    "resourceSamples": [
+      {
+        "name": "qwen3:4b-instruct",
+        "size": 3180247121,
+        "size_vram": 3180247121,
+        "context_length": 4096
+      }
+    ]
+  },
+  {
+    "evidence": "baseline",
+    "model": "qwen2.5:7b",
+    "operations": 30,
+    "httpRequests": 60,
+    "rawClassification": {
+      "n": 0,
+      "d": 30,
+      "rate": 0
+    },
+    "validatedClassification": {
+      "n": 0,
+      "d": 30,
+      "rate": 0
+    },
+    "applicationCategory": {
+      "n": 28,
+      "d": 30,
+      "rate": 0.9333333333333333
+    },
+    "acceptableIntent": {
+      "n": 2,
+      "d": 30,
+      "rate": 0.06666666666666667
+    },
+    "complaintPriority": {
+      "n": 4,
+      "d": 4,
+      "rate": 1
+    },
+    "ambiguityUnsorted": {
+      "n": 3,
+      "d": 3,
+      "rate": 1
+    },
+    "wireSchema": {
+      "n": 0,
+      "d": 30,
+      "rate": 0
+    },
+    "zodSchema": {
+      "n": 0,
+      "d": 30,
+      "rate": 0
+    },
+    "extractionZodSchema": {
+      "n": 0,
+      "d": 30,
+      "rate": 0
+    },
+    "extraction": {
+      "n": 0,
+      "d": 198,
+      "rate": 0
+    },
+    "extractionByField": {
+      "dates.from": {
+        "n": 0,
+        "d": 30,
+        "rate": 0
+      },
+      "dates.to": {
+        "n": 0,
+        "d": 28,
+        "rate": 0
+      },
+      "guests.adults": {
+        "n": 0,
+        "d": 25,
+        "rate": 0
+      },
+      "guests.children": {
+        "n": 0,
+        "d": 25,
+        "rate": 0
+      },
+      "guests.total": {
+        "n": 0,
+        "d": 30,
+        "rate": 0
+      },
+      "budget.amountInr": {
+        "n": 0,
+        "d": 30,
+        "rate": 0
+      },
+      "language": {
+        "n": 0,
+        "d": 30,
+        "rate": 0
+      }
+    },
+    "guardSafety": {
+      "n": 0,
+      "d": 30,
+      "rate": 0
+    },
+    "guardAmongGenerated": {
+      "n": 0,
+      "d": 0,
+      "rate": null
+    },
+    "normativeRawGuard": {
+      "n": 0,
+      "d": 30,
+      "rate": 0
+    },
+    "unsafeAcceptedByGuard": 0,
+    "quoteByModelCategory": {
+      "n": 0,
+      "d": 30,
+      "rate": 0
+    },
+    "quoteAll": {
+      "n": 0,
+      "d": 30,
+      "rate": 0
+    },
+    "quoteRoom": {
+      "n": 0,
+      "d": 20,
+      "rate": 0
+    },
+    "fallback": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "templateFallback": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "unsorted": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "timeouts": 30,
+    "errors": [
+      {
+        "id": "T01",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T02",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T03",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T04",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T05",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T06",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T07",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T08",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T09",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T10",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T11",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T12",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T13",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T14",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T15",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T16",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T17",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T18",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T19",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T20",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T21",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T22",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T23",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T24",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T25",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T26",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T27",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T28",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T29",
+        "run": 1,
+        "error": "TIMEOUT"
+      },
+      {
+        "id": "T30",
+        "run": 1,
+        "error": "TIMEOUT"
+      }
+    ],
+    "medianLatencyMs": 20017.468900000007,
+    "p95LatencyMs": 20027.20079999999,
+    "minLatencyMs": 20002.48080000002,
+    "maxLatencyMs": 20030.749599999996,
+    "tokens": {
+      "input": 0,
+      "output": 0,
+      "reportedRequests": 0,
+      "unknownRequests": 60
+    },
+    "humanReviewCoverage": 0,
+    "generatedDrafts": 0,
+    "humanUnsafe": 0,
+    "humanQualityMean": null,
+    "resourceSamples": []
+  },
+  {
+    "evidence": "controlled",
+    "model": "qwen3:4b-instruct",
+    "operations": 30,
+    "httpRequests": 30,
+    "rawClassification": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "validatedClassification": {
+      "n": 29,
+      "d": 30,
+      "rate": 0.9666666666666667
+    },
+    "applicationCategory": {
+      "n": 29,
+      "d": 30,
+      "rate": 0.9666666666666667
+    },
+    "acceptableIntent": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "complaintPriority": {
+      "n": 4,
+      "d": 4,
+      "rate": 1
+    },
+    "ambiguityUnsorted": {
+      "n": 1,
+      "d": 3,
+      "rate": 0.3333333333333333
+    },
+    "wireSchema": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "zodSchema": {
+      "n": 29,
+      "d": 30,
+      "rate": 0.9666666666666667
+    },
+    "extractionZodSchema": {
+      "n": 29,
+      "d": 30,
+      "rate": 0.9666666666666667
+    },
+    "extraction": {
+      "n": 161,
+      "d": 198,
+      "rate": 0.8131313131313131
+    },
+    "extractionByField": {
+      "dates.from": {
+        "n": 27,
+        "d": 30,
+        "rate": 0.9
+      },
+      "dates.to": {
+        "n": 25,
+        "d": 28,
+        "rate": 0.8928571428571429
+      },
+      "guests.adults": {
+        "n": 21,
+        "d": 25,
+        "rate": 0.84
+      },
+      "guests.children": {
+        "n": 21,
+        "d": 25,
+        "rate": 0.84
+      },
+      "guests.total": {
+        "n": 10,
+        "d": 30,
+        "rate": 0.3333333333333333
+      },
+      "budget.amountInr": {
+        "n": 29,
+        "d": 30,
+        "rate": 0.9666666666666667
+      },
+      "language": {
+        "n": 28,
+        "d": 30,
+        "rate": 0.9333333333333333
+      }
+    },
+    "guardSafety": {
+      "n": 8,
+      "d": 30,
+      "rate": 0.26666666666666666
+    },
+    "guardAmongGenerated": {
+      "n": 8,
+      "d": 30,
+      "rate": 0.26666666666666666
+    },
+    "normativeRawGuard": {
+      "n": 8,
+      "d": 30,
+      "rate": 0.26666666666666666
+    },
+    "unsafeAcceptedByGuard": 0,
+    "quoteByModelCategory": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "quoteAll": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "quoteRoom": {
+      "n": 20,
+      "d": 20,
+      "rate": 1
+    },
+    "fallback": {
+      "n": 1,
+      "d": 30,
+      "rate": 0.03333333333333333
+    },
+    "templateFallback": {
+      "n": 22,
+      "d": 30,
+      "rate": 0.7333333333333333
+    },
+    "unsorted": {
+      "n": 2,
+      "d": 30,
+      "rate": 0.06666666666666667
+    },
+    "timeouts": 0,
+    "errors": [
+      {
+        "id": "T21",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      }
+    ],
+    "medianLatencyMs": 2865.9228000000003,
+    "p95LatencyMs": 4238.079299999998,
+    "minLatencyMs": 1580.0354000000007,
+    "maxLatencyMs": 4310.368000000002,
+    "tokens": {
+      "input": 10752,
+      "output": 4812,
+      "reportedRequests": 30,
+      "unknownRequests": 0
+    },
+    "humanReviewCoverage": 30,
+    "generatedDrafts": 30,
+    "humanUnsafe": 7,
+    "humanQualityMean": 2.566666666666667,
+    "resourceSamples": [
+      {
+        "name": "qwen3:4b-instruct",
+        "size": 3180247121,
+        "size_vram": 3180247121,
+        "context_length": 4096
+      }
+    ]
+  },
+  {
+    "evidence": "controlled",
+    "model": "qwen2.5:7b",
+    "operations": 9,
+    "httpRequests": 10,
+    "rawClassification": {
+      "n": 9,
+      "d": 9,
+      "rate": 1
+    },
+    "validatedClassification": {
+      "n": 9,
+      "d": 9,
+      "rate": 1
+    },
+    "applicationCategory": {
+      "n": 9,
+      "d": 9,
+      "rate": 1
+    },
+    "acceptableIntent": {
+      "n": 9,
+      "d": 9,
+      "rate": 1
+    },
+    "complaintPriority": {
+      "n": 0,
+      "d": 0,
+      "rate": null
+    },
+    "ambiguityUnsorted": {
+      "n": 0,
+      "d": 0,
+      "rate": null
+    },
+    "wireSchema": {
+      "n": 9,
+      "d": 9,
+      "rate": 1
+    },
+    "zodSchema": {
+      "n": 9,
+      "d": 9,
+      "rate": 1
+    },
+    "extractionZodSchema": {
+      "n": 9,
+      "d": 9,
+      "rate": 1
+    },
+    "extraction": {
+      "n": 42,
+      "d": 63,
+      "rate": 0.6666666666666666
+    },
+    "extractionByField": {
+      "dates.from": {
+        "n": 8,
+        "d": 9,
+        "rate": 0.8888888888888888
+      },
+      "dates.to": {
+        "n": 8,
+        "d": 9,
+        "rate": 0.8888888888888888
+      },
+      "guests.adults": {
+        "n": 1,
+        "d": 9,
+        "rate": 0.1111111111111111
+      },
+      "guests.children": {
+        "n": 1,
+        "d": 9,
+        "rate": 0.1111111111111111
+      },
+      "guests.total": {
+        "n": 8,
+        "d": 9,
+        "rate": 0.8888888888888888
+      },
+      "budget.amountInr": {
+        "n": 7,
+        "d": 9,
+        "rate": 0.7777777777777778
+      },
+      "language": {
+        "n": 9,
+        "d": 9,
+        "rate": 1
+      }
+    },
+    "guardSafety": {
+      "n": 3,
+      "d": 9,
+      "rate": 0.3333333333333333
+    },
+    "guardAmongGenerated": {
+      "n": 3,
+      "d": 9,
+      "rate": 0.3333333333333333
+    },
+    "normativeRawGuard": {
+      "n": 3,
+      "d": 9,
+      "rate": 0.3333333333333333
+    },
+    "unsafeAcceptedByGuard": 0,
+    "quoteByModelCategory": {
+      "n": 6,
+      "d": 9,
+      "rate": 0.6666666666666666
+    },
+    "quoteAll": {
+      "n": 6,
+      "d": 9,
+      "rate": 0.6666666666666666
+    },
+    "quoteRoom": {
+      "n": 6,
+      "d": 9,
+      "rate": 0.6666666666666666
+    },
+    "fallback": {
+      "n": 0,
+      "d": 9,
+      "rate": 0
+    },
+    "templateFallback": {
+      "n": 6,
+      "d": 9,
+      "rate": 0.6666666666666666
+    },
+    "unsorted": {
+      "n": 0,
+      "d": 9,
+      "rate": 0
+    },
+    "timeouts": 0,
+    "errors": [],
+    "medianLatencyMs": 7589.097999999998,
+    "p95LatencyMs": 16861.225399999996,
+    "minLatencyMs": 6273.752999999997,
+    "maxLatencyMs": 16861.225399999996,
+    "tokens": {
+      "input": 3113,
+      "output": 1502,
+      "reportedRequests": 9,
+      "unknownRequests": 1
+    },
+    "humanReviewCoverage": 9,
+    "generatedDrafts": 9,
+    "humanUnsafe": 0,
+    "humanQualityMean": 2.111111111111111,
+    "resourceSamples": [
+      {
+        "name": "qwen2.5:7b",
+        "size": 5152041860,
+        "size_vram": 4199263764,
+        "context_length": 4096
+      }
+    ]
+  },
+  {
+    "evidence": "extended-baseline",
+    "model": "qwen3:4b-instruct",
+    "operations": 30,
+    "httpRequests": 30,
+    "rawClassification": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "validatedClassification": {
+      "n": 28,
+      "d": 30,
+      "rate": 0.9333333333333333
+    },
+    "applicationCategory": {
+      "n": 29,
+      "d": 30,
+      "rate": 0.9666666666666667
+    },
+    "acceptableIntent": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "complaintPriority": {
+      "n": 4,
+      "d": 4,
+      "rate": 1
+    },
+    "ambiguityUnsorted": {
+      "n": 1,
+      "d": 3,
+      "rate": 0.3333333333333333
+    },
+    "wireSchema": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "zodSchema": {
+      "n": 28,
+      "d": 30,
+      "rate": 0.9333333333333333
+    },
+    "extractionZodSchema": {
+      "n": 28,
+      "d": 30,
+      "rate": 0.9333333333333333
+    },
+    "extraction": {
+      "n": 159,
+      "d": 198,
+      "rate": 0.803030303030303
+    },
+    "extractionByField": {
+      "dates.from": {
+        "n": 27,
+        "d": 30,
+        "rate": 0.9
+      },
+      "dates.to": {
+        "n": 24,
+        "d": 28,
+        "rate": 0.8571428571428571
+      },
+      "guests.adults": {
+        "n": 21,
+        "d": 25,
+        "rate": 0.84
+      },
+      "guests.children": {
+        "n": 20,
+        "d": 25,
+        "rate": 0.8
+      },
+      "guests.total": {
+        "n": 9,
+        "d": 30,
+        "rate": 0.3
+      },
+      "budget.amountInr": {
+        "n": 29,
+        "d": 30,
+        "rate": 0.9666666666666667
+      },
+      "language": {
+        "n": 29,
+        "d": 30,
+        "rate": 0.9666666666666667
+      }
+    },
+    "guardSafety": {
+      "n": 8,
+      "d": 30,
+      "rate": 0.26666666666666666
+    },
+    "guardAmongGenerated": {
+      "n": 8,
+      "d": 30,
+      "rate": 0.26666666666666666
+    },
+    "normativeRawGuard": {
+      "n": 8,
+      "d": 30,
+      "rate": 0.26666666666666666
+    },
+    "unsafeAcceptedByGuard": 0,
+    "quoteByModelCategory": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "quoteAll": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "quoteRoom": {
+      "n": 20,
+      "d": 20,
+      "rate": 1
+    },
+    "fallback": {
+      "n": 2,
+      "d": 30,
+      "rate": 0.06666666666666667
+    },
+    "templateFallback": {
+      "n": 22,
+      "d": 30,
+      "rate": 0.7333333333333333
+    },
+    "unsorted": {
+      "n": 3,
+      "d": 30,
+      "rate": 0.1
+    },
+    "timeouts": 0,
+    "errors": [
+      {
+        "id": "T21",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      },
+      {
+        "id": "T23",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      }
+    ],
+    "medianLatencyMs": 2780.268649999998,
+    "p95LatencyMs": 4030.019800000002,
+    "minLatencyMs": 1311.196299999996,
+    "maxLatencyMs": 10994.047400000001,
+    "tokens": {
+      "input": 10752,
+      "output": 4699,
+      "reportedRequests": 30,
+      "unknownRequests": 0
+    },
+    "humanReviewCoverage": 30,
+    "generatedDrafts": 30,
+    "humanUnsafe": 7,
+    "humanQualityMean": 2.3,
+    "resourceSamples": [
+      {
+        "name": "qwen3:4b-instruct",
+        "size": 3180247121,
+        "size_vram": 3180247121,
+        "context_length": 4096
+      }
+    ]
+  },
+  {
+    "evidence": "extended-baseline",
+    "model": "qwen2.5:7b",
+    "operations": 30,
+    "httpRequests": 30,
+    "rawClassification": {
+      "n": 26,
+      "d": 30,
+      "rate": 0.8666666666666667
+    },
+    "validatedClassification": {
+      "n": 24,
+      "d": 30,
+      "rate": 0.8
+    },
+    "applicationCategory": {
+      "n": 26,
+      "d": 30,
+      "rate": 0.8666666666666667
+    },
+    "acceptableIntent": {
+      "n": 26,
+      "d": 30,
+      "rate": 0.8666666666666667
+    },
+    "complaintPriority": {
+      "n": 1,
+      "d": 4,
+      "rate": 0.25
+    },
+    "ambiguityUnsorted": {
+      "n": 2,
+      "d": 3,
+      "rate": 0.6666666666666666
+    },
+    "wireSchema": {
+      "n": 30,
+      "d": 30,
+      "rate": 1
+    },
+    "zodSchema": {
+      "n": 28,
+      "d": 30,
+      "rate": 0.9333333333333333
+    },
+    "extractionZodSchema": {
+      "n": 28,
+      "d": 30,
+      "rate": 0.9333333333333333
+    },
+    "extraction": {
+      "n": 132,
+      "d": 198,
+      "rate": 0.6666666666666666
+    },
+    "extractionByField": {
+      "dates.from": {
+        "n": 23,
+        "d": 30,
+        "rate": 0.7666666666666667
+      },
+      "dates.to": {
+        "n": 22,
+        "d": 28,
+        "rate": 0.7857142857142857
+      },
+      "guests.adults": {
+        "n": 6,
+        "d": 25,
+        "rate": 0.24
+      },
+      "guests.children": {
+        "n": 6,
+        "d": 25,
+        "rate": 0.24
+      },
+      "guests.total": {
+        "n": 23,
+        "d": 30,
+        "rate": 0.7666666666666667
+      },
+      "budget.amountInr": {
+        "n": 24,
+        "d": 30,
+        "rate": 0.8
+      },
+      "language": {
+        "n": 28,
+        "d": 30,
+        "rate": 0.9333333333333333
+      }
+    },
+    "guardSafety": {
+      "n": 5,
+      "d": 30,
+      "rate": 0.16666666666666666
+    },
+    "guardAmongGenerated": {
+      "n": 5,
+      "d": 29,
+      "rate": 0.1724137931034483
+    },
+    "normativeRawGuard": {
+      "n": 7,
+      "d": 30,
+      "rate": 0.23333333333333334
+    },
+    "unsafeAcceptedByGuard": 0,
+    "quoteByModelCategory": {
+      "n": 16,
+      "d": 30,
+      "rate": 0.5333333333333333
+    },
+    "quoteAll": {
+      "n": 17,
+      "d": 30,
+      "rate": 0.5666666666666667
+    },
+    "quoteRoom": {
+      "n": 8,
+      "d": 20,
+      "rate": 0.4
+    },
+    "fallback": {
+      "n": 2,
+      "d": 30,
+      "rate": 0.06666666666666667
+    },
+    "templateFallback": {
+      "n": 25,
+      "d": 30,
+      "rate": 0.8333333333333334
+    },
+    "unsorted": {
+      "n": 3,
+      "d": 30,
+      "rate": 0.1
+    },
+    "timeouts": 0,
+    "errors": [
+      {
+        "id": "T13",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      },
+      {
+        "id": "T27",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      }
+    ],
+    "medianLatencyMs": 6989.011000000013,
+    "p95LatencyMs": 8701.429700000008,
+    "minLatencyMs": 5352.390700000018,
+    "maxLatencyMs": 16416.3842,
+    "tokens": {
+      "input": 10752,
+      "output": 4846,
+      "reportedRequests": 30,
+      "unknownRequests": 0
+    },
+    "humanReviewCoverage": 29,
+    "generatedDrafts": 29,
+    "humanUnsafe": 7,
+    "humanQualityMean": 2.1724137931034484,
+    "resourceSamples": [
+      {
+        "name": "qwen2.5:7b",
+        "size": 5152041860,
+        "size_vram": 4199263764,
+        "context_length": 4096
+      }
+    ]
+  },
+  {
+    "evidence": "extended-controlled",
+    "model": "qwen3:4b-instruct",
+    "operations": 90,
+    "httpRequests": 90,
+    "rawClassification": {
+      "n": 90,
+      "d": 90,
+      "rate": 1
+    },
+    "validatedClassification": {
+      "n": 87,
+      "d": 90,
+      "rate": 0.9666666666666667
+    },
+    "applicationCategory": {
+      "n": 87,
+      "d": 90,
+      "rate": 0.9666666666666667
+    },
+    "acceptableIntent": {
+      "n": 90,
+      "d": 90,
+      "rate": 1
+    },
+    "complaintPriority": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "ambiguityUnsorted": {
+      "n": 3,
+      "d": 9,
+      "rate": 0.3333333333333333
+    },
+    "wireSchema": {
+      "n": 90,
+      "d": 90,
+      "rate": 1
+    },
+    "zodSchema": {
+      "n": 87,
+      "d": 90,
+      "rate": 0.9666666666666667
+    },
+    "extractionZodSchema": {
+      "n": 87,
+      "d": 90,
+      "rate": 0.9666666666666667
+    },
+    "extraction": {
+      "n": 476,
+      "d": 594,
+      "rate": 0.8013468013468014
+    },
+    "extractionByField": {
+      "dates.from": {
+        "n": 81,
+        "d": 90,
+        "rate": 0.9
+      },
+      "dates.to": {
+        "n": 75,
+        "d": 84,
+        "rate": 0.8928571428571429
+      },
+      "guests.adults": {
+        "n": 63,
+        "d": 75,
+        "rate": 0.84
+      },
+      "guests.children": {
+        "n": 61,
+        "d": 75,
+        "rate": 0.8133333333333334
+      },
+      "guests.total": {
+        "n": 28,
+        "d": 90,
+        "rate": 0.3111111111111111
+      },
+      "budget.amountInr": {
+        "n": 87,
+        "d": 90,
+        "rate": 0.9666666666666667
+      },
+      "language": {
+        "n": 81,
+        "d": 90,
+        "rate": 0.9
+      }
+    },
+    "guardSafety": {
+      "n": 25,
+      "d": 90,
+      "rate": 0.2777777777777778
+    },
+    "guardAmongGenerated": {
+      "n": 25,
+      "d": 90,
+      "rate": 0.2777777777777778
+    },
+    "normativeRawGuard": {
+      "n": 25,
+      "d": 90,
+      "rate": 0.2777777777777778
+    },
+    "unsafeAcceptedByGuard": 1,
+    "quoteByModelCategory": {
+      "n": 88,
+      "d": 90,
+      "rate": 0.9777777777777777
+    },
+    "quoteAll": {
+      "n": 88,
+      "d": 90,
+      "rate": 0.9777777777777777
+    },
+    "quoteRoom": {
+      "n": 60,
+      "d": 60,
+      "rate": 1
+    },
+    "fallback": {
+      "n": 3,
+      "d": 90,
+      "rate": 0.03333333333333333
+    },
+    "templateFallback": {
+      "n": 65,
+      "d": 90,
+      "rate": 0.7222222222222222
+    },
+    "unsorted": {
+      "n": 6,
+      "d": 90,
+      "rate": 0.06666666666666667
+    },
+    "timeouts": 0,
+    "errors": [
+      {
+        "id": "T21",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      },
+      {
+        "id": "T21",
+        "run": 2,
+        "error": "INVALID_RESPONSE"
+      },
+      {
+        "id": "T21",
+        "run": 3,
+        "error": "INVALID_RESPONSE"
+      }
+    ],
+    "medianLatencyMs": 2800.172000000006,
+    "p95LatencyMs": 4138.9342999999935,
+    "minLatencyMs": 1288.6612000000023,
+    "maxLatencyMs": 4553.998099999997,
+    "tokens": {
+      "input": 32256,
+      "output": 14463,
+      "reportedRequests": 90,
+      "unknownRequests": 0
+    },
+    "humanReviewCoverage": 90,
+    "generatedDrafts": 90,
+    "humanUnsafe": 28,
+    "humanQualityMean": 2.2333333333333334,
+    "resourceSamples": [
+      {
+        "name": "qwen3:4b-instruct",
+        "size": 3180247121,
+        "size_vram": 3180247121,
+        "context_length": 4096
+      }
+    ]
+  },
+  {
+    "evidence": "extended-controlled",
+    "model": "qwen2.5:7b",
+    "operations": 90,
+    "httpRequests": 90,
+    "rawClassification": {
+      "n": 81,
+      "d": 90,
+      "rate": 0.9
+    },
+    "validatedClassification": {
+      "n": 78,
+      "d": 90,
+      "rate": 0.8666666666666667
+    },
+    "applicationCategory": {
+      "n": 81,
+      "d": 90,
+      "rate": 0.9
+    },
+    "acceptableIntent": {
+      "n": 81,
+      "d": 90,
+      "rate": 0.9
+    },
+    "complaintPriority": {
+      "n": 3,
+      "d": 12,
+      "rate": 0.25
+    },
+    "ambiguityUnsorted": {
+      "n": 9,
+      "d": 9,
+      "rate": 1
+    },
+    "wireSchema": {
+      "n": 90,
+      "d": 90,
+      "rate": 1
+    },
+    "zodSchema": {
+      "n": 87,
+      "d": 90,
+      "rate": 0.9666666666666667
+    },
+    "extractionZodSchema": {
+      "n": 87,
+      "d": 90,
+      "rate": 0.9666666666666667
+    },
+    "extraction": {
+      "n": 411,
+      "d": 594,
+      "rate": 0.6919191919191919
+    },
+    "extractionByField": {
+      "dates.from": {
+        "n": 70,
+        "d": 90,
+        "rate": 0.7777777777777778
+      },
+      "dates.to": {
+        "n": 67,
+        "d": 84,
+        "rate": 0.7976190476190477
+      },
+      "guests.adults": {
+        "n": 18,
+        "d": 75,
+        "rate": 0.24
+      },
+      "guests.children": {
+        "n": 18,
+        "d": 75,
+        "rate": 0.24
+      },
+      "guests.total": {
+        "n": 69,
+        "d": 90,
+        "rate": 0.7666666666666667
+      },
+      "budget.amountInr": {
+        "n": 82,
+        "d": 90,
+        "rate": 0.9111111111111111
+      },
+      "language": {
+        "n": 87,
+        "d": 90,
+        "rate": 0.9666666666666667
+      }
+    },
+    "guardSafety": {
+      "n": 30,
+      "d": 90,
+      "rate": 0.3333333333333333
+    },
+    "guardAmongGenerated": {
+      "n": 30,
+      "d": 89,
+      "rate": 0.33707865168539325
+    },
+    "normativeRawGuard": {
+      "n": 36,
+      "d": 90,
+      "rate": 0.4
+    },
+    "unsafeAcceptedByGuard": 1,
+    "quoteByModelCategory": {
+      "n": 51,
+      "d": 90,
+      "rate": 0.5666666666666667
+    },
+    "quoteAll": {
+      "n": 57,
+      "d": 90,
+      "rate": 0.6333333333333333
+    },
+    "quoteRoom": {
+      "n": 27,
+      "d": 60,
+      "rate": 0.45
+    },
+    "fallback": {
+      "n": 3,
+      "d": 90,
+      "rate": 0.03333333333333333
+    },
+    "templateFallback": {
+      "n": 60,
+      "d": 90,
+      "rate": 0.6666666666666666
+    },
+    "unsorted": {
+      "n": 15,
+      "d": 90,
+      "rate": 0.16666666666666666
+    },
+    "timeouts": 0,
+    "errors": [
+      {
+        "id": "T13",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      },
+      {
+        "id": "T13",
+        "run": 2,
+        "error": "INVALID_RESPONSE"
+      },
+      {
+        "id": "T13",
+        "run": 3,
+        "error": "INVALID_RESPONSE"
+      }
+    ],
+    "medianLatencyMs": 6895.191699999996,
+    "p95LatencyMs": 8331.87579999998,
+    "minLatencyMs": 4223.832999999984,
+    "maxLatencyMs": 8839.653099999996,
+    "tokens": {
+      "input": 32256,
+      "output": 14370,
+      "reportedRequests": 90,
+      "unknownRequests": 0
+    },
+    "humanReviewCoverage": 89,
+    "generatedDrafts": 89,
+    "humanUnsafe": 14,
+    "humanQualityMean": 2.539325842696629,
+    "resourceSamples": [
+      {
+        "name": "qwen2.5:7b",
+        "size": 5152041860,
+        "size_vram": 4199263764,
+        "context_length": 4096
+      }
+    ]
+  },
+  {
+    "evidence": "improved-single",
+    "model": "qwen3:4b-instruct",
+    "operations": 12,
+    "httpRequests": 12,
+    "rawClassification": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "validatedClassification": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "applicationCategory": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "acceptableIntent": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "complaintPriority": {
+      "n": 2,
+      "d": 2,
+      "rate": 1
+    },
+    "ambiguityUnsorted": {
+      "n": 1,
+      "d": 2,
+      "rate": 0.5
+    },
+    "wireSchema": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "zodSchema": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "extractionZodSchema": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "extraction": {
+      "n": 68,
+      "d": 78,
+      "rate": 0.8717948717948718
+    },
+    "extractionByField": {
+      "dates.from": {
+        "n": 10,
+        "d": 12,
+        "rate": 0.8333333333333334
+      },
+      "dates.to": {
+        "n": 9,
+        "d": 10,
+        "rate": 0.9
+      },
+      "guests.adults": {
+        "n": 8,
+        "d": 10,
+        "rate": 0.8
+      },
+      "guests.children": {
+        "n": 8,
+        "d": 10,
+        "rate": 0.8
+      },
+      "guests.total": {
+        "n": 9,
+        "d": 12,
+        "rate": 0.75
+      },
+      "budget.amountInr": {
+        "n": 12,
+        "d": 12,
+        "rate": 1
+      },
+      "language": {
+        "n": 12,
+        "d": 12,
+        "rate": 1
+      }
+    },
+    "guardSafety": {
+      "n": 5,
+      "d": 12,
+      "rate": 0.4166666666666667
+    },
+    "guardAmongGenerated": {
+      "n": 5,
+      "d": 12,
+      "rate": 0.4166666666666667
+    },
+    "normativeRawGuard": {
+      "n": 5,
+      "d": 12,
+      "rate": 0.4166666666666667
+    },
+    "unsafeAcceptedByGuard": 0,
+    "quoteByModelCategory": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "quoteAll": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "quoteRoom": {
+      "n": 8,
+      "d": 8,
+      "rate": 1
+    },
+    "fallback": {
+      "n": 0,
+      "d": 12,
+      "rate": 0
+    },
+    "templateFallback": {
+      "n": 7,
+      "d": 12,
+      "rate": 0.5833333333333334
+    },
+    "unsorted": {
+      "n": 1,
+      "d": 12,
+      "rate": 0.08333333333333333
+    },
+    "timeouts": 0,
+    "errors": [],
+    "medianLatencyMs": 3086.120149999997,
+    "p95LatencyMs": 4067.0337,
+    "minLatencyMs": 2129.562,
+    "maxLatencyMs": 4067.0337,
+    "tokens": {
+      "input": 6081,
+      "output": 2073,
+      "reportedRequests": 12,
+      "unknownRequests": 0
+    },
+    "humanReviewCoverage": 12,
+    "generatedDrafts": 12,
+    "humanUnsafe": 1,
+    "humanQualityMean": 3.0833333333333335,
+    "resourceSamples": [
+      {
+        "name": "qwen3:4b-instruct",
+        "size": 3180247121,
+        "size_vram": 3180247121,
+        "context_length": 4096
+      }
+    ]
+  },
+  {
+    "evidence": "improved-single",
+    "model": "qwen2.5:7b",
+    "operations": 12,
+    "httpRequests": 12,
+    "rawClassification": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "validatedClassification": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "applicationCategory": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "acceptableIntent": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "complaintPriority": {
+      "n": 0,
+      "d": 2,
+      "rate": 0
+    },
+    "ambiguityUnsorted": {
+      "n": 2,
+      "d": 2,
+      "rate": 1
+    },
+    "wireSchema": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "zodSchema": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "extractionZodSchema": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "extraction": {
+      "n": 54,
+      "d": 78,
+      "rate": 0.6923076923076923
+    },
+    "extractionByField": {
+      "dates.from": {
+        "n": 8,
+        "d": 12,
+        "rate": 0.6666666666666666
+      },
+      "dates.to": {
+        "n": 8,
+        "d": 10,
+        "rate": 0.8
+      },
+      "guests.adults": {
+        "n": 4,
+        "d": 10,
+        "rate": 0.4
+      },
+      "guests.children": {
+        "n": 4,
+        "d": 10,
+        "rate": 0.4
+      },
+      "guests.total": {
+        "n": 8,
+        "d": 12,
+        "rate": 0.6666666666666666
+      },
+      "budget.amountInr": {
+        "n": 10,
+        "d": 12,
+        "rate": 0.8333333333333334
+      },
+      "language": {
+        "n": 12,
+        "d": 12,
+        "rate": 1
+      }
+    },
+    "guardSafety": {
+      "n": 5,
+      "d": 12,
+      "rate": 0.4166666666666667
+    },
+    "guardAmongGenerated": {
+      "n": 5,
+      "d": 12,
+      "rate": 0.4166666666666667
+    },
+    "normativeRawGuard": {
+      "n": 5,
+      "d": 12,
+      "rate": 0.4166666666666667
+    },
+    "unsafeAcceptedByGuard": 0,
+    "quoteByModelCategory": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "quoteAll": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "quoteRoom": {
+      "n": 8,
+      "d": 8,
+      "rate": 1
+    },
+    "fallback": {
+      "n": 0,
+      "d": 12,
+      "rate": 0
+    },
+    "templateFallback": {
+      "n": 7,
+      "d": 12,
+      "rate": 0.5833333333333334
+    },
+    "unsorted": {
+      "n": 3,
+      "d": 12,
+      "rate": 0.25
+    },
+    "timeouts": 0,
+    "errors": [],
+    "medianLatencyMs": 6792.33530000001,
+    "p95LatencyMs": 14432.257200000007,
+    "minLatencyMs": 4435.2166,
+    "maxLatencyMs": 14432.257200000007,
+    "tokens": {
+      "input": 6081,
+      "output": 1968,
+      "reportedRequests": 12,
+      "unknownRequests": 0
+    },
+    "humanReviewCoverage": 12,
+    "generatedDrafts": 12,
+    "humanUnsafe": 2,
+    "humanQualityMean": 2.9166666666666665,
+    "resourceSamples": [
+      {
+        "name": "qwen2.5:7b",
+        "size": 5152041860,
+        "size_vram": 4199263764,
+        "context_length": 4096
+      }
+    ]
+  },
+  {
+    "evidence": "two-call",
+    "model": "qwen3:4b-instruct",
+    "operations": 12,
+    "httpRequests": 22,
+    "rawClassification": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "validatedClassification": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "applicationCategory": {
+      "n": 11,
+      "d": 12,
+      "rate": 0.9166666666666666
+    },
+    "acceptableIntent": {
+      "n": 12,
+      "d": 12,
+      "rate": 1
+    },
+    "complaintPriority": {
+      "n": 2,
+      "d": 2,
+      "rate": 1
+    },
+    "ambiguityUnsorted": {
+      "n": 1,
+      "d": 2,
+      "rate": 0.5
+    },
+    "wireSchema": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "zodSchema": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "extractionZodSchema": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "extraction": {
+      "n": 63,
+      "d": 78,
+      "rate": 0.8076923076923077
+    },
+    "extractionByField": {
+      "dates.from": {
+        "n": 10,
+        "d": 12,
+        "rate": 0.8333333333333334
+      },
+      "dates.to": {
+        "n": 8,
+        "d": 10,
+        "rate": 0.8
+      },
+      "guests.adults": {
+        "n": 8,
+        "d": 10,
+        "rate": 0.8
+      },
+      "guests.children": {
+        "n": 8,
+        "d": 10,
+        "rate": 0.8
+      },
+      "guests.total": {
+        "n": 5,
+        "d": 12,
+        "rate": 0.4166666666666667
+      },
+      "budget.amountInr": {
+        "n": 12,
+        "d": 12,
+        "rate": 1
+      },
+      "language": {
+        "n": 12,
+        "d": 12,
+        "rate": 1
+      }
+    },
+    "guardSafety": {
+      "n": 4,
+      "d": 12,
+      "rate": 0.3333333333333333
+    },
+    "guardAmongGenerated": {
+      "n": 4,
+      "d": 10,
+      "rate": 0.4
+    },
+    "normativeRawGuard": {
+      "n": 4,
+      "d": 12,
+      "rate": 0.3333333333333333
+    },
+    "unsafeAcceptedByGuard": 0,
+    "quoteByModelCategory": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "quoteAll": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "quoteRoom": {
+      "n": 6,
+      "d": 8,
+      "rate": 0.75
+    },
+    "fallback": {
+      "n": 2,
+      "d": 12,
+      "rate": 0.16666666666666666
+    },
+    "templateFallback": {
+      "n": 8,
+      "d": 12,
+      "rate": 0.6666666666666666
+    },
+    "unsorted": {
+      "n": 2,
+      "d": 12,
+      "rate": 0.16666666666666666
+    },
+    "timeouts": 0,
+    "errors": [
+      {
+        "id": "T21",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      },
+      {
+        "id": "T27",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      }
+    ],
+    "medianLatencyMs": 7763.20275,
+    "p95LatencyMs": 12147.336800000005,
+    "minLatencyMs": 2501.4560000000056,
+    "maxLatencyMs": 12147.336800000005,
+    "tokens": {
+      "input": 7278,
+      "output": 4580,
+      "reportedRequests": 22,
+      "unknownRequests": 0
+    },
+    "humanReviewCoverage": 10,
+    "generatedDrafts": 10,
+    "humanUnsafe": 0,
+    "humanQualityMean": 4.3,
+    "resourceSamples": [
+      {
+        "name": "qwen3:4b-instruct",
+        "size": 3180247121,
+        "size_vram": 3180247121,
+        "context_length": 4096
+      }
+    ]
+  },
+  {
+    "evidence": "two-call",
+    "model": "qwen2.5:7b",
+    "operations": 12,
+    "httpRequests": 22,
+    "rawClassification": {
+      "n": 11,
+      "d": 12,
+      "rate": 0.9166666666666666
+    },
+    "validatedClassification": {
+      "n": 9,
+      "d": 12,
+      "rate": 0.75
+    },
+    "applicationCategory": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "acceptableIntent": {
+      "n": 11,
+      "d": 12,
+      "rate": 0.9166666666666666
+    },
+    "complaintPriority": {
+      "n": 2,
+      "d": 2,
+      "rate": 1
+    },
+    "ambiguityUnsorted": {
+      "n": 2,
+      "d": 2,
+      "rate": 1
+    },
+    "wireSchema": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "zodSchema": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "extractionZodSchema": {
+      "n": 10,
+      "d": 12,
+      "rate": 0.8333333333333334
+    },
+    "extraction": {
+      "n": 51,
+      "d": 78,
+      "rate": 0.6538461538461539
+    },
+    "extractionByField": {
+      "dates.from": {
+        "n": 9,
+        "d": 12,
+        "rate": 0.75
+      },
+      "dates.to": {
+        "n": 8,
+        "d": 10,
+        "rate": 0.8
+      },
+      "guests.adults": {
+        "n": 4,
+        "d": 10,
+        "rate": 0.4
+      },
+      "guests.children": {
+        "n": 4,
+        "d": 10,
+        "rate": 0.4
+      },
+      "guests.total": {
+        "n": 8,
+        "d": 12,
+        "rate": 0.6666666666666666
+      },
+      "budget.amountInr": {
+        "n": 6,
+        "d": 12,
+        "rate": 0.5
+      },
+      "language": {
+        "n": 12,
+        "d": 12,
+        "rate": 1
+      }
+    },
+    "guardSafety": {
+      "n": 4,
+      "d": 12,
+      "rate": 0.3333333333333333
+    },
+    "guardAmongGenerated": {
+      "n": 4,
+      "d": 10,
+      "rate": 0.4
+    },
+    "normativeRawGuard": {
+      "n": 3,
+      "d": 12,
+      "rate": 0.25
+    },
+    "unsafeAcceptedByGuard": 0,
+    "quoteByModelCategory": {
+      "n": 9,
+      "d": 12,
+      "rate": 0.75
+    },
+    "quoteAll": {
+      "n": 7,
+      "d": 12,
+      "rate": 0.5833333333333334
+    },
+    "quoteRoom": {
+      "n": 3,
+      "d": 8,
+      "rate": 0.375
+    },
+    "fallback": {
+      "n": 2,
+      "d": 12,
+      "rate": 0.16666666666666666
+    },
+    "templateFallback": {
+      "n": 8,
+      "d": 12,
+      "rate": 0.6666666666666666
+    },
+    "unsorted": {
+      "n": 4,
+      "d": 12,
+      "rate": 0.3333333333333333
+    },
+    "timeouts": 0,
+    "errors": [
+      {
+        "id": "T06",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      },
+      {
+        "id": "T21",
+        "run": 1,
+        "error": "INVALID_RESPONSE"
+      }
+    ],
+    "medianLatencyMs": 8282.903700000003,
+    "p95LatencyMs": 10871.825199999992,
+    "minLatencyMs": 5417.144,
+    "maxLatencyMs": 10871.825199999992,
+    "tokens": {
+      "input": 7154,
+      "output": 2221,
+      "reportedRequests": 22,
+      "unknownRequests": 0
+    },
+    "humanReviewCoverage": 10,
+    "generatedDrafts": 10,
+    "humanUnsafe": 2,
+    "humanQualityMean": 2.8,
+    "resourceSamples": [
+      {
+        "name": "qwen2.5:7b",
+        "size": 5152041860,
+        "size_vram": 4199263764,
+        "context_length": 4096
+      }
+    ]
+  }
+]

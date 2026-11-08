@@ -3,7 +3,7 @@ import { z } from "zod";
 import { readFileSync, readdirSync } from "node:fs";
 import { generateText } from "ai";
 import { selectProvider } from "./factory";
-import { executeStructured } from "./execute";
+import { executeStructured, ATTEMPT_TIMEOUT_MS, LOCAL_ATTEMPT_TIMEOUT_MS } from "./execute";
 vi.mock("ai", async (original) => ({
   ...(await original<typeof import("ai")>()),
   generateText: vi.fn(),
@@ -91,15 +91,45 @@ describe("provider transport", () => {
     expect(result).toMatchObject({ error: "RATE_LIMIT", attempts: 1 });
     expect(JSON.stringify(result)).not.toMatch(/secret|contact|api-key/);
   });
-  it("times out and aborts twice", async () => {
+  it("gives local inference thirty minutes per attempt and aborts twice", async () => {
     vi.useFakeTimers();
     vi.mocked(generateText).mockImplementation(() => new Promise(() => {}));
     const pending = executeStructured(request, local());
-    await vi.advanceTimersByTimeAsync(20_000);
-    expect(await pending).toMatchObject({ error: "TIMEOUT", attempts: 2, latencyMs: 20_000 });
+    await vi.advanceTimersByTimeAsync(LOCAL_ATTEMPT_TIMEOUT_MS * 2);
+    expect(await pending).toMatchObject({
+      error: "TIMEOUT",
+      attempts: 2,
+      latencyMs: LOCAL_ATTEMPT_TIMEOUT_MS * 2,
+    });
     expect(vi.mocked(generateText).mock.calls.every(([args]) => args.abortSignal?.aborted)).toBe(
       true,
     );
+  });
+  it("does not abort local work after the hosted ten-second limit", async () => {
+    vi.useFakeTimers();
+    vi.mocked(generateText).mockImplementation(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ output: { answer: "slow local success" } } as never), 60_000),
+        ),
+    );
+    const pending = executeStructured(request, local());
+    await vi.advanceTimersByTimeAsync(ATTEMPT_TIMEOUT_MS);
+    expect(vi.mocked(generateText).mock.calls[0][0].abortSignal?.aborted).toBe(false);
+    await vi.advanceTimersByTimeAsync(50_000);
+    expect(await pending).toMatchObject({ kind: "success", attempts: 1, latencyMs: 60_000 });
+  });
+  it("keeps hosted providers at ten seconds per attempt", async () => {
+    vi.useFakeTimers();
+    vi.mocked(generateText).mockImplementation(() => new Promise(() => {}));
+    const hosted = selectProvider({
+      AI_PROVIDER: "anthropic",
+      AI_MODEL: "synthetic",
+      ANTHROPIC_API_KEY: "synthetic",
+    });
+    const pending = executeStructured(request, hosted);
+    await vi.advanceTimersByTimeAsync(ATTEMPT_TIMEOUT_MS * 2);
+    expect(await pending).toMatchObject({ error: "TIMEOUT", attempts: 2, latencyMs: 20_000 });
   });
   it("invalid keys are not retried", async () => {
     vi.mocked(generateText).mockRejectedValue({ statusCode: 401 });

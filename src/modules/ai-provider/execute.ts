@@ -2,6 +2,8 @@ import { generateText, Output } from "ai";
 import { selectProvider } from "./factory";
 import type { ProviderError, ProviderResult, ProviderSelection, StructuredRequest } from "./types";
 export const ATTEMPT_TIMEOUT_MS = 10_000;
+// Local laptop inference includes cold loading and CPU offload; hosted calls keep a short budget.
+export const LOCAL_ATTEMPT_TIMEOUT_MS = 30 * 60 * 1000;
 /** Inspect transport metadata only; SDK messages and bodies may contain secrets/PII. */
 export function transportError(error: unknown): {
   code: ProviderError;
@@ -54,6 +56,8 @@ export async function executeStructured<T>(
   });
   if (selection.kind === "rules-only") return { kind: "rules-only", ...meta() };
   if (selection.kind === "error") return { kind: "error", error: "NOT_CONFIGURED", ...meta() };
+  const attemptTimeoutMs =
+    selection.provider === "local" ? LOCAL_ATTEMPT_TIMEOUT_MS : ATTEMPT_TIMEOUT_MS;
   for (let i = 0; i < 2; i++) {
     attempts++;
     const controller = new AbortController();
@@ -63,7 +67,7 @@ export async function executeStructured<T>(
         timer = setTimeout(() => {
           controller.abort();
           reject(new DOMException("Timed out", "TimeoutError"));
-        }, ATTEMPT_TIMEOUT_MS);
+        }, attemptTimeoutMs);
       });
       const result = await Promise.race([
         generateText({

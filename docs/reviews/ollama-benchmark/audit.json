@@ -1,0 +1,50 @@
+{
+  "passed": true,
+  "operations": 387,
+  "recordedChatAttempts": 438,
+  "interruptedUnrecordedChatAttempts": 1,
+  "totalChatAttempts": 439,
+  "returnedEnvelopes": 377,
+  "maxPromptTokens": 704,
+  "maxCompletionTokens": 489,
+  "configuredContext": 4096,
+  "configuredOutputCap": 1800,
+  "contextHeadroomVerified": true,
+  "rawEnvelopeContentIdentityVerified": true,
+  "independentTwoMessageRequestsVerified": true,
+  "primaryThreeFullPassesVerified": true,
+  "allStartedRerunRequestsAccountedFor": true,
+  "allGeneratedDraftsReviewed": true,
+  "counts": [
+    {
+      "evidence": "baseline",
+      "operations": 60,
+      "chatAttempts": 90
+    },
+    {
+      "evidence": "controlled",
+      "operations": 39,
+      "chatAttempts": 40
+    },
+    {
+      "evidence": "extended-baseline",
+      "operations": 60,
+      "chatAttempts": 60
+    },
+    {
+      "evidence": "extended-controlled",
+      "operations": 180,
+      "chatAttempts": 180
+    },
+    {
+      "evidence": "improved-single",
+      "operations": 24,
+      "chatAttempts": 24
+    },
+    {
+      "evidence": "two-call",
+      "operations": 24,
+      "chatAttempts": 44
+    }
+  ]
+}

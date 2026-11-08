@@ -3,6 +3,10 @@
 Scrum master: Aditya Pawar. Deadline: 9 Nov 2026, 23:59 IST.
 Developers update this file after significant changes. Keep entries one line.
 
+## Codex R1–R4 Ollama benchmark (2026-11-08)
+- Isolated branch `codex/r1-r4-ollama-benchmark` at implementation base `39d168f`; fetched main remains `e1e3d92`. Original 30-case/model ten-second baseline and interrupted controlled evidence preserved; Ollama 0.40.15 and both Q4_K_M model digests verified on RTX 4050/6141 MiB. No database calls, paid providers, model downloads or sends.
+- Complete: 439 live chat attempts (387 completed operations, retries and one user interruption), 30 cases with three controlled passes/model plus two 12-case architecture experiments; raw/schema/application/quality/GPU evidence audited. Recommendation C: improve single call with Qwen3 4B locally; no architecture change implemented. Typecheck, scoped lint and 321 unit tests pass. Only authorized production change is local timeout 30 minutes versus hosted 10 seconds; no DB access. Report: `docs/reviews/r1-r4-ollama-model-benchmark.md`.
+
 ## Codex S2 R1–R4 (2026-11-08)
 - M0: fetched `origin/main`; base `e1e3d92d80ccfa6b2e89dd4fd23166bde11ba944` already equals `codex/dev`, including B10/stay builder; isolated Codex worktree now uses `codex/r1-r4-ai-routing`. Scrum master's final handoff assigns ai-provider, ai-router and R2 enquiry internals; other modules/schema stay read-only. User-supplied untracked final handoff preserved.
 - M0 gates: baseline typecheck/lint, 232 unit tests and production build pass (tests/build require subprocess permission on Windows); read-only repository safety guard verified isolated TEST_DATABASE_URL and PostgreSQL 18.6 before writes. No hosted provider keys/local endpoint configured; Ollama executable absent. No live-model results claimed.
