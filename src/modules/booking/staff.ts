@@ -1,9 +1,17 @@
 import { and, asc, desc, eq, gte, inArray, lte, type SQL } from "drizzle-orm";
-import { bookingNights, bookingRooms, bookings } from "@/db/schema";
+import { bookingEvents, bookingNights, bookingRooms, bookings, payments } from "@/db/schema";
 import type { Tx } from "@/lib/db";
 import { getDb } from "@/lib/db";
 import { promoCodeInTx } from "@/modules/pricing/internal";
-import type { Booking, BookingStatus, ListForStaffResult, ParsedListForStaffInput } from "./index";
+import type {
+  Booking,
+  BookingStatus,
+  GetForStaffResult,
+  ListForStaffResult,
+  ListRefundPendingResult,
+  ParsedListForStaffInput,
+  StaffPayment,
+} from "./index";
 
 /** Batched snapshot read: four queries for any number of bookings, in the order of `rows`. */
 export async function readBookings(
@@ -91,5 +99,61 @@ export async function listForStaff(input: ParsedListForStaffInput): Promise<List
       .orderBy(desc(bookings.createdAt))
       .limit(input.limit);
     return { ok: true, bookings: await readBookings(tx, rows) } as const;
+  });
+}
+
+/** One booking for staff with its audit timeline (oldest first) and payments. */
+export async function getForStaff(ref: string): Promise<GetForStaffResult> {
+  return getDb().transaction(async (tx) => {
+    const [row] = await tx.select().from(bookings).where(eq(bookings.ref, ref));
+    if (!row) return { ok: false, code: "NOT_FOUND" } as const;
+    const [b] = await readBookings(tx, [row]);
+    const events = await tx
+      .select()
+      .from(bookingEvents)
+      .where(eq(bookingEvents.bookingId, row.id))
+      .orderBy(asc(bookingEvents.at));
+    const paid = await tx
+      .select()
+      .from(payments)
+      .where(eq(payments.bookingId, row.id))
+      .orderBy(asc(payments.createdAt));
+    return {
+      ok: true,
+      booking: b,
+      events: events.map((e) => ({
+        at: e.at.toISOString(),
+        fromStatus: e.fromStatus,
+        toStatus: e.toStatus,
+        actor: e.actor,
+        note: e.note,
+      })),
+      payments: paid.map(toStaffPayment(row.ref)),
+    } as const;
+  });
+}
+
+/** Payments recorded for refund (late payment after a hold ended), newest first. */
+export async function listRefundPending(limit: number): Promise<ListRefundPendingResult> {
+  const rows = await getDb()
+    .select({ p: payments, ref: bookings.ref })
+    .from(payments)
+    .innerJoin(bookings, eq(bookings.id, payments.bookingId))
+    .where(eq(payments.status, "REFUND_PENDING"))
+    .orderBy(desc(payments.createdAt))
+    .limit(limit);
+  return { ok: true, payments: rows.map((r) => toStaffPayment(r.ref)(r.p)) };
+}
+
+function toStaffPayment(ref: string) {
+  return (p: typeof payments.$inferSelect): StaffPayment => ({
+    id: p.id,
+    bookingId: p.bookingId,
+    ref,
+    provider: p.provider,
+    providerPaymentId: p.providerPaymentId,
+    amountPaise: p.amountPaise,
+    status: p.status as StaffPayment["status"],
+    createdAt: p.createdAt.toISOString(),
   });
 }

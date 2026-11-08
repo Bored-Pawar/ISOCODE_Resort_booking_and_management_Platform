@@ -10,7 +10,11 @@ import { getDb } from "@/lib/db";
 import { releaseExpiredHoldsInTx } from "./internal";
 import { acquireHold as acquireHoldImpl } from "./hold";
 import { cancelHeld as cancelHeldImpl } from "./cancel";
-import { listForStaff as listForStaffImpl } from "./staff";
+import {
+  getForStaff as getForStaffImpl,
+  listForStaff as listForStaffImpl,
+  listRefundPending as listRefundPendingImpl,
+} from "./staff";
 import { isDateStr } from "@/lib/dates";
 import { readBooking } from "./read";
 import { bookings } from "@/db/schema";
@@ -166,6 +170,35 @@ export type ParsedListForStaffInput = z.output<typeof listForStaffInputSchema>;
 /** Newest created first. */
 export type ListForStaffResult = Ok<{ bookings: Booking[] }> | Err<"INVALID_INPUT" | "FORBIDDEN">;
 
+export type BookingEvent = {
+  at: string;
+  fromStatus: string | null;
+  toStatus: string | null;
+  actor: string;
+  note: string | null;
+};
+
+export type StaffPayment = {
+  id: string;
+  bookingId: string;
+  ref: string;
+  provider: string;
+  providerPaymentId: string;
+  amountPaise: number;
+  status: "SUCCESS" | "FAILED" | "REFUND_PENDING";
+  createdAt: string;
+};
+
+export type GetForStaffResult =
+  | Ok<{ booking: Booking; events: BookingEvent[]; payments: StaffPayment[] }>
+  | Err<"INVALID_INPUT" | "NOT_FOUND" | "FORBIDDEN">;
+
+export const listRefundPendingInputSchema = z.object({
+  limit: z.number().int().min(1).max(200).default(50),
+});
+export type ListRefundPendingResult =
+  Ok<{ payments: StaffPayment[] }> | Err<"INVALID_INPUT" | "FORBIDDEN">;
+
 function isBookingStaff(actor: BookingActor): boolean {
   return (
     actorSchema.safeParse(actor).success &&
@@ -213,6 +246,25 @@ export const booking = {
     const parsed = listForStaffInputSchema.safeParse(input);
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
     return listForStaffImpl(parsed.data);
+  },
+
+  /** Additive staff read (A5): one booking with its event timeline and payments. */
+  async getForStaff(input: GetBookingInput, actor: BookingActor): Promise<GetForStaffResult> {
+    if (!isBookingStaff(actor)) return { ok: false, code: "FORBIDDEN" };
+    const parsed = getBookingInputSchema.safeParse(input);
+    if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
+    return getForStaffImpl(parsed.data.ref);
+  },
+
+  /** Additive staff read (A5): payments recorded as REFUND_PENDING, newest first. */
+  async listRefundPending(
+    input: z.input<typeof listRefundPendingInputSchema>,
+    actor: BookingActor,
+  ): Promise<ListRefundPendingResult> {
+    if (!isBookingStaff(actor)) return { ok: false, code: "FORBIDDEN" };
+    const parsed = listRefundPendingInputSchema.safeParse(input);
+    if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
+    return listRefundPendingImpl(parsed.data.limit);
   },
 
   /** Additive read for "My bookings". Never writes; no lazy expiry. */
