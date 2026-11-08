@@ -108,8 +108,13 @@ export async function listInbox(
 }
 
 /** Count badges (Unsorted, Complaints, Needs attention): open items only, one query. */
-export async function laneCounts(actor: InboxActor): Promise<LaneCounts> {
-  const lanes = badgeLanesFor(actor.role);
+/**
+ * Open (not closed) counts per lane. Default: the badge lanes. `only` asks for other lanes (the
+ * `/admin` overview); it is cut to the lanes the role may open, and rows to `viewSql`.
+ */
+export async function laneCounts(actor: InboxActor, only?: readonly Lane[]): Promise<LaneCounts> {
+  const allowed = lanesFor(actor.role);
+  const lanes = only ? only.filter((l) => allowed.includes(l)) : badgeLanesFor(actor.role);
   if (!lanes.length) return {};
   const cols = lanes.map(
     (l) => sql`count(*) FILTER (WHERE ${laneSql(l, actor.userId)})::int AS ${sql.identifier(l)}`,

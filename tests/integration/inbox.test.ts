@@ -121,6 +121,29 @@ describe("inbox visibility in SQL (test 1)", () => {
     expect((await inbox.counts(f.actor("gm"))).unsorted).toBe(before + 1);
     expect(await inbox.counts(f.actor("sales"))).toEqual({});
   });
+
+  it("overview counts: per lane, open only, cut to the role's lanes", async () => {
+    const lanes = ["room", "wedding", "offsite", "complaints", "unsorted", "attention"] as const;
+    const before = {
+      gm: await inbox.counts(f.actor("gm"), lanes),
+      sales: await inbox.counts(f.actor("sales"), lanes),
+      reservations: await inbox.counts(f.actor("reservations"), lanes),
+    };
+    expect(Object.keys(before.sales).sort()).toEqual(["offsite", "wedding"]);
+    expect(Object.keys(before.reservations).sort()).toEqual(["attention", "room"]);
+    await f.enquiry({ category: "room" });
+    await f.enquiry({ category: "wedding" });
+    await f.enquiry({ category: "room", status: "closed" });
+    const gm = await inbox.counts(f.actor("gm"), lanes);
+    expect(gm.room).toBe((before.gm.room ?? 0) + 1);
+    expect(gm.wedding).toBe((before.gm.wedding ?? 0) + 1);
+    const sales = await inbox.counts(f.actor("sales"), lanes);
+    expect(sales.wedding).toBe((before.sales.wedding ?? 0) + 1);
+    expect(sales.room).toBeUndefined();
+    const res = await inbox.counts(f.actor("reservations"), lanes);
+    expect(res.room).toBe((before.reservations.room ?? 0) + 1);
+    expect(res.wedding).toBeUndefined();
+  });
 });
 
 describe("re-route and field edits (tests 2, 4, 6)", () => {
