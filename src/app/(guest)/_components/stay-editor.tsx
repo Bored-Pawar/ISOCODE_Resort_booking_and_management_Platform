@@ -5,7 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, CircleAlert, CircleSlash, Plus, Trash2, Users } from "lucide-react";
-import { Badge, Button, ButtonLink, Card, PriceBlock, Select, Stepper } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  ButtonLink,
+  Card,
+  Input,
+  PriceBlock,
+  Select,
+  Stepper,
+} from "@/components/ui";
 import { fitsRoom } from "@/lib/occupancy";
 import { formatInr } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -13,6 +22,7 @@ import {
   continueState,
   counter,
   lineIssues,
+  PROMO_INVALID_MESSAGE,
   type CartQuote,
   type RoomCardView,
 } from "../_lib/book";
@@ -21,20 +31,22 @@ import {
   encodeLine,
   guestsLeft,
   MAX_CART_ROOMS,
+  normalisePromo,
   stayHref,
   stayQuery,
   type CartLine,
   type CartStay,
   type Party,
 } from "../_lib/cart";
+import { enquiryHref } from "../_lib/enquiry";
 import { guestsLabel, occupancyLabel, plural } from "../_lib/format";
 import { nightsByDate } from "../_lib/room-detail";
 import { SEARCH_LIMITS } from "../_lib/search";
 import { addBlockedReason, partyForRoom, roomsLeftToAdd } from "../_lib/stay";
 import { readStoredStay, writeStoredStay } from "../_lib/stay-storage";
 
-const keyOf = (group: Party, lines: CartLine[]) =>
-  [group.adults, group.children, ...lines.map(encodeLine)].join("|");
+const keyOf = (group: Party, lines: CartLine[], promo: string) =>
+  [group.adults, group.children, promo, ...lines.map(encodeLine)].join("|");
 
 /**
  * The stay builder: room type cards, the guest's room lines ("Your stay") and a summary with the
@@ -49,6 +61,7 @@ export function StayEditor({
   initialLines,
   hasCartParam,
   quote,
+  promoInvalid,
   dropped,
   nights,
   suggested,
@@ -62,6 +75,8 @@ export function StayEditor({
   /** The URL carried a cart (possibly empty after edits); false means "restore if saved". */
   hasCartParam: boolean;
   quote: CartQuote;
+  /** The URL's promo code was refused by pricing; `quote` is the price without it. */
+  promoInvalid: boolean;
   dropped: boolean;
   nights: number;
   /** A starting cart for the URL's group, or null when none fits in 4 rooms with free stock. */
@@ -73,21 +88,30 @@ export function StayEditor({
   const urlGroup = { adults: stay.adults, children: stay.children };
   const [lines, setLines] = useState(initialLines);
   const [group, setGroup] = useState<Party>(urlGroup);
+  const urlPromo = stay.promo ?? "";
+  const [promo, setPromo] = useState(urlPromo);
+  const [promoDraft, setPromoDraft] = useState(urlPromo);
   const [isPending, startTransition] = useTransition();
-  const propsKey = keyOf(urlGroup, initialLines);
+  const propsKey = keyOf(urlGroup, initialLines, urlPromo);
   const pushed = useRef(propsKey);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const started = useRef(false);
 
-  function update(nextLines: CartLine[], nextGroup: Party = group) {
+  function update(nextLines: CartLine[], nextGroup: Party = group, nextPromo: string = promo) {
     setLines(nextLines);
     setGroup(nextGroup);
-    const nextStay = { checkIn: stay.checkIn, checkOut: stay.checkOut, ...nextGroup };
+    setPromo(nextPromo);
+    const nextStay = {
+      checkIn: stay.checkIn,
+      checkOut: stay.checkOut,
+      ...nextGroup,
+      promo: nextPromo,
+    };
     writeStoredStay(nextStay, nextLines);
     clearTimeout(timer.current);
     // Short debounce so a run of stepper clicks asks for one quote, not five.
     timer.current = setTimeout(() => {
-      pushed.current = keyOf(nextGroup, nextLines);
+      pushed.current = keyOf(nextGroup, nextLines, nextPromo);
       const href = stayHref(nextStay, nextLines);
       startTransition(() => router.replace(href, { scroll: false }));
     }, 250);
@@ -115,11 +139,14 @@ export function StayEditor({
       pushed.current = propsKey;
       setLines(initialLines);
       setGroup({ adults: stay.adults, children: stay.children });
+      setPromo(urlPromo);
+      setPromoDraft(urlPromo);
     }
-  }, [propsKey, initialLines, stay.adults, stay.children]);
+  }, [propsKey, initialLines, stay.adults, stay.children, urlPromo]);
   useEffect(() => () => clearTimeout(timer.current), []);
 
-  const fresh = keyOf(group, lines) === propsKey;
+  const fresh = keyOf(group, lines, promo) === propsKey;
+  const promoRefused = fresh && promoInvalid && !!promo;
   const shownQuote = fresh ? quote : null;
   const issues = lineIssues(rooms, lines, shownQuote);
   const pending = isPending || !fresh;
@@ -131,7 +158,7 @@ export function StayEditor({
   const total = group.adults + group.children;
   const priced = shownQuote?.ok ? shownQuote.quote : null;
   const roomById = new Map(rooms.map((r) => [r.id, r]));
-  const currentStay = { checkIn: stay.checkIn, checkOut: stay.checkOut, ...group };
+  const currentStay = { checkIn: stay.checkIn, checkOut: stay.checkOut, ...group, promo };
   const detailQuery = stayQuery(currentStay, lines).toString();
   const atMax = lines.length >= MAX_CART_ROOMS;
   // Not enough stock or rooms for the group: offer a prefilled enquiry.
@@ -179,8 +206,30 @@ export function StayEditor({
   }
 
   const goNext = () => {
-    if (state.ok && priced) router.push(detailsHref(currentStay, lines, priced.quoteHash));
+    // A refused code is not carried on: the quote shown (and its hash) is the one without it.
+    if (state.ok && priced)
+      router.push(
+        detailsHref(
+          { ...currentStay, promo: priced.promo ? priced.promo.code : "" },
+          lines,
+          priced.quoteHash,
+        ),
+      );
   };
+  const zeroHref = enquiryHref({
+    checkIn: stay.checkIn,
+    checkOut: stay.checkOut,
+    adults: group.adults,
+    children: group.children,
+    rooms: lines.length || undefined,
+  });
+
+  function applyPromo(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const code = normalisePromo(promoDraft);
+    setPromoDraft(code);
+    if (code !== promo) update(lines, group, code);
+  }
 
   const counterText =
     count.kind === "placed"
@@ -607,11 +656,59 @@ export function StayEditor({
             )}
           </div>
 
+          <form onSubmit={applyPromo} className="flex flex-col gap-2 border-t border-border pt-4">
+            <div className="flex items-start gap-2">
+              <Input
+                label="Promo code (optional)"
+                name="promo"
+                value={promoDraft}
+                maxLength={32}
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                className="min-w-0 flex-1"
+                onChange={(e) => setPromoDraft(e.target.value)}
+                error={promoRefused ? PROMO_INVALID_MESSAGE : undefined}
+                help={
+                  fresh && priced?.promo
+                    ? `${priced.promo.code} applied, you save ${formatInr(priced.discountPaise)}`
+                    : undefined
+                }
+              />
+              <Button type="submit" variant="secondary" className="mt-6 shrink-0">
+                Apply
+              </Button>
+            </div>
+            {promo ? (
+              <button
+                type="button"
+                className="min-h-11 self-start text-small font-semibold text-accent hover:underline"
+                onClick={() => {
+                  setPromoDraft("");
+                  update(lines, group, "");
+                }}
+              >
+                Remove code
+              </button>
+            ) : null}
+          </form>
+
           <Button className="w-full" disabled={!state.ok} onClick={goNext}>
             Continue
           </Button>
           <p className="text-small text-muted" aria-live="polite">
-            {state.ok ? "Next, your details. Rooms are held when you confirm them." : state.reason}
+            {state.ok ? (
+              "Next, your details. Rooms are held when you confirm them."
+            ) : state.zeroTotal ? (
+              <>
+                {state.reason}:{" "}
+                <Link href={zeroHref} className="font-semibold text-accent hover:underline">
+                  Send an enquiry
+                </Link>
+              </>
+            ) : (
+              state.reason
+            )}
           </p>
         </Card>
       </aside>

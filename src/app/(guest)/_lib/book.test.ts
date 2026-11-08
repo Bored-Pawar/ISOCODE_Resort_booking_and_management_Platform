@@ -117,6 +117,14 @@ describe("continueState", () => {
     expect(reason(continueState({ ...base, lines: [p(3), v(3, 2)] }))).toMatch(/Fix the rooms/);
     expect(reason(continueState({ ...base, lines: Array(5).fill(p(1)) }))).toMatch(/up to 4/);
   });
+  it("keeps Continue disabled for a zero total (the payment schema needs a positive amount)", () => {
+    const free = { ok: true as const, quote: { ...twoRoomQuoteFixture, totalPaise: 0 } };
+    expect(continueState({ ...base, lines: [p(2, 1), v(3, 2)], quote: free })).toEqual({
+      ok: false,
+      reason: "This code can't be used online, send us an enquiry",
+      zeroTotal: true,
+    });
+  });
 });
 
 describe("toCartQuote", () => {

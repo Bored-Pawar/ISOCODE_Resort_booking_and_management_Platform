@@ -92,6 +92,7 @@ describe("stayNav", () => {
     checkIn: "2026-12-01",
     checkOut: "2026-12-03",
     party: { adults: 2, children: 1 },
+    promo: "",
     lines: [line],
     dropped: false,
   };

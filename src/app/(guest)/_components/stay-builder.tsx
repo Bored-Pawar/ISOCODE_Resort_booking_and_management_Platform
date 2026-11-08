@@ -81,11 +81,13 @@ export async function StayBuilder({ searchParams }: { searchParams: Params }) {
 
   const nights = nightsBetween(values.checkIn, values.checkOut);
   const party = { adults: values.adults, children: values.children };
-  const stay = { checkIn: values.checkIn, checkOut: values.checkOut, ...party };
+  const stay = { checkIn: values.checkIn, checkOut: values.checkOut, ...party, promo: cart.promo };
 
   let rooms: RoomCardView[];
   let types: RoomType[];
   let quote: CartQuote = null;
+  // The promo the URL carries; pricing decides whether it is valid for this cart.
+  let promoInvalid = false;
   try {
     const [listed, availability] = await Promise.all([
       catalog.listRoomTypes(),
@@ -142,13 +144,14 @@ export async function StayBuilder({ searchParams }: { searchParams: Params }) {
     );
     // Price only a cart that passes the local rules; the server is still the only price source.
     if (cart.lines.length && lineIssues(rooms, cart.lines, null).every((i) => i === null)) {
-      quote = toCartQuote(
-        await pricing.quote({
-          checkIn: values.checkIn,
-          checkOut: values.checkOut,
-          rooms: cart.lines,
-        }),
-      );
+      const base = { checkIn: values.checkIn, checkOut: values.checkOut, rooms: cart.lines };
+      let result = await pricing.quote({ ...base, promoCode: cart.promo || undefined });
+      if (!result.ok && result.code === "PROMO_INVALID" && cart.promo) {
+        // The stay stays usable without the code: price it plain and say so under the field.
+        promoInvalid = true;
+        result = await pricing.quote(base);
+      }
+      quote = toCartQuote(result);
     }
   } catch (error) {
     console.error("stay builder failed", error);
@@ -195,6 +198,7 @@ export async function StayBuilder({ searchParams }: { searchParams: Params }) {
         initialLines={cart.lines}
         hasCartParam={hasCartParam}
         quote={quote}
+        promoInvalid={promoInvalid}
         dropped={cart.dropped}
         nights={nights}
         suggested={suggested}
