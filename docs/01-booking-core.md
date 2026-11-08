@@ -109,6 +109,7 @@ Review-approved scoped lazy expiry (2026-11-08): `inventory.availability` calls 
 The seed may import the pure `pricing/calculation` implementation directly for snapshot assembly; tests may import it to verify the same rules. This review-approved exception keeps calculations shared without adding public service exports or exposing database internals to UI.
 
 ### Lock order
+0. `acquireHold` only (S2 review M1, approved 2026-11-08): the **first** statement is `SELECT pg_advisory_xact_lock(hashtextextended('hold:' || guestId, 0))`. Per guest, not per stay: one guest's holds are serialized, other guests are unaffected. Full order: guest advisory lock, then `bookings` rows, then `inventory` in `(room_type_id, date)` order.
 1. Within one transaction: `bookings` rows first (only in expiry, `FOR UPDATE SKIP LOCKED`), then `inventory` rows.
 2. Inventory rows are always locked and updated ordered by `(room_type_id, date)` ascending, in one statement per lock step, across every room type of the cart (B10).
 3. Never lock `inventory` rows out of order, and never take a lock on `payments` before `bookings`. A conditional `UPDATE bookings ... WHERE status='HELD'` is the only booking write in `confirmPayment`.
@@ -116,7 +117,7 @@ The seed may import the pure `pricing/calculation` implementation directly for s
 
 ### `acquireHold` sequence
 1. Zod parse, `requireGuestOwner`-style guest check by the caller (guestId comes from the server session only, never the client).
-2. `db.transaction`: `releaseExpiredHoldsInTx` (scoped to room type and dates) -> `lockNights` -> `quoteInTx` -> compare `quoteHash` -> `adjustNights(heldDelta: +1)` -> insert `bookings`, `booking_nights`, `booking_events`.
+2. `db.transaction`: guest advisory lock -> live-hold lookup (Contract note 7) -> `releaseExpiredHoldsInTx` (scoped to room type and dates) -> `lockNights` -> `quoteInTx` -> compare `quoteHash` -> `adjustNights(heldDelta: +1)` -> insert `bookings`, `booking_nights`, `booking_events`.
 3. Results: `lockNights` error -> `SOLD_OUT` / `BLACKOUT`; `quoteInTx` error -> `NO_RATE` / `PROMO_INVALID` / `OVER_OCCUPANCY` / `INVALID_INPUT`; hash mismatch -> `PRICE_CHANGED` with the new quote. These are the codes in `AcquireHoldResult`.
 
 ### Rollback rules
@@ -137,6 +138,7 @@ Clarifications added with the frozen interfaces. They restate decisions above; n
 4. Business failures are returned as `{ ok: false, code }`, never thrown.
 5. `acquireHold` can also return `PROMO_INVALID` and `OVER_OCCUPANCY` (from the price recheck) besides `SOLD_OUT`, `BLACKOUT`, `NO_RATE`, `INVALID_INPUT` and `PRICE_CHANGED`. `guestId` is taken from the server session only.
 6. `confirmPayment` `REFUND_PENDING` means the payment was handled (recorded for refund) and the booking is **not** confirmed. UI must branch on `outcome`, not only `ok`.
+7. `acquireHold` is **idempotent per guest and exact stay** (approved semantic addition, S2 review M1, 2026-11-08; same signature and result type). Right after the guest advisory lock, one query looks for this guest's booking with `status='HELD'`, `hold_expires_at > now()`, the same `check_in`, `check_out` and `quote_hash`, and identical room lines in `line_no` order (`room_type_id`, `rate_plan_id`, `adults`, `children`; `quoteHash` excludes occupancy, so the lines are compared). A match returns `{ ok: true, booking }` for it, takes no stock and writes no event. An expired hold, a different party split or another guest never matches. The UI prechecks through `listForGuest` are removed; double submit and concurrent Refresh hold rely on this.
 
 ## S1 implementation coordination notes (2026-11-08; no public contract changes)
 1. **B3/B4 implementation order:** B3 requires `releaseExpiredHoldsInTx` before acquiring its inventory locks. Implement the internal helper early enough for B3 to work; B4 still owns completing the additive public wrapper, cron, idempotency tests and acceptance criteria. This clarifies work sequencing only.
