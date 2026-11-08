@@ -13,7 +13,9 @@ describe("booking ref generator", () => {
     const pg = { code: "23505", constraint_name: "bookings_ref_unique" };
     expect(isRefCollision(pg)).toBe(true);
     expect(isRefCollision({ message: "wrapped", cause: pg })).toBe(true);
-    expect(isRefCollision({ code: "23505", constraint_name: "payments_provider_payment_id_unique" })).toBe(false);
+    expect(
+      isRefCollision({ code: "23505", constraint_name: "payments_provider_payment_id_unique" }),
+    ).toBe(false);
     expect(isRefCollision({ code: "23514" })).toBe(false);
     expect(isRefCollision(null)).toBe(false);
   });

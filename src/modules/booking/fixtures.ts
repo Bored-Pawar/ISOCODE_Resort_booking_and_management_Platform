@@ -1,4 +1,9 @@
-import { changedQuoteFixture, quoteFixture, twoRoomQuoteFixture, FIXTURE_IDS } from "@/modules/pricing";
+import {
+  changedQuoteFixture,
+  quoteFixture,
+  twoRoomQuoteFixture,
+  FIXTURE_IDS,
+} from "@/modules/pricing";
 import type { Quote } from "@/modules/pricing";
 import type { Booking } from "./index";
 

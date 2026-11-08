@@ -2,16 +2,24 @@ import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { bookings, bookingEvents, payments } from "@/db/schema";
 import { getDb, type Tx } from "@/lib/db";
-import { eachNight } from "@/lib/dates";
 import { adjustNights } from "@/modules/inventory/internal";
 import { recordPromoUseInTx } from "@/modules/pricing/internal";
-import { releaseExpiredHoldsInTx } from "./internal";
+import { bookingNightChanges, releaseExpiredHoldsInTx } from "./internal";
 import { readBooking } from "./read";
 import { RollbackResult, isTransactionConflict } from "./transaction";
 import { confirmationClock } from "./clock";
 import type { ConfirmPaymentInput, ConfirmPaymentResult } from "./index";
 
-class HoldElapsedWhileWaiting extends Error {}
+/** B10 minor fix 2: a second occurrence is thrown to the caller with this message. */
+export class HoldElapsedWhileWaiting extends Error {
+  constructor(bookingId: string) {
+    super(
+      `Payment confirmation for booking ${bookingId} waited past the hold deadline twice; ` +
+        "rolled back with no changes. Retry the notification.",
+    );
+    this.name = "HoldElapsedWhileWaiting";
+  }
+}
 
 async function duplicateResult(tx: Tx, input: ConfirmPaymentInput): Promise<ConfirmPaymentResult> {
   const [payment] = await tx
@@ -71,7 +79,7 @@ export async function confirmPayment(input: ConfirmPaymentInput): Promise<Confir
         ) {
           // PostgreSQL can evaluate the predicate before waiting for a row lock. Roll back a
           // now-stale confirmation and retry, so a lock wait cannot extend a hold's validity.
-          throw new HoldElapsedWhileWaiting();
+          throw new HoldElapsedWhileWaiting(input.bookingId);
         }
         const confirmed = transition?.status === "CONFIRMED";
         const inserted = await tx
@@ -88,11 +96,13 @@ export async function confirmPayment(input: ConfirmPaymentInput): Promise<Confir
         if (!inserted.length) throw new RollbackResult(await duplicateResult(tx, input));
 
         if (transition) {
+          // B10 rule 5: per room type, in aggregate, from booking_rooms x nights.
           await adjustNights(tx, {
-            roomTypeId: saved.roomTypeId,
-            dates: eachNight(saved.checkIn, saved.checkOut),
-            heldDelta: -saved.units,
-            soldDelta: confirmed ? saved.units : 0,
+            changes: await bookingNightChanges(
+              tx,
+              [{ id: saved.id, checkIn: saved.checkIn, checkOut: saved.checkOut }],
+              (units) => ({ heldDelta: -units, soldDelta: confirmed ? units : 0 }),
+            ),
           });
           await tx.insert(bookingEvents).values({
             bookingId: input.bookingId,

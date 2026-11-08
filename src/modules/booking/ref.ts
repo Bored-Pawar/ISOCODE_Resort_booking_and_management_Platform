@@ -24,7 +24,12 @@ export function isRefCollision(error: unknown): boolean {
   const seen = new Set<unknown>();
   while (error && typeof error === "object" && !seen.has(error)) {
     seen.add(error);
-    const e = error as { code?: string; constraint_name?: string; constraint?: string; cause?: unknown };
+    const e = error as {
+      code?: string;
+      constraint_name?: string;
+      constraint?: string;
+      cause?: unknown;
+    };
     if (e.code === "23505") return (e.constraint_name ?? e.constraint) === "bookings_ref_unique";
     error = e.cause;
   }

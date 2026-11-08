@@ -6,11 +6,12 @@ import { acquireBookingHold } from "./actions";
 
 const input = {
   stay: {
-    roomTypeId: "r",
-    ratePlanId: "p",
     checkIn: "2099-11-14",
     checkOut: "2099-11-16",
-    adults: 2,
+    rooms: [
+      { roomTypeId: "r", ratePlanId: "p", adults: 2 },
+      { roomTypeId: "r2", ratePlanId: "p2", adults: 1, children: 1 },
+    ],
   },
   quoteHash: "hash",
 };
@@ -36,7 +37,10 @@ describe("hold server action", () => {
     expect(requireRole).toHaveBeenCalledWith("guest");
     expect(service).toHaveBeenCalledWith({
       ...input,
-      stay: { ...input.stay, children: 0 },
+      stay: {
+        ...input.stay,
+        rooms: [{ ...input.stay.rooms[0], children: 0 }, input.stay.rooms[1]],
+      },
       guestId: "verified-guest",
     });
   });

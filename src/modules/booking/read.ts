@@ -1,5 +1,5 @@
-import { eq, asc } from "drizzle-orm";
-import { bookings, bookingNights } from "@/db/schema";
+import { eq, asc, inArray } from "drizzle-orm";
+import { bookings, bookingNights, bookingRooms } from "@/db/schema";
 import type { Tx } from "@/lib/db";
 import { promoCodeInTx } from "@/modules/pricing/internal";
 import type { Booking, BookingStatus } from "./index";
@@ -7,28 +7,29 @@ import type { Booking, BookingStatus } from "./index";
 export async function readBooking(tx: Tx, id: string): Promise<Booking | null> {
   const [b] = await tx.select().from(bookings).where(eq(bookings.id, id));
   if (!b) return null;
-  const nights = await tx
-    .select({
-      date: bookingNights.date,
-      ratePaise: bookingNights.ratePaise,
-      discountPaise: bookingNights.discountPaise,
-      gstBp: bookingNights.gstBp,
-      gstPaise: bookingNights.gstPaise,
-    })
-    .from(bookingNights)
-    .where(eq(bookingNights.bookingId, id))
-    .orderBy(asc(bookingNights.date));
+  const rooms = await tx
+    .select()
+    .from(bookingRooms)
+    .where(eq(bookingRooms.bookingId, b.id))
+    .orderBy(asc(bookingRooms.lineNo));
+  const nights = rooms.length
+    ? await tx
+        .select()
+        .from(bookingNights)
+        .where(
+          inArray(
+            bookingNights.bookingRoomId,
+            rooms.map((r) => r.id),
+          ),
+        )
+        .orderBy(asc(bookingNights.date))
+    : [];
   return {
     id: b.id,
     ref: b.ref,
     guestId: b.guestId,
-    roomTypeId: b.roomTypeId,
-    ratePlanId: b.ratePlanId,
     checkIn: b.checkIn,
     checkOut: b.checkOut,
-    units: b.units,
-    adults: b.adults,
-    children: b.children,
     status: b.status as BookingStatus,
     holdExpiresAt: b.holdExpiresAt?.toISOString() ?? null,
     quoteHash: b.quoteHash,
@@ -37,7 +38,26 @@ export async function readBooking(tx: Tx, id: string): Promise<Booking | null> {
     discountPaise: b.discountPaise,
     gstPaise: b.gstPaise,
     totalPaise: b.totalPaise,
-    nights,
+    rooms: rooms.map((r) => ({
+      lineNo: r.lineNo,
+      roomTypeId: r.roomTypeId,
+      ratePlanId: r.ratePlanId,
+      adults: r.adults,
+      children: r.children,
+      subtotalPaise: r.subtotalPaise,
+      discountPaise: r.discountPaise,
+      gstPaise: r.gstPaise,
+      totalPaise: r.totalPaise,
+      nights: nights
+        .filter((n) => n.bookingRoomId === r.id)
+        .map((n) => ({
+          date: n.date,
+          ratePaise: n.ratePaise,
+          discountPaise: n.discountPaise,
+          gstBp: n.gstBp,
+          gstPaise: n.gstPaise,
+        })),
+    })),
     createdAt: b.createdAt.toISOString(),
     confirmedAt: b.confirmedAt?.toISOString() ?? null,
   };
