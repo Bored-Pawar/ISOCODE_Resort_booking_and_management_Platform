@@ -49,6 +49,10 @@ S1 approved narrow exception (R01): the `booking` module, as transaction owner, 
 B1+B2 review-fix exceptions: `inventory/index.ts` may call the internal booking-owned scoped lazy-expiry wrapper (mandatory stay date range; optional room type). It opens the expiry transaction inside booking and never calls the site-wide sweep. Seed code and tests may import the pure `pricing/calculation.ts` implementation directly to share price snapshot calculations. Public service contracts remain unchanged; see `01-booking-core.md` § Contracts.
 
 ## Security
+S2 approved D6 internal exception: only `ai-router` consumes `enquiries/internal.ts` queue claims, snapshot reads and transaction-aware settlement. Claims and settlement open short enquiries-owned transactions; no transaction spans a provider call. Settlement locks the enquiry, verifies attempt/timestamp generation and staff state, and atomically saves classification, an unapproved draft, alert and audit event. No schema/migration changes.
+
+Staff eligibility (D2): `users` has no active/disabled flag. All existing accounts with the exact target staff role are eligible, ordered `created_at ASC, id ASC`; missing staff keeps the row unsorted. The first GM receives complaint/unsorted alerts; without a GM account the complaint flag and unsorted lane remain visible, but a notification cannot be inserted without a recipient.
+
 1. Role checks inside every server action and route handler. Middleware only redirects.
 2. Guests can read only their own bookings.
 3. Secrets only in env. `.env.example` lists names.

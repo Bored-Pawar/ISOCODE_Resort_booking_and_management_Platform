@@ -9,6 +9,9 @@ Developers update this file after significant changes. Keep entries one line.
 - M1: AI SDK 7.0.164 shared `generateText`/`Output.object` transport supports Google, Anthropic, OpenAI-compatible local and zero-call rules; 10-second abort per attempt, one bounded transient retry, sanitized errors. Typecheck and all 244 unit tests pass; no live smoke possible without configured provider. Local model installation is deferred as instructed.
 
 ## Ownership of locked areas
+- M2 persistence: all 9 isolated PostgreSQL queue tests pass, covering concurrent claims, stale generation, recovery, batch five, atomic rollback on draft/notification failure, duplicate settle, metadata merge and human changes. Failed persistence retains a recoverable processing row; staff intervention cancels the generation with `STAFF_CHANGED`. No migration or schema change.
+
+S2 R1–R4 assignment supersedes the historical S1 enquiry lock only for R2 internals: Codex owns `ai-provider`, `ai-router` and R2 enquiry processing internals on `codex/r1-r4-ai-routing`. Other locks are unchanged; no Q4–Q7 screens or database/booking edits are authorized here.
 Coordination records, not enforcement. The scrum master assigns ownership in chat; developers confirm before editing. Pull `main` before reading this table.
 
 | Area | Paths | Owner | Since |
