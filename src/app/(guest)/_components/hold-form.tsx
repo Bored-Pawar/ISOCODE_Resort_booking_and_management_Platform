@@ -65,11 +65,12 @@ export function HoldForm({
         </div>
       </dl>
       <Input
+        key={state?.attempt ?? 0}
         label="Phone (optional)"
         name="phone"
         type="tel"
         autoComplete="tel"
-        defaultValue={phone ?? ""}
+        defaultValue={state?.phone ?? phone ?? ""}
         help="For questions about your stay only."
         error={state?.phoneError}
       />
@@ -102,6 +103,12 @@ export function HoldForm({
             Continue at {formatInr(step.totalPaise)}
           </Button>
         </div>
+      ) : null}
+
+      {state?.message ? (
+        <p role="alert" className="text-small text-danger">
+          {state.message}
+        </p>
       ) : null}
 
       {step?.kind === "window" ? (

@@ -3,13 +3,24 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth";
+import { allow, RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
 import { updateGuestPhone } from "@/lib/auth/profile";
 import { phoneField } from "@/lib/auth/sign-up-schema";
 import { acquireBookingHold } from "@/modules/booking/actions";
 import { parseCartParams } from "../../_lib/cart";
 import { holdStep, type HoldStep } from "../../_lib/hold-flow";
 
-export type HoldFormState = { step?: HoldStep; phoneError?: string } | undefined;
+export type HoldFormState =
+  | {
+      step?: HoldStep;
+      phoneError?: string;
+      /** The phone as typed, so a failed submit keeps it (React 19 resets the form). */
+      phone?: string;
+      /** Changes on every result; the phone field remounts with `key={attempt}`. */
+      attempt?: number;
+      message?: string;
+    }
+  | undefined;
 
 const holdFormSchema = z.object({
   /** The /book/details query string: dates, group, cart, promo and the quoteHash shown. */
@@ -40,13 +51,24 @@ function readQuery(query: string) {
  * hold for this guest and exact stay inside its transaction (back button, double submit, two
  * tabs). Held goes to the pay page; stock and price problems go back to /rooms with the cart.
  */
-export async function holdStay(_: HoldFormState, formData: FormData): Promise<HoldFormState> {
+export async function holdStay(prev: HoldFormState, formData: FormData): Promise<HoldFormState> {
+  const result = await hold(formData);
+  const phone = formData.get("phone");
+  return {
+    ...result,
+    ...(typeof phone === "string" ? { phone: phone.slice(0, 40) } : {}),
+    attempt: (prev?.attempt ?? 0) + 1,
+  };
+}
+
+async function hold(formData: FormData): Promise<NonNullable<HoldFormState>> {
   const parsed = holdFormSchema.safeParse({
     query: formData.get("query"),
     phone: formData.get("phone"),
     phoneBefore: formData.get("phoneBefore"),
   });
   const guest = await requireRole("guest");
+  if (!(await allow("hold", guest.id))) return { message: RATE_LIMITED_MESSAGE };
   if (!parsed.success) return { step: { kind: "error" } };
   const { cart, quoteHash } = readQuery(parsed.data.query);
   if (!cart.checkIn || !cart.checkOut || !cart.lines.length || !quoteHash || cart.dropped)

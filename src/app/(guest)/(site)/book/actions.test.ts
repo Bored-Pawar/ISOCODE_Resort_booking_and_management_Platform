@@ -85,9 +85,10 @@ describe("holdStay", () => {
 
   it("validates input first and never holds on a broken query", async () => {
     vi.mocked(requireRole).mockResolvedValue(guest);
-    expect(await holdStay(undefined, form({}))).toEqual({ step: { kind: "error" } });
+    expect(await holdStay(undefined, form({}))).toEqual({ step: { kind: "error" }, attempt: 1 });
     expect(await holdStay(undefined, form({ query: "checkIn=2099-11-14" }))).toEqual({
       step: { kind: "error" },
+      attempt: 1,
     });
     expect(acquireBookingHold).not.toHaveBeenCalled();
   });
@@ -101,7 +102,8 @@ describe("holdStay", () => {
   it("updates only a changed phone, and reports a bad one without holding", async () => {
     vi.mocked(requireRole).mockResolvedValue(guest);
     const bad = await holdStay(undefined, form({ query, phone: "12", phoneBefore: "" }));
-    expect(bad).toEqual({ phoneError: "Enter a valid phone number" });
+    // The typed phone comes back so the field keeps it after React resets the form.
+    expect(bad).toEqual({ phoneError: "Enter a valid phone number", phone: "12", attempt: 1 });
     expect(acquireBookingHold).not.toHaveBeenCalled();
 
     vi.mocked(acquireBookingHold).mockResolvedValue({ ok: false, code: "INVALID_INPUT" });

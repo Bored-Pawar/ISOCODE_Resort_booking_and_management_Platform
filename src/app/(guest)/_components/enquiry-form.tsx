@@ -67,7 +67,8 @@ export function EnquiryForm({
     v ? v[key] : fallback === undefined ? "" : String(fallback);
 
   return (
-    <form action={action} className="flex flex-col gap-5" noValidate>
+    // Remount on each failed attempt so every field shows the echoed value (React 19 resets forms).
+    <form key={state?.attempt ?? 0} action={action} className="flex flex-col gap-5" noValidate>
       {defaults.room ? <input type="hidden" name="room" value={defaults.room} /> : null}
       {roomName ? (
         <p className="text-small text-muted">
@@ -253,7 +254,7 @@ export function EnquiryForm({
             name="consent"
             className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]"
             aria-invalid={errs?.consent ? true : undefined}
-            defaultChecked={false}
+            defaultChecked={v?.consent === "on"}
           />
           <span>
             I agree that Company A may store my name and contact details to reply to this enquiry,

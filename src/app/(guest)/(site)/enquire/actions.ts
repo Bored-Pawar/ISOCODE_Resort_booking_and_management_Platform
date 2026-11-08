@@ -1,6 +1,7 @@
 "use server";
 
 import { CONSENT_VERSION } from "@/lib/consent";
+import { allow, RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
 import { todayIST } from "@/lib/dates";
 import { catalog } from "@/modules/catalog";
 import { enquiries } from "@/modules/enquiries";
@@ -14,6 +15,8 @@ export type EnquiryFormState =
       /** Echoed back so the form keeps what the guest typed after a validation error. */
       values?: Record<string, string>;
       needs?: string[];
+      /** Changes on every failed submit; the form remounts with `key={attempt}`. */
+      attempt?: number;
       /** Set on success. `enquiryId` is empty for honeypot hits. */
       sent?: { enquiryId: string };
     };
@@ -33,14 +36,20 @@ const TEXT_FIELDS = [
   "eventTo",
   "eventGuests",
   "budget",
+  "consent",
 ] as const;
 
-// Public entry point (like sign up): Zod validated, no role to require. Spam control beyond the
-// honeypot (rate limiting) is deferred to H2.
+// Public entry point (like sign up): Zod validated, no role to require. Spam control: the honeypot
+// plus an in-memory rate limit per IP and per contact (H2, per instance).
 export async function submitEnquiryAction(
-  _: EnquiryFormState,
+  prev: EnquiryFormState,
   formData: FormData,
 ): Promise<EnquiryFormState> {
+  const result = await submit(formData);
+  return result?.sent ? result : { ...result, attempt: (prev?.attempt ?? 0) + 1 };
+}
+
+async function submit(formData: FormData): Promise<EnquiryFormState> {
   const raw: Record<string, string> = {};
   for (const [k, v] of formData.entries()) if (typeof v === "string") raw[k] = v;
   const values: Record<string, string> = {};
@@ -55,6 +64,8 @@ export async function submitEnquiryAction(
   }
   const form = parsed.data;
   if (form.website) return { sent: { enquiryId: "" } }; // honeypot: look successful, store nothing
+  if (!(await allow("enquiry", form.contact)))
+    return { error: RATE_LIMITED_MESSAGE, values, needs };
 
   let roomName: string | undefined;
   if (form.room) {
