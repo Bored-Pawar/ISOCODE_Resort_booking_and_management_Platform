@@ -40,13 +40,19 @@ function form(fields: Record<string, string>) {
 }
 const payForm = (outcome = "succeeds") => form({ ref: "CA-ABCDE", outcome, attemptId });
 
+/** One fixed clock for the whole file: every expiry below is derived from it (no flaky edges). */
+const NOW = Date.parse("2026-11-08T10:00:00Z");
+
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(NOW);
   vi.mocked(requireRole).mockResolvedValue(guest);
   vi.mocked(MockProvider).mockImplementation(function (this: unknown) {
     return { name: "mock", charge } as never;
   } as never);
 });
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   charge.mockReset();
   vi.mocked(acquireBookingHold).mockReset();
@@ -54,7 +60,7 @@ afterEach(() => {
 
 describe("payGate", () => {
   it("is open, gated under 2 minutes, ended at zero or when not HELD", () => {
-    const now = Date.now();
+    const now = NOW;
     expect(payGate(heldFor(120_001), now)).toBe("open");
     expect(payGate(heldFor(119_000), now)).toBe("gated");
     expect(payGate(heldFor(-1), now)).toBe("ended");
