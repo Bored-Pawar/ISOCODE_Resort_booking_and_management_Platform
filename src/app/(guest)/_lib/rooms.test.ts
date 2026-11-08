@@ -111,5 +111,13 @@ describe("partyPlan and partyFitsNoRoom", () => {
     expect(partyFitsNoRoom(roomTypesFixture, { adults: 8, children: 4 })).toBe(false);
     expect(partyFitsNoRoom([plantation], { adults: 8, children: 5 })).toBe(true);
     expect(partyFitsNoRoom([pool], { adults: 8, children: 5 })).toBe(false);
+    // a mix of types can take a party that no single type can within 4 rooms
+    const adultsRoom = { ...pool, id: "a", maxAdults: 4, maxOccupancy: 4 };
+    const familyRoom = { ...pool, id: "f", maxAdults: 1, maxOccupancy: 10 };
+    const party = { adults: 7, children: 10 };
+    expect(partyFitsNoRoom([adultsRoom], party)).toBe(true);
+    expect(partyFitsNoRoom([familyRoom], party)).toBe(true);
+    expect(partyFitsNoRoom([adultsRoom, familyRoom], party)).toBe(false);
+    expect(partyFitsNoRoom([adultsRoom, familyRoom], { adults: 17, children: 0 })).toBe(true);
   });
 });

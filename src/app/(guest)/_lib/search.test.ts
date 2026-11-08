@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { parseSearchParams, toSearchParams, validateSearch, type SearchValues } from "./search";
+import { enquiryHref } from "./enquiry";
+import {
+  formCount,
+  parseSearchParams,
+  toSearchParams,
+  validateSearch,
+  type SearchValues,
+} from "./search";
 
 const today = "2026-11-10";
 const ok: SearchValues = { checkIn: "2026-11-14", checkOut: "2026-11-16", adults: 2, children: 0 };
@@ -36,10 +43,18 @@ describe("validateSearch", () => {
     ).toBe("too-long");
   });
 
-  it("needs at least one adult and caps the party size", () => {
+  it("needs at least one adult and caps the party at 24 guests", () => {
     expect(validateSearch({ ...ok, adults: 0 }, today)?.code).toBe("no-adults");
-    expect(validateSearch({ ...ok, adults: 9 }, today)?.code).toBe("too-many-guests");
-    expect(validateSearch({ ...ok, children: 5 }, today)?.code).toBe("too-many-guests");
+    expect(validateSearch({ ...ok, adults: 9, children: 5 }, today)).toBeNull();
+    expect(validateSearch({ ...ok, adults: 24, children: 0 }, today)).toBeNull();
+    expect(validateSearch({ ...ok, adults: 20, children: 5 }, today)?.code).toBe("too-many-guests");
+    expect(validateSearch({ ...ok, adults: 25 }, today)?.code).toBe("too-many-guests");
+  });
+
+  it("rejects unreadable counts instead of defaulting them", () => {
+    expect(validateSearch({ ...ok, adults: Number.NaN }, today)?.code).toBe("bad-guests");
+    expect(validateSearch({ ...ok, children: Number.NaN }, today)?.code).toBe("bad-guests");
+    expect(validateSearch({ ...ok, children: -1 }, today)?.code).toBe("bad-guests");
   });
 });
 
@@ -50,18 +65,44 @@ describe("search params", () => {
     expect(parseSearchParams(Object.fromEntries(new URLSearchParams(qs)))).toEqual(ok);
   });
 
-  it("falls back on malformed input", () => {
-    expect(
-      parseSearchParams({ checkIn: "2026-13-45", checkOut: ["x"], adults: "-1", children: "abc" }),
-    ).toEqual({ checkIn: "", checkOut: "", adults: 2, children: 0 });
+  it("falls back on malformed dates and defaults only absent counts", () => {
+    expect(parseSearchParams({ checkIn: "2026-13-45", checkOut: ["x"] })).toEqual({
+      checkIn: "",
+      checkOut: "",
+      adults: 2,
+      children: 0,
+    });
   });
 
-  it("takes the first value of a repeated param and clamps counts", () => {
+  it("marks present but unreadable counts as invalid, never as the default", () => {
+    const v = parseSearchParams({ adults: "-1", children: "abc" });
+    expect(Number.isNaN(v.adults)).toBe(true);
+    expect(Number.isNaN(v.children)).toBe(true);
+    expect(validateSearch({ ...ok, adults: v.adults, children: v.children }, today)?.code).toBe(
+      "bad-guests",
+    );
+  });
+
+  it("takes the first value of a repeated param and keeps counts as requested", () => {
     expect(
-      parseSearchParams({ checkIn: ["2026-11-14", "2026-12-01"], adults: "99" }),
-    ).toMatchObject({
-      checkIn: "2026-11-14",
-      adults: 8,
+      parseSearchParams({ checkIn: ["2026-11-14", "2026-12-01"], adults: "9", children: "5" }),
+    ).toMatchObject({ checkIn: "2026-11-14", adults: 9, children: 5 });
+    expect(parseSearchParams({ adults: "99" }).adults).toBe(99);
+  });
+
+  it("keeps the requested counts in the group enquiry link", () => {
+    const v = parseSearchParams({
+      ...Object.fromEntries(new URLSearchParams(toSearchParams(ok))),
+      adults: "30",
+      children: "2",
     });
+    expect(validateSearch(v, today)?.code).toBe("too-many-guests");
+    expect(enquiryHref(v)).toContain("adults=30&children=2");
+  });
+
+  it("shows form defaults without clamping the party", () => {
+    expect(formCount(30, 2)).toBe(2);
+    expect(formCount(Number.NaN, 2)).toBe(2);
+    expect(formCount(9, 2)).toBe(9);
   });
 });

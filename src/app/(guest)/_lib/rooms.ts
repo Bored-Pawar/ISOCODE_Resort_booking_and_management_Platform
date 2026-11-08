@@ -8,7 +8,7 @@
  */
 import type { RoomType } from "@/modules/catalog";
 import type { Quote } from "@/modules/pricing";
-import { roomsNeeded, splitParty, type Party } from "./cart";
+import { MAX_CART_ROOMS, roomsNeeded, splitParty, type Party } from "./cart";
 
 export type { Party };
 
@@ -73,7 +73,24 @@ export function classifyRoom(input: {
   return { kind: "available", room, cheapest, plansPriced: quotes.length, rooms: n };
 }
 
-/** True when every room type would need more than 4 rooms: the page points to an enquiry. */
+/**
+ * True when no mix of at most 4 rooms (any types, repeats allowed) can hold the party under the
+ * occupancy rule: the page points to a group enquiry. Stock is not considered here.
+ */
 export function partyFitsNoRoom(rooms: RoomType[], party: Party): boolean {
-  return rooms.length > 0 && rooms.every((r) => roomsNeeded(r, party) === null);
+  if (rooms.length === 0) return false;
+  const total = party.adults + party.children;
+  const search = (count: number, from: number, adults: number, occupancy: number): boolean => {
+    if (count > 0 && count <= party.adults && adults >= party.adults && occupancy >= total) {
+      return true;
+    }
+    if (count === MAX_CART_ROOMS) return false;
+    for (let i = from; i < rooms.length; i++) {
+      if (search(count + 1, i, adults + rooms[i].maxAdults, occupancy + rooms[i].maxOccupancy)) {
+        return true;
+      }
+    }
+    return false;
+  };
+  return !search(0, 0, 0, 0);
 }

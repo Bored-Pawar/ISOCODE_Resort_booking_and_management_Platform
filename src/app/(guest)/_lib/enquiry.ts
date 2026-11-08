@@ -21,8 +21,8 @@ export function enquiryHref(opts: EnquiryPrefill = {}): string {
   const params = new URLSearchParams();
   if (opts.checkIn && isDateStr(opts.checkIn)) params.set("checkIn", opts.checkIn);
   if (opts.checkOut && isDateStr(opts.checkOut)) params.set("checkOut", opts.checkOut);
-  if (opts.adults !== undefined) params.set("adults", String(opts.adults));
-  if (opts.children !== undefined) params.set("children", String(opts.children));
+  if (Number.isInteger(opts.adults)) params.set("adults", String(opts.adults));
+  if (Number.isInteger(opts.children)) params.set("children", String(opts.children));
   if (opts.room && SLUG_RE.test(opts.room)) params.set("room", opts.room);
   const qs = params.toString();
   return qs ? `/enquire?${qs}` : "/enquire";

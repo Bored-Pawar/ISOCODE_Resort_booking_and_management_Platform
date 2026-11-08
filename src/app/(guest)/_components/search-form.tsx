@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button, DateRange, FieldNote, Stepper, type DateRangeValue } from "@/components/ui";
 import { addDays, isDateStr } from "@/lib/dates";
 import {
+  DEFAULT_GUESTS,
+  formCount,
   SEARCH_LIMITS,
   toSearchParams,
   validateSearch,
@@ -33,8 +35,8 @@ export function SearchForm({
     checkIn: defaults.checkIn,
     checkOut: defaults.checkOut,
   });
-  const [adults, setAdults] = useState(defaults.adults);
-  const [children, setChildren] = useState(defaults.children);
+  const [adults, setAdults] = useState(formCount(defaults.adults, DEFAULT_GUESTS.adults));
+  const [children, setChildren] = useState(formCount(defaults.children, DEFAULT_GUESTS.children));
   const [issue, setIssue] = useState<SearchIssue | null>(null);
 
   function onDates(next: DateRangeValue) {
@@ -68,7 +70,7 @@ export function SearchForm({
             hint="Age 13 and over"
             value={adults}
             min={1}
-            max={SEARCH_LIMITS.maxAdults}
+            max={SEARCH_LIMITS.maxGuests}
             onChange={(n) => {
               setAdults(n);
               setIssue(null);
@@ -78,7 +80,7 @@ export function SearchForm({
             label="Children"
             hint="Age 12 and under"
             value={children}
-            max={SEARCH_LIMITS.maxChildren}
+            max={SEARCH_LIMITS.maxGuests}
             onChange={(n) => {
               setChildren(n);
               setIssue(null);

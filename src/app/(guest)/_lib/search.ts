@@ -4,7 +4,11 @@
  */
 import { isDateStr, nightsBetween, type DateStr } from "@/lib/dates";
 
-export const SEARCH_LIMITS = { maxNights: 14, maxAdults: 8, maxChildren: 4 } as const;
+/**
+ * Online booking takes a party of up to `maxGuests` that fits in at most 4 rooms (B10). Counts are
+ * never clamped: a party outside these rules is told so and offered an enquiry with its real counts.
+ */
+export const SEARCH_LIMITS = { maxNights: 14, maxGuests: 24 } as const;
 
 export type SearchValues = {
   checkIn: DateStr | "";
@@ -14,7 +18,14 @@ export type SearchValues = {
 };
 
 export type SearchIssue = {
-  code: "missing-dates" | "past" | "order" | "too-long" | "no-adults" | "too-many-guests";
+  code:
+    | "missing-dates"
+    | "past"
+    | "order"
+    | "too-long"
+    | "no-adults"
+    | "bad-guests"
+    | "too-many-guests";
   message: string;
 };
 
@@ -37,17 +48,19 @@ export function validateSearch(v: SearchValues, today: DateStr): SearchIssue | n
       message: `We take online bookings up to ${SEARCH_LIMITS.maxNights} nights. For a longer stay, send us an enquiry.`,
     };
   }
-  if (!Number.isInteger(v.adults) || v.adults < 1) {
+  if (!Number.isInteger(v.adults) || v.adults < 0) {
+    return { code: "bad-guests", message: "Check the number of guests and try again." };
+  }
+  if (v.adults < 1) {
     return { code: "no-adults", message: "At least one adult needs to be staying." };
   }
-  if (
-    v.adults > SEARCH_LIMITS.maxAdults ||
-    v.children < 0 ||
-    v.children > SEARCH_LIMITS.maxChildren
-  ) {
+  if (!Number.isInteger(v.children) || v.children < 0) {
+    return { code: "bad-guests", message: "Check the number of guests and try again." };
+  }
+  if (v.adults + v.children > SEARCH_LIMITS.maxGuests) {
     return {
       code: "too-many-guests",
-      message: "Booking for a group? Send us an enquiry and we will arrange the rooms.",
+      message: `Online booking is for up to ${SEARCH_LIMITS.maxGuests} guests. Booking for a group? Send us an enquiry and we will arrange the rooms.`,
     };
   }
   return null;
@@ -69,19 +82,28 @@ function first(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value) ?? "";
 }
 
-function toCount(raw: string, fallback: number, max: number): number {
-  if (!/^\d{1,2}$/.test(raw)) return fallback;
-  return Math.min(Number(raw), max);
+/**
+ * Absent means the default. Present but unreadable is NaN, which validateSearch reports, so a
+ * mangled link is never quietly turned into a different party. Large values are kept as given.
+ */
+function toCount(raw: string, fallback: number): number {
+  if (raw === "") return fallback;
+  return /^\d{1,3}$/.test(raw) ? Number(raw) : Number.NaN;
 }
 
-/** Reads untrusted URL params. Anything malformed falls back to an empty or default value. */
+/** A count the guest form can show: out-of-range or unreadable values fall back to the default. */
+export function formCount(n: number, fallback: number): number {
+  return Number.isInteger(n) && n >= 0 && n <= SEARCH_LIMITS.maxGuests ? n : fallback;
+}
+
+/** Reads untrusted URL params. Malformed dates become empty; counts are preserved (see toCount). */
 export function parseSearchParams(raw: RawParams): SearchValues {
   const checkIn = first(raw.checkIn);
   const checkOut = first(raw.checkOut);
   return {
     checkIn: isDateStr(checkIn) ? checkIn : "",
     checkOut: isDateStr(checkOut) ? checkOut : "",
-    adults: toCount(first(raw.adults), DEFAULT_GUESTS.adults, SEARCH_LIMITS.maxAdults),
-    children: toCount(first(raw.children), DEFAULT_GUESTS.children, SEARCH_LIMITS.maxChildren),
+    adults: toCount(first(raw.adults), DEFAULT_GUESTS.adults),
+    children: toCount(first(raw.children), DEFAULT_GUESTS.children),
   };
 }
