@@ -1,0 +1,167 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { catalog } from "@/modules/catalog";
+import { inventory } from "@/modules/inventory";
+import { pricing, quoteFixture, type QuoteInput } from "@/modules/pricing";
+import { roomTypesFixture } from "@/modules/catalog/fixtures";
+import { classificationFixtures } from "./fixtures";
+import { matchingRooms, selectQuote } from "./quote-selection";
+vi.mock("@/modules/catalog", () => ({ catalog: { listRoomTypes: vi.fn() } }));
+vi.mock("@/modules/inventory", () => ({ inventory: { availability: vi.fn() } }));
+vi.mock("@/modules/pricing", async (original) => ({
+  ...(await original<typeof import("@/modules/pricing")>()),
+  pricing: { quote: vi.fn() },
+}));
+const villa = classificationFixtures["ENQ-4411"].classification;
+afterEach(() => vi.resetAllMocks());
+function setup(units = 3) {
+  vi.mocked(catalog.listRoomTypes).mockResolvedValue(roomTypesFixture);
+  vi.mocked(inventory.availability).mockResolvedValue({
+    ok: true,
+    rooms: roomTypesFixture.map((r) => ({
+      roomTypeId: r.id,
+      availableUnits: units,
+      soldOut: units === 0,
+      blackedOut: false,
+    })),
+  });
+  const costs = new Map(roomTypesFixture.map((r, i) => [r.id, (i + 1) * 100000]));
+  vi.mocked(pricing.quote).mockImplementation(async (input: QuoteInput) => ({
+    ok: true,
+    quote: {
+      ...quoteFixture,
+      checkIn: input.checkIn,
+      checkOut: input.checkOut,
+      lines: input.rooms.map((line, i) => ({
+        ...quoteFixture.lines[0],
+        ...line,
+        children: line.children ?? 0,
+        lineNo: i + 1,
+        totalPaise: costs.get(line.roomTypeId)!,
+      })),
+      totalPaise: input.rooms.reduce((n, line) => n + costs.get(line.roomTypeId)!, 0),
+    },
+  }));
+}
+const quoteFor = (c: typeof villa, text: string) =>
+  selectQuote(
+    c,
+    `${text}. From ${c.dates.from} to ${c.dates.to} for ${c.guests.adults} adults and ${c.guests.children ?? 0} children.`,
+    "2026-11-08",
+  );
+describe("deterministic quote choice", () => {
+  it.each([
+    ["पूल विला", "Pool Villa"],
+    ["pool wala villa", "Pool Villa"],
+    ["गार्डन विला", "Garden Villa"],
+    ["bagiche wala villa", "Garden Villa"],
+    ["एस्टेट सुइट", "Estate Suite"],
+    ["estate suit", "Estate Suite"],
+    ["प्लांटेशन कमरा", "Plantation Room"],
+    ["plantation kamra", "Plantation Room"],
+  ])("matches only existing type for alias %s", (alias, name) => {
+    expect(matchingRooms(roomTypesFixture, alias).map((r) => r.name)).toEqual([name]);
+  });
+  it("named Pool Villa with no availability never quotes other available types", async () => {
+    setup();
+    vi.mocked(inventory.availability).mockResolvedValue({
+      ok: true,
+      rooms: roomTypesFixture.map((r) => ({
+        roomTypeId: r.id,
+        availableUnits: r.name === "Pool Villa" ? 0 : 3,
+        soldOut: r.name === "Pool Villa",
+        blackedOut: false,
+      })),
+    });
+    expect(await quoteFor(villa, "My name is Priya and we want the Pool Villa")).toBeNull();
+    expect(pricing.quote).not.toHaveBeenCalled();
+  });
+  it.each([
+    "2027-02-30 to 2027-03-01 for -2 adults and 1.5 children",
+    "14-16 Nov for -2 adults and 1 child",
+    "14-16 Nov for 2 adults and 1.5 children",
+    "14-16 Nov or 20-22 Nov for 2 adults and 1 child",
+    "INR 14/11 and Rs 16/11 for 2 adults and 1 child",
+  ])("unsupported extraction cannot reach pricing: %s", async (raw) => {
+    setup();
+    expect(await selectQuote(villa, raw, "2026-11-08")).toBeNull();
+    expect(pricing.quote).not.toHaveBeenCalled();
+    expect(inventory.availability).not.toHaveBeenCalled();
+  });
+  it("a more specific named room never broadens to a shorter name it contains", () => {
+    const specific = {
+      ...roomTypesFixture[2],
+      id: "specific",
+      name: "Garden Villa North Wing",
+      slug: "garden-villa-north-wing",
+    };
+    expect(
+      matchingRooms([...roomTypesFixture, specific], "Garden Villa North Wing").map((r) => r.id),
+    ).toEqual(["specific"]);
+    expect(
+      matchingRooms(roomTypesFixture, "Garden Villa or Pool Villa").map((r) => r.name),
+    ).toEqual(["Garden Villa", "Pool Villa"]);
+  });
+  it("villa preference excludes cheaper plantation rooms", async () => {
+    setup();
+    const quote = await quoteFor(villa, "Is a villa free?");
+    expect(quote?.lines[0].roomTypeId).toBe(roomTypesFixture[2].id);
+  });
+  it("respects a specific Pool Villa request", async () => {
+    setup();
+    expect((await quoteFor(villa, "Pool Villa please"))?.lines[0].roomTypeId).toBe(
+      roomTypesFixture[3].id,
+    );
+  });
+  it("an unavailable requested villa never substitutes a plantation room", async () => {
+    setup(0);
+    expect(await quoteFor(villa, "a villa")).toBeNull();
+    expect(pricing.quote).not.toHaveBeenCalled();
+  });
+  it("checks repeated units for a two-room request", async () => {
+    setup(1);
+    expect(
+      await quoteFor({ ...villa, guests: { adults: 4, children: 0 } }, "2 rooms, Plantation Room"),
+    ).toBeNull();
+    setup(2);
+    expect(
+      (await quoteFor({ ...villa, guests: { adults: 4, children: 0 } }, "2 rooms, Plantation Room"))
+        ?.lines,
+    ).toHaveLength(2);
+  });
+  it("missing rates never generate a price", async () => {
+    setup();
+    vi.mocked(pricing.quote).mockResolvedValue({ ok: false, code: "NO_RATE" });
+    expect(await quoteFor(villa, "a villa")).toBeNull();
+  });
+  it("stable tie-break survives catalog order changes", async () => {
+    setup();
+    vi.mocked(pricing.quote).mockImplementation(async (input) => ({
+      ok: true,
+      quote: {
+        ...quoteFixture,
+        lines: input.rooms.map((line, i) => ({
+          ...quoteFixture.lines[0],
+          ...line,
+          children: line.children ?? 0,
+          lineNo: i + 1,
+        })),
+        totalPaise: input.rooms.length * 10000,
+      },
+    }));
+    const first = await quoteFor(villa, "a villa");
+    vi.mocked(catalog.listRoomTypes).mockResolvedValue([...roomTypesFixture].reverse());
+    expect(await quoteFor(villa, "a villa")).toEqual(first);
+  });
+  it("missing fields/non-room enquiries do not read stock or rates", async () => {
+    setup();
+    expect(await quoteFor({ ...villa, dates: {} }, "villa")).toBeNull();
+    expect(await quoteFor({ ...villa, category: "offsite" }, "conference hall")).toBeNull();
+    expect(inventory.availability).not.toHaveBeenCalled();
+  });
+  it("generic suites and private pool requests restrict types", () => {
+    expect(matchingRooms(roomTypesFixture, "villa with private pool").map((r) => r.name)).toEqual([
+      "Pool Villa",
+    ]);
+    expect(matchingRooms(roomTypesFixture, "a suite").map((r) => r.name)).toEqual(["Estate Suite"]);
+  });
+});

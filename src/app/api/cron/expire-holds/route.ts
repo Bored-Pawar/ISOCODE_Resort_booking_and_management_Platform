@@ -1,6 +1,8 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { booking } from "@/modules/booking";
+import { recoverEnquiries } from "@/modules/ai-router";
+export const maxDuration = 60;
 
 const inputSchema = z.object({
   authorization: z.string().regex(/^Bearer \S+$/),
@@ -20,5 +22,9 @@ export async function GET(request: Request): Promise<Response> {
   if (!timingSafeEqual(digest(input.data.authorization), digest(`Bearer ${secret}`))) {
     return Response.json({ error: "UNAUTHENTICATED" }, { status: 401 });
   }
-  return Response.json(await booking.releaseExpiredHolds());
+  const [holds, aiRecovery] = await Promise.all([
+    booking.releaseExpiredHolds(),
+    recoverEnquiries().catch(() => ({ error: "RECOVERY_FAILED" })),
+  ]);
+  return Response.json({ ...holds, aiRecovery });
 }

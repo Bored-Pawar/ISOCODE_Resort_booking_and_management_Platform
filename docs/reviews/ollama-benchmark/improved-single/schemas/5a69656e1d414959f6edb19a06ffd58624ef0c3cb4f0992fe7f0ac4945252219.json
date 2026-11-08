@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "enum": [
+        "room",
+        "wedding",
+        "offsite",
+        "complaint",
+        "other"
+      ]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "dates": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "additionalProperties": false
+    },
+    "guests": {
+      "type": "object",
+      "properties": {
+        "adults": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "children": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        }
+      },
+      "additionalProperties": false
+    },
+    "budget": {
+      "type": "object",
+      "properties": {
+        "amountInr": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "additionalProperties": false
+    },
+    "language": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "draftText": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "category",
+    "confidence",
+    "dates",
+    "guests",
+    "budget",
+    "language",
+    "summary"
+  ],
+  "additionalProperties": false
+}

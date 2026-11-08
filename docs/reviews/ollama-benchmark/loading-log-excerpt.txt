@@ -1,0 +1,15 @@
+﻿load_tensors:    CUDA_Host model buffer size =   844.04 MiB
+time=2026-11-08T20:05:15.816+05:30 level=WARN source=llama_server.go:1357 msg="client connection closed before llama-server finished loading, aborting load"
+time=2026-11-08T20:05:15.816+05:30 level=INFO source=sched.go:679 msg="Load failed" model="[USERPROFILE]\\.ollama\\models\\blobs\\sha256-2bada8a7450677000f678be90653b85d364de7db25eb5ea54136ada5f3933730" error="timed out waiting for llama-server to start: context canceled"
+common_params_fit_impl: context size set by user to 4096 -> no change
+load_tensors: offloaded 25/29 layers to GPU
+load_tensors:        CUDA0 model buffer size =  3616.41 MiB
+load_tensors:    CUDA_Host model buffer size =   844.04 MiB
+time=2026-11-08T20:05:25.894+05:30 level=WARN source=llama_server.go:1357 msg="client connection closed before llama-server finished loading, aborting load"
+time=2026-11-08T20:05:25.894+05:30 level=INFO source=sched.go:679 msg="Load failed" model="[USERPROFILE]\\.ollama\\models\\blobs\\sha256-2bada8a7450677000f678be90653b85d364de7db25eb5ea54136ada5f3933730" error="timed out waiting for llama-server to start: context canceled"
+common_params_fit_impl: context size set by user to 4096 -> no change
+load_tensors: offloaded 25/29 layers to GPU
+load_tensors:        CUDA0 model buffer size =  3616.41 MiB
+load_tensors:    CUDA_Host model buffer size =   844.04 MiB
+time=2026-11-08T20:05:35.730+05:30 level=WARN source=llama_server.go:1357 msg="client connection closed before llama-server finished loading, aborting load"
+time=2026-11-08T20:05:35.730+05:30 level=INFO source=sched.go:679 msg="Load failed" model="[USERPROFILE]\\.ollama\\models\\blobs\\sha256-2bada8a7450677000f678be90653b85d364de7db25eb5ea54136ada5f3933730" error="timed out waiting for llama-server to start: context canceled"
