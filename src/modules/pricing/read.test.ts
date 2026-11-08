@@ -50,3 +50,34 @@ describe("B10 quote input", () => {
     });
   });
 });
+
+describe("NO_RATE from a missing tax slab", () => {
+  const A = "6f1c1c1e-4a3b-4c6d-8e9f-0a1b2c3d4e5f";
+  const B = "8f1c1c1e-4a3b-4c6d-8e9f-0a1b2c3d4e5f";
+  const rates = (pricePaise: number) => [
+    { date: "2099-11-14", pricePaise },
+    { date: "2099-11-15", pricePaise },
+  ];
+  const lineRow = (idx: number, pricePaise: number) => ({
+    idx,
+    found: true,
+    maxAdults: 4,
+    maxOccupancy: 4,
+    rates: rates(pricePaise),
+  });
+  // Slabs end at Rs 7,500: only the second line's Rs 8,000 nights are uncovered.
+  const db = {
+    execute: async () => [
+      {
+        lines: [lineRow(0, 400000), lineRow(1, 800000)],
+        slabs: [{ minPaise: 0, maxPaise: 750000, gstBp: 500, effectiveFrom: "2025-09-22" }],
+        promo: null,
+      },
+    ],
+  } as unknown as Db;
+
+  it("returns the lineIndex of the line with no slab, not a bare NO_RATE", async () => {
+    const result = await readQuote(db, stay([room, { ...room, roomTypeId: A, ratePlanId: B }]));
+    expect(result).toEqual({ ok: false, code: "NO_RATE", lineIndex: 1 });
+  });
+});

@@ -112,7 +112,9 @@ export async function readQuote(db: Db | Tx, input: QuoteInput): Promise<QuoteRe
       ),
     };
   } catch (error) {
-    if (error instanceof MissingTaxSlab) return { ok: false, code: "NO_RATE" };
+    if (error instanceof MissingTaxSlab) {
+      return { ok: false, code: "NO_RATE", lineIndex: error.lineIndex };
+    }
     throw error;
   }
 }

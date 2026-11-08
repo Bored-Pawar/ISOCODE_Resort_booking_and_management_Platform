@@ -184,3 +184,25 @@ describe("B10 multi-room calculation", () => {
     );
   });
 });
+
+describe("missing tax slab location", () => {
+  // Slabs cover only up to Rs 7,500: a Rs 8,000 cell has no matching slab.
+  const partial = [{ minPaise: 0, maxPaise: 750000, gstBp: 500, effectiveFrom: "2025-09-22" }];
+
+  it("reports the line whose cell has no slab", () => {
+    const run = () =>
+      calculateQuote(
+        stay,
+        twoNights,
+        [line([400000, 400000]), line([800000, 800000], { roomTypeId: "r2" })],
+        null,
+        partial,
+      );
+    expect(run).toThrow(MissingTaxSlab);
+    try {
+      run();
+    } catch (error) {
+      expect((error as MissingTaxSlab).lineIndex).toBe(1);
+    }
+  });
+});

@@ -10,7 +10,10 @@ export type Slab = {
 };
 export type PromoRule = Pick<Promo, "kind" | "value">;
 
-export class MissingTaxSlab extends Error {}
+export class MissingTaxSlab extends Error {
+  /** 0-based cart line whose cell had no matching slab; set by calculateQuote. */
+  lineIndex?: number;
+}
 
 /** Each effective date defines a complete schedule; never fall back to an older schedule. */
 export function pickGstBp(valuePaise: number, slabs: readonly Slab[], date: string): number {
@@ -119,9 +122,15 @@ export function calculateQuote(
     promo,
   );
   const quoteLines: QuoteLine[] = lines.map((line, li) => {
-    const nights = dates.map((date, di) =>
-      buildNight(date, line.rates[di], discounts[li * dates.length + di], slabs),
-    );
+    let nights: QuoteNight[];
+    try {
+      nights = dates.map((date, di) =>
+        buildNight(date, line.rates[di], discounts[li * dates.length + di], slabs),
+      );
+    } catch (error) {
+      if (error instanceof MissingTaxSlab) error.lineIndex = li;
+      throw error;
+    }
     const subtotalPaise = sum(nights, "ratePaise");
     const discountPaise = sum(nights, "discountPaise");
     const gstPaise = sum(nights, "gstPaise");
