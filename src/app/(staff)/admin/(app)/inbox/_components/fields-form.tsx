@@ -3,7 +3,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, useToast } from "@/components/ui";
 import type { Extracted } from "@/modules/enquiries";
-import type { Evidence } from "@/modules/enquiries/staff/rules";
+import type { Evidence } from "@/modules/enquiries/staff/display";
 import { EvidenceBadge } from "./badges";
 import { saveFieldsAction } from "../actions";
 

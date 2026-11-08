@@ -6,7 +6,7 @@ import { Bell as BellIcon, ShieldAlert, Inbox } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { Bell } from "@/modules/enquiries";
-import { formatWaiting } from "@/modules/enquiries/staff/rules";
+import { formatWaiting } from "@/modules/enquiries/staff/display";
 import { bellAction, markAllReadAction, markReadAction } from "../bell-actions";
 
 /**

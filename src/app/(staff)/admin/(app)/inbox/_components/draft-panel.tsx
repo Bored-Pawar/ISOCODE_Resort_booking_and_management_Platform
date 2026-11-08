@@ -5,7 +5,7 @@ import { AlertTriangle, Send, Sparkles } from "lucide-react";
 import { Badge, Button, Card, Textarea, useToast } from "@/components/ui";
 import { formatInr } from "@/lib/money";
 import type { Draft } from "@/modules/enquiries";
-import { addsNewPrice, PRICE_WARNING } from "@/modules/enquiries/staff/rules";
+import { addsNewPrice, PRICE_WARNING } from "@/modules/enquiries/staff/display";
 import { approveAndSendAction, closeAction, regenerateAction, saveDraftAction } from "../actions";
 
 type Quote = {

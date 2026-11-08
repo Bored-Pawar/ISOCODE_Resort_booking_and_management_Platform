@@ -3,7 +3,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, Megaphone } from "lucide-react";
 import { Button, Card, Textarea, useToast } from "@/components/ui";
-import { NOTE_MAX } from "@/modules/enquiries/staff/rules";
+import { NOTE_MAX } from "@/modules/enquiries/staff/display";
 import { requestAttentionAction, resolveAttentionAction } from "../actions";
 
 /**

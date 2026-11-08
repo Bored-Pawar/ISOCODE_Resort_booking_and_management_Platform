@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui";
 import type { InboxRow } from "@/modules/enquiries";
-import { EVIDENCE_LABEL, LOW_CONFIDENCE, type Evidence } from "@/modules/enquiries/staff/rules";
+import { EVIDENCE_LABEL, LOW_CONFIDENCE, type Evidence } from "@/modules/enquiries/staff/display";
 
 export const CATEGORY_LABEL = {
   room: "Room",

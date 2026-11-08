@@ -1,9 +1,15 @@
 import { Card } from "@/components/ui";
 import { formatInr } from "@/lib/money";
 import type { InboxActor, InboxDetail } from "@/modules/enquiries";
-import { formatWaiting } from "@/modules/enquiries/staff/rules";
+import {
+  CATEGORIES,
+  defaultOwnerRole,
+  formatWaiting,
+  ownerRolesFor,
+} from "@/modules/enquiries/staff/rules";
 import {
   AiBadge,
+  CATEGORY_LABEL,
   CategoryBadge,
   ChannelBadge,
   CHANNEL_LABEL,
@@ -13,7 +19,7 @@ import {
   WaitingBadge,
 } from "./badges";
 import { FieldsForm } from "./fields-form";
-import { RerouteForm } from "./reroute-form";
+import { RerouteForm, type RerouteOption } from "./reroute-form";
 import { RetryForm } from "./retry-form";
 import { Timeline } from "./timeline";
 
@@ -22,6 +28,25 @@ const when = new Intl.DateTimeFormat("en-IN", {
   timeStyle: "short",
   timeZone: "Asia/Kolkata",
 });
+
+const ROLE = { reservations: "Reservations", sales: "Sales", gm: "GM" } as const;
+
+/** Owner choices per category, from permissions (complaints only the GM). */
+function rerouteOptions(detail: InboxDetail): RerouteOption[] {
+  const complaint = detail.enquiry.isComplaint;
+  return CATEGORIES.map((category) => {
+    const isComplaint = complaint || category === "complaint";
+    const roles = ownerRolesFor(category, isComplaint);
+    const users = detail.staff.filter((u) => roles.includes(u.role));
+    const preferred = defaultOwnerRole(category, isComplaint);
+    return {
+      category,
+      label: CATEGORY_LABEL[category],
+      owners: users.map((u) => ({ id: u.id, label: `${u.name} (${ROLE[u.role]})` })),
+      defaultOwnerId: (users.find((u) => u.role === preferred) ?? users[0])?.id ?? "",
+    };
+  });
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -132,7 +157,7 @@ export function Detail({
             category={q.category}
             ownerId={q.ownerId}
             isComplaint={q.isComplaint}
-            staff={detail.staff}
+            options={rerouteOptions(detail)}
           />
         </Section>
       ) : null}
