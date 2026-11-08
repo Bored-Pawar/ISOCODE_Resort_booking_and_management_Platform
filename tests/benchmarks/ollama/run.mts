@@ -10,6 +10,7 @@ import { executeStructured, BENCHMARK_ATTEMPT_TIMEOUT_MS } from "./provider";
 import { classificationSchema, modelResponseSchema } from "../../../src/modules/ai-router/schema";
 import { safeModelDraft } from "../../../src/modules/ai-router/price-guard";
 import { buildDraft } from "../../../src/modules/ai-router/draft";
+import { groundExtraction } from "../../../src/modules/ai-router/grounding";
 import { route } from "../../../src/modules/ai-router/routing";
 import {
   SYSTEM_PROMPT,
@@ -350,12 +351,7 @@ for (const model of models) {
         senderContact: "visitor@benchmark.invalid",
         receivedAt: new Date(REFERENCE_DATE),
       };
-      const result =
-        suite === "two-call"
-          ? await twoCall(input)
-          : suite === "improved-single"
-            ? await improvedSingle(input)
-            : await improvedSingle(input);
+      const result = suite === "two-call" ? await twoCall(input) : await improvedSingle(input);
       const totalLatencyMs = performance.now() - start;
       const captures = [...active];
       const responses = captures.map((c) => {
@@ -403,7 +399,17 @@ for (const model of models) {
         draftValue && typeof draftValue === "object"
           ? (draftValue as Record<string, unknown>).draftText
           : null;
-      const draft = buildDraft(result.classification, result.draftText, null);
+      const context = {
+        evidence: groundExtraction(item.text, result.classification, "2026-11-08"),
+        rawText: item.text,
+      };
+      const draft = buildDraft(
+        result.classification,
+        result.draftText,
+        null,
+        context.evidence,
+        item.text,
+      );
       const row = {
         suite,
         model,
@@ -413,7 +419,16 @@ for (const model of models) {
         referenceDate: REFERENCE_DATE,
         rawResponses: responses,
         application: result,
-        route: route(result.classification, result.status),
+        route: route(
+          result.classification,
+          result.status,
+          item.text,
+          Boolean(
+            rawValue &&
+            typeof rawValue === "object" &&
+            (rawValue as Record<string, unknown>).isComplaint === true,
+          ),
+        ),
         noQuoteFixtureDraft: draft,
         metrics: {
           categoryCorrect: item.expected.categories.includes(result.classification.category),
@@ -427,10 +442,15 @@ for (const model of models) {
           extraction: evaluateExtraction(item, rawValue),
           schemaValid: result.status === "ok",
           rawLiteralQuoteCount: placeholderCount(rawDraft),
-          rawGuardPass: safeModelDraft(rawDraft, result.classification.category === "room"),
+          rawGuardPass: safeModelDraft(
+            rawDraft,
+            result.classification.category === "room",
+            context,
+          ),
           modelDraftGuardPass: safeModelDraft(
             result.draftText,
             result.classification.category === "room",
+            context,
           ),
           fallback: result.status === "fallback",
           draftTemplateFallback: draft.usedTemplate,

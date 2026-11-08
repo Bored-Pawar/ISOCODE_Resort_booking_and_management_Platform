@@ -5,6 +5,7 @@ import { selectProvider } from "../src/modules/ai-provider";
 import { safeModelDraft } from "../src/modules/ai-router/price-guard";
 import { route } from "../src/modules/ai-router/routing";
 import { PROMPT_VERSION } from "../src/modules/ai-router/prompts";
+import { groundExtraction } from "../src/modules/ai-router/grounding";
 
 const smoke = process.argv.includes("--smoke");
 const selection = selectProvider();
@@ -45,8 +46,11 @@ if (selection.kind !== "error")
       actual: r.classification.category,
       status: r.status,
       correct: r.classification.category === item.label,
-      safeDraft: safeModelDraft(r.draftText, r.classification.category === "room"),
-      unsorted: route(r.classification, r.status).lane === "unsorted",
+      safeDraft: safeModelDraft(r.draftText, r.classification.category === "room", {
+        rawText: item.text,
+        evidence: groundExtraction(item.text, r.classification, "2026-11-08"),
+      }),
+      unsorted: route(r.classification, r.status, item.text, r.complaintSignal).lane === "unsorted",
       latencyMs: r.response.latencyMs,
       rateLimits: r.response.rateLimits,
       error: r.response.kind === "error" ? r.response.error : null,

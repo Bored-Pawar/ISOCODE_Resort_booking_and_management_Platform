@@ -34,6 +34,8 @@ describe("draft safety", () => {
     );
     expect(result.body).toContain("Plantation Room");
     expect(result.body).not.toContain("0 children");
+    expect(result.quote).toEqual(quoteFixture);
+    expect(result.quote).not.toHaveProperty("roomNames");
   });
   it("fills canonicalized placeholders and still rejects disguised model prices", () => {
     const draft = buildDraft(villa, "Thank you. ｛｛QUO\u200bTE｝｝", quoteFixture);

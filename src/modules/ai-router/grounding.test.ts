@@ -63,4 +63,15 @@ describe("server extraction grounding", () => {
     ).toMatchObject({ eligible: true, childrenSupplied: true });
     expect(groundExtraction("14-16 Nov for two people", value, today).eligible).toBe(false);
   });
+  it.each([
+    "twenty two adults",
+    "minus two adults",
+    "- 2 adults",
+    "one point two adults",
+    "one or two adults",
+    "1/2 adults",
+    "INR 2 adults",
+  ])("does not truncate compound/invalid party evidence: %s", (party) => {
+    expect(groundExtraction(`14-16 Nov for ${party} and 1 child`, c, today).eligible).toBe(false);
+  });
 });

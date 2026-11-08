@@ -26,5 +26,8 @@ export function buildDraft(
   const price = quote
     ? `Quoted for ${quote.checkIn} to ${quote.checkOut}, ${evidence!.guests!.adults} adults, ${evidence!.childrenSupplied ? `${evidence!.guests!.children} children` : "child count not supplied; estimate assumes no children"}, ${quote.roomNames?.join(" + ") ?? quote.lines.map((line) => line.roomTypeId).join(" + ")}: From ${formatInr(quote.totalPaise)} (room only, including ${formatInr(quote.gstPaise)} GST). This is indicative, subject to availability; no room is held.`
     : "Please confirm your dates, adults, children and preferred room type. Our team will check availability and rates.";
-  return { body: template.replaceAll("{{QUOTE}}", price), quote, usedTemplate: !safe };
+  // Catalog labels are presentation evidence, not part of the frozen pricing snapshot.
+  const snapshot = quote ? { ...quote } : null;
+  if (snapshot) delete snapshot.roomNames;
+  return { body: template.replaceAll("{{QUOTE}}", price), quote: snapshot, usedTemplate: !safe };
 }

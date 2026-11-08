@@ -20,6 +20,10 @@ vi.mock("ai", async (original) => ({
 }));
 vi.mock("next/server", () => ({ after: vi.fn() }));
 vi.mock("next/cache", () => ({ cacheLife: vi.fn() }));
+vi.mock("@/lib/dates", async (original) => ({
+  ...(await original<typeof import("@/lib/dates")>()),
+  todayIST: () => "2026-11-08",
+}));
 const { db, client } = dbModule.createDb(testUrl(), { max: 6 });
 const ids: string[] = [];
 const staffIds: string[] = [];
@@ -185,6 +189,53 @@ describe(
 );
 
 describe("fallback, duplicate intake and security", { timeout: 90_000 }, () => {
+  it.each([
+    [
+      "2027-02-30 to 2027-03-01 for -2 adults and 1.5 children",
+      { from: "2027-02-28", to: "2027-03-01" },
+    ],
+    ["14-16 Nov for -2 adults and 1 child", villa.dates],
+    ["14-16 Nov for 2 adults and 1.5 children", villa.dates],
+    ["14-16 Nov or 20-22 Nov for 2 adults and 1 child", villa.dates],
+    ["2026-10-14 to 2026-10-16 for 2 adults and 1 child", { from: "2026-10-14", to: "2026-10-16" }],
+  ])(
+    "unsupported extraction never calls live pricing or changes room classification: %s",
+    async (text, dates) => {
+      output({ ...villa, dates }, null);
+      const quoteSpy = vi.spyOn(pricing, "quote");
+      const { id } = await ingest(text);
+      expect(await aiRouter.process({ enquiryId: id })).toMatchObject({
+        ok: true,
+        status: "ok",
+        ownerRole: "reservations",
+      });
+      expect(quoteSpy).not.toHaveBeenCalled();
+      const [draft] = await draftsFor(id);
+      expect(draft.quote).toBeNull();
+      expect(draft.body).not.toContain("₹");
+      expect(draft.body).toContain("confirm your dates");
+      expect((await rowsFor(id))[0].extracted).toHaveProperty("grounding");
+    },
+  );
+  it("mixed complaint with a high-confidence room label alerts GM exactly once and keeps reservations", async () => {
+    output(villa, null);
+    const { id } = await ingest("The room was dirty and broken. We also need another room.");
+    expect(await aiRouter.process({ enquiryId: id })).toMatchObject({
+      ok: true,
+      ownerRole: "reservations",
+      notifyGm: true,
+    });
+    expect(await aiRouter.process({ enquiryId: id })).toMatchObject({
+      ok: true,
+      ownerRole: "reservations",
+      notifyGm: true,
+    });
+    expect((await rowsFor(id))[0]).toMatchObject({ isComplaint: true, category: "room" });
+    const alerts = await db.select().from(t.notifications).where(eq(t.notifications.enquiryId, id));
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].kind).toBe("complaint");
+    expect(await draftsFor(id)).toHaveLength(1);
+  });
   it("provider outage alerts GM once for complaint, always unsorted", async () => {
     vi.mocked(generateText).mockRejectedValue({
       statusCode: 401,
@@ -252,7 +303,8 @@ describe("multi-room quote selection using public services", { timeout: 90_000 }
   it("splits occupancy over two rooms and respects each unit's website stock", async () => {
     const c = { ...villa, guests: { adults: 4, children: 2, total: 6 } };
     const text = (await catalog.listRoomTypes()).find((r) => r.id === room.room.id)!.name;
-    const quote = await selectQuote(c, text);
+    const original = `${text}. 2026-11-14 to 2026-11-16 for 4 adults and 2 children`;
+    const quote = await selectQuote(c, original);
     expect(quote?.lines).toHaveLength(2);
     expect(quote?.lines.reduce((n, r) => n + r.adults, 0)).toBe(4);
     expect(quote?.lines.reduce((n, r) => n + r.children, 0)).toBe(2);
@@ -260,12 +312,14 @@ describe("multi-room quote selection using public services", { timeout: 90_000 }
       .update(t.inventory)
       .set({ allotment: 1 })
       .where(eq(t.inventory.roomTypeId, room.room.id));
-    expect(await selectQuote(c, text)).toBeNull();
+    expect(await selectQuote(c, original)).toBeNull();
   }, 60000);
   it("missing rate or missing party produces no fabricated price", async () => {
     const text = (await catalog.listRoomTypes()).find((r) => r.id === room.room.id)!.name;
     await db.delete(t.dailyRates).where(eq(t.dailyRates.roomTypeId, room.room.id));
-    expect(await selectQuote(villa, text)).toBeNull();
+    expect(
+      await selectQuote(villa, `${text}. 2026-11-14 to 2026-11-16 for 2 adults and 1 child`),
+    ).toBeNull();
     expect(await selectQuote({ ...villa, guests: {} }, text)).toBeNull();
     expect(await selectQuote({ ...villa, dates: {} }, text)).toBeNull();
   }, 60000);

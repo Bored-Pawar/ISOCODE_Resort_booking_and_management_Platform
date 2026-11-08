@@ -144,9 +144,19 @@ function countEvidence(text: string, label: string) {
   const mentions = [...text.matchAll(new RegExp(`(?<![\\p{L}\\p{N}])${label}(?![\\p{L}])`, "giu"))];
   const counts = mentions.map((m) => {
     const before = text.slice(0, m.index).trimEnd();
-    const token = before
-      .match(/(?<![\p{L}\p{N}.])([+\-−]?\d+(?:\.\d+)?|[a-z]+)\s*$/iu)?.[1]
-      ?.toLowerCase();
+    const tokenMatch = before.match(/(?<![\p{L}\p{N}.])([+\-−]?\d+(?:\.\d+)?|[a-z]+)\s*$/iu);
+    const token = tokenMatch?.[1]?.toLowerCase();
+    const prefix = tokenMatch ? before.slice(0, tokenMatch.index).trimEnd() : "";
+    // Never take the final component of a compound, fraction, negative or ambiguous count.
+    const compound = new RegExp(
+      `\\b(?:${Object.keys(numbers).join("|")}|thirty|forty|fifty|hundred|minus|negative|point|half|quarter)(?:[ -]+(?:or|to|and|of))?[ -]*$`,
+      "i",
+    );
+    if (
+      compound.test(prefix) ||
+      /\d\s*[./+−-]\s*$|(?:^|[\s(:,])[-−]\s*$|[₹$€£]\s*$|\b(?:inr|rs)\.?\s*$/i.test(prefix)
+    )
+      return undefined;
     const value =
       token === undefined ? undefined : /^\d+$/.test(token) ? Number(token) : numbers[token];
     return value;
