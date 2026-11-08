@@ -2,10 +2,11 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Db, Tx } from "@/lib/db";
 import { eachNight } from "@/lib/dates";
+import { fitsRoom } from "@/lib/occupancy";
 import { calculateQuote, MissingTaxSlab, type Slab } from "./calculation";
-import { quoteInputSchema, type Quote, type QuoteInput, type QuoteResult } from "./types";
+import { quoteInputSchema, type Promo, type QuoteInput, type QuoteResult } from "./types";
 
-type PromoRow = NonNullable<Quote["promo"]> & {
+type PromoRow = Promo & {
   active: boolean;
   validFrom: string;
   validTo: string;
@@ -14,26 +15,51 @@ type PromoRow = NonNullable<Quote["promo"]> & {
   usedCount: number;
 };
 
-/** One statement gives public reads and transaction repricing a coherent database snapshot. */
+type LineRow = {
+  idx: number;
+  found: boolean;
+  maxAdults: number | null;
+  maxOccupancy: number | null;
+  rates: { date: string; pricePaise: number }[];
+};
+
+const uuid = z.uuid();
+
+/**
+ * One statement gives public reads and transaction repricing a coherent database snapshot for
+ * every line of the cart. Line checks run in cart order; the first failing line is reported.
+ */
 export async function readQuote(db: Db | Tx, input: QuoteInput): Promise<QuoteResult> {
   const parsed = quoteInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
   const p = parsed.data;
-  if (!z.uuid().safeParse(p.roomTypeId).success || !z.uuid().safeParse(p.ratePlanId).success) {
-    return { ok: false, code: "NO_RATE" };
-  }
-  const rows = await db.execute<{
-    max_adults: number;
-    max_children: number;
-    rates: { date: string; pricePaise: number }[];
-    slabs: Slab[];
-    promo: PromoRow | null;
-  }>(sql`
-    SELECT r.max_adults, r.max_children,
-      (SELECT coalesce(jsonb_agg(jsonb_build_object('date', d.date, 'pricePaise', d.price_paise)
-         ORDER BY d.date), '[]'::jsonb) FROM daily_rates d
-       WHERE d.room_type_id = r.id AND d.rate_plan_id = p.id
-         AND d.date >= ${p.checkIn}::date AND d.date < ${p.checkOut}::date) AS rates,
+  const badId = p.rooms.findIndex(
+    (r) => !uuid.safeParse(r.roomTypeId).success || !uuid.safeParse(r.ratePlanId).success,
+  );
+  if (badId >= 0) return { ok: false, code: "NO_RATE", lineIndex: badId };
+
+  const requested = sql.join(
+    p.rooms.map((r, i) => sql`(${i}::int, ${r.roomTypeId}::uuid, ${r.ratePlanId}::uuid)`),
+    sql`, `,
+  );
+  const rows = await db.execute<{ lines: LineRow[]; slabs: Slab[]; promo: PromoRow | null }>(sql`
+    WITH req(idx, room_type_id, rate_plan_id) AS (VALUES ${requested})
+    SELECT
+      (SELECT jsonb_agg(jsonb_build_object(
+          'idx', q.idx,
+          'found', p.id IS NOT NULL,
+          'maxAdults', r.max_adults,
+          'maxOccupancy', r.max_occupancy,
+          'rates', (SELECT coalesce(jsonb_agg(jsonb_build_object('date', d.date,
+              'pricePaise', d.price_paise) ORDER BY d.date), '[]'::jsonb)
+            FROM daily_rates d
+            WHERE d.room_type_id = r.id AND d.rate_plan_id = p.id
+              AND d.date >= ${p.checkIn}::date AND d.date < ${p.checkOut}::date))
+        ORDER BY q.idx)
+       FROM req q
+       LEFT JOIN room_types r ON r.id = q.room_type_id
+       LEFT JOIN rate_plans p ON p.id = q.rate_plan_id AND p.room_type_id = r.id AND p.active
+      ) AS lines,
       (SELECT coalesce(jsonb_agg(jsonb_build_object('minPaise', s.min_paise,
         'maxPaise', s.max_paise, 'gstBp', s.gst_bp, 'effectiveFrom', s.effective_from)), '[]'::jsonb)
         FROM tax_slabs s WHERE s.effective_from < ${p.checkOut}::date) AS slabs,
@@ -41,17 +67,19 @@ export async function readQuote(db: Db | Tx, input: QuoteInput): Promise<QuoteRe
         'active', c.active, 'validFrom', c.valid_from, 'validTo', c.valid_to,
         'minNights', c.min_nights, 'maxUses', c.max_uses, 'usedCount', c.used_count)
         FROM promo_codes c WHERE upper(c.code) = ${p.promoCode?.toUpperCase() ?? null}) AS promo
-    FROM room_types r JOIN rate_plans p ON p.room_type_id = r.id AND p.active
-    WHERE r.id = ${p.roomTypeId}::uuid AND p.id = ${p.ratePlanId}::uuid
   `);
   const row = rows[0];
-  if (!row) return { ok: false, code: "NO_RATE" };
-  if (p.adults > row.max_adults || p.children > row.max_children) {
-    return { ok: false, code: "OVER_OCCUPANCY" };
-  }
   const dates = eachNight(p.checkIn, p.checkOut);
-  if (row.rates.length !== dates.length || row.rates.some((r, i) => r.date !== dates[i])) {
-    return { ok: false, code: "NO_RATE" };
+  for (const [i, room] of p.rooms.entries()) {
+    const line = row.lines[i];
+    if (!line?.found) return { ok: false, code: "NO_RATE", lineIndex: i };
+    // B10 rule 1: 1 <= adults <= max_adults and adults + children <= max_occupancy.
+    if (!fitsRoom({ maxAdults: line.maxAdults!, maxOccupancy: line.maxOccupancy! }, room)) {
+      return { ok: false, code: "OVER_OCCUPANCY", lineIndex: i };
+    }
+    if (line.rates.length !== dates.length || line.rates.some((r, d) => r.date !== dates[d])) {
+      return { ok: false, code: "NO_RATE", lineIndex: i };
+    }
   }
   const promo = row.promo;
   if (
@@ -60,6 +88,7 @@ export async function readQuote(db: Db | Tx, input: QuoteInput): Promise<QuoteRe
       !promo.active ||
       promo.validFrom > p.checkIn ||
       promo.validTo < dates[dates.length - 1] ||
+      // min_nights is per stay, not per line.
       promo.minNights > dates.length ||
       (promo.maxUses !== null && promo.usedCount >= promo.maxUses))
   ) {
@@ -71,7 +100,13 @@ export async function readQuote(db: Db | Tx, input: QuoteInput): Promise<QuoteRe
       quote: calculateQuote(
         p,
         dates,
-        row.rates.map((r) => r.pricePaise),
+        p.rooms.map((room, i) => ({
+          roomTypeId: room.roomTypeId,
+          ratePlanId: room.ratePlanId,
+          adults: room.adults,
+          children: room.children,
+          rates: row.lines[i].rates.map((r) => r.pricePaise),
+        })),
         promo ? { code: promo.code, kind: promo.kind, value: promo.value } : null,
         row.slabs,
       ),

@@ -5,13 +5,23 @@ import {
   MissingTaxSlab,
   nightDiscounts,
   pickGstBp,
+  type LineInput,
 } from "./calculation";
 
 const slabs = [
   { minPaise: 0, maxPaise: 750000, gstBp: 500, effectiveFrom: "2025-09-22" },
   { minPaise: 750001, maxPaise: null, gstBp: 1800, effectiveFrom: "2025-09-22" },
 ];
-const stay = { roomTypeId: "r", ratePlanId: "p", checkIn: "2026-11-14", checkOut: "2026-11-16" };
+const stay = { checkIn: "2026-11-14", checkOut: "2026-11-16" };
+const twoNights = [stay.checkIn, "2026-11-15"];
+const line = (rates: number[], over: Partial<LineInput> = {}): LineInput => ({
+  roomTypeId: "r",
+  ratePlanId: "p",
+  adults: 2,
+  children: 0,
+  rates,
+  ...over,
+});
 
 describe("shared pricing calculation", () => {
   it.each([
@@ -40,7 +50,7 @@ describe("shared pricing calculation", () => {
   });
 
   it("chooses inclusive GST bounds after discount and rounds each night to paise", () => {
-    const nights = buildNights(["2026-11-14", "2026-11-15"], [750000, 750001], null, slabs);
+    const nights = buildNights(twoNights, [750000, 750001], null, slabs);
     expect(nights.map((n) => n.gstBp)).toEqual([500, 1800]);
     expect(nights.map((n) => n.gstPaise)).toEqual([37500, 135000]);
     const [discounted] = buildNights([stay.checkIn], [820000], { kind: "pct", value: 10 }, slabs);
@@ -54,9 +64,9 @@ describe("shared pricing calculation", () => {
       { minPaise: 0, maxPaise: null, gstBp: 1200, effectiveFrom: "2026-11-15" },
       ...slabs,
     ];
-    expect(
-      buildNights([stay.checkIn, "2026-11-15"], [10000, 10000], null, updated).map((n) => n.gstBp),
-    ).toEqual([500, 1200]);
+    expect(buildNights(twoNights, [10000, 10000], null, updated).map((n) => n.gstBp)).toEqual([
+      500, 1200,
+    ]);
     expect(() => pickGstBp(100, slabs, "2020-01-01")).toThrow(MissingTaxSlab);
     expect(() =>
       pickGstBp(
@@ -71,8 +81,8 @@ describe("shared pricing calculation", () => {
     const quote = () =>
       calculateQuote(
         stay,
-        [stay.checkIn, "2026-11-15"],
-        [100, 1000],
+        twoNights,
+        [line([100, 1000])],
         { code: "FLAT", kind: "flat", value: 600 },
         slabs,
       );
@@ -84,8 +94,93 @@ describe("shared pricing calculation", () => {
       gstPaise: 25,
       totalPaise: 525,
     });
-    expect(
-      calculateQuote(stay, [stay.checkIn, "2026-11-15"], [100, 1001], null, slabs).quoteHash,
-    ).not.toBe(q.quoteHash);
+    expect(calculateQuote(stay, twoNights, [line([100, 1001])], null, slabs).quoteHash).not.toBe(
+      q.quoteHash,
+    );
+  });
+});
+
+describe("B10 multi-room calculation", () => {
+  const threeNights = ["2026-11-14", "2026-11-15", "2026-11-16"];
+  const threeNightStay = { checkIn: "2026-11-14", checkOut: "2026-11-17" };
+
+  it("allocates a flat promo over 2 lines x 3 nights in (line, date) order, R09-safe", () => {
+    // Cells flattened: line 1 [100, 5000, 5000], line 2 [5000, 5000, 200]. Value 3000.
+    const lines = [line([100, 5000, 5000]), line([5000, 5000, 200], { roomTypeId: "r2" })];
+    const q = calculateQuote(
+      threeNightStay,
+      threeNights,
+      lines,
+      { code: "FLAT", kind: "flat", value: 3000 },
+      slabs,
+    );
+    const cells = q.lines.flatMap((l) => l.nights.map((n) => n.discountPaise));
+    // Equal shares of 500, capped at 100 and 200; the 700 left is shared again in cell order.
+    expect(cells).toEqual([100, 675, 675, 675, 675, 200]);
+    expect(cells.reduce((s, d) => s + d, 0)).toBe(3000);
+    expect(q.lines.map((l) => l.discountPaise)).toEqual([1450, 1550]);
+    q.lines.forEach((l, li) =>
+      l.nights.forEach((n, di) => {
+        expect(n.discountPaise).toBeGreaterThanOrEqual(0);
+        expect(n.discountPaise).toBeLessThanOrEqual(lines[li].rates[di]);
+      }),
+    );
+    // A promo worth more than the whole cart takes every cell to zero, no further.
+    const all = calculateQuote(
+      threeNightStay,
+      threeNights,
+      lines,
+      { code: "BIG", kind: "flat", value: 10_000_000 },
+      slabs,
+    );
+    expect(all.discountPaise).toBe(all.subtotalPaise);
+    expect(all.totalPaise).toBe(0);
+  });
+
+  it("two Rs 4,000 rooms on one night stay at 5% GST: per cell, never a per date sum", () => {
+    const q = calculateQuote(
+      { checkIn: "2026-11-14", checkOut: "2026-11-15" },
+      ["2026-11-14"],
+      [line([400000]), line([400000])],
+      null,
+      slabs,
+    );
+    // Rs 8,000 summed across rooms would hit the 18% slab; each Rs 4,000 cell is 5%.
+    expect(q.lines.flatMap((l) => l.nights.map((n) => n.gstBp))).toEqual([500, 500]);
+    expect(q.gstPaise).toBe(40000);
+  });
+
+  it("order totals = sum of line totals = sum of cells, with no re-rounding", () => {
+    const q = calculateQuote(
+      threeNightStay,
+      threeNights,
+      [line([333333, 750001, 101]), line([12345, 67890, 750000]), line([1, 2, 3])],
+      { code: "PCT", kind: "pct", value: 7 },
+      slabs,
+    );
+    const cells = q.lines.flatMap((l) => l.nights);
+    expect(q.subtotalPaise).toBe(cells.reduce((s, n) => s + n.ratePaise, 0));
+    expect(q.discountPaise).toBe(cells.reduce((s, n) => s + n.discountPaise, 0));
+    expect(q.gstPaise).toBe(cells.reduce((s, n) => s + n.gstPaise, 0));
+    expect(q.totalPaise).toBe(q.lines.reduce((s, l) => s + l.totalPaise, 0));
+    for (const l of q.lines)
+      expect(l.totalPaise).toBe(l.subtotalPaise - l.discountPaise + l.gstPaise);
+    expect(q.lines.map((l) => l.lineNo)).toEqual([1, 2, 3]);
+  });
+
+  it("line order changes the hash; the flat total is the same either way", () => {
+    const a = line([100, 1000]);
+    const b = line([1000, 1000], { roomTypeId: "r2" });
+    const promo = { code: "FLAT", kind: "flat", value: 1001 } as const;
+    const ab = calculateQuote(stay, twoNights, [a, b], promo, slabs);
+    const ba = calculateQuote(stay, twoNights, [b, a], promo, slabs);
+    expect(ab.quoteHash).not.toBe(ba.quoteHash);
+    expect(ab.discountPaise).toBe(ba.discountPaise);
+  });
+
+  it("rejects a line with a missing nightly rate", () => {
+    expect(() => calculateQuote(stay, twoNights, [line([100])], null, slabs)).toThrow(
+      "Missing nightly rate",
+    );
   });
 });
