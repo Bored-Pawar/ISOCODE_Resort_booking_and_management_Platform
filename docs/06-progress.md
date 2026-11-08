@@ -8,7 +8,8 @@ Coordination records, not enforcement. The scrum master assigns ownership in cha
 
 | Area | Paths | Owner | Since |
 |---|---|---|---|
-| S2 booking flow (runbook `s2-booking-runbook.md`) | `src/modules/{booking,payments}/**`, `src/app/(guest)/**`, `src/app/api/payments/**`, `src/app/(staff)/admin/bookings/**`, `src/components/ui/hold-timer.tsx` | Claude Code, branch `claude/booking-flow` only. Read only: `src/db/**`, pricing, inventory. Codex keeps `src/modules/{enquiries,ai-router}/**` (R1 to R4) | 2026-11-08 17:45 IST |
+| S2 admin and RBAC (runbook `s2-admin-rbac-runbook.md`) | `src/lib/auth/permissions.ts`, `src/app/(staff)/admin/(app)/{layout.tsx,page.tsx,rates/**,allotment/**,promos/**}`, `src/modules/admin/**`, `src/modules/{pricing,inventory}/admin.ts`, `src/components/ui/data-grid.tsx` | Claude Code, branch `claude/admin` only. Read only: `src/db/**` (no schema change), booking, payments. Codex keeps `src/modules/{enquiries,ai-router}/**`, the inbox pages and `/enquire` | 2026-11-08 21:55 IST |
+| S2 booking flow (runbook `s2-booking-runbook.md`) | `src/modules/{booking,payments}/**`, `src/app/(guest)/**`, `src/app/api/payments/**`, `src/app/(staff)/admin/bookings/**`, `src/components/ui/hold-timer.tsx` | Released: merged into `main` as PR #5 (`444840d`). Was Claude Code, branch `claude/booking-flow` | 2026-11-08 17:45 IST |
 | Database schema, migrations and seed | `src/db/**` | Read only in S2 booking flow (no schema change). Was Codex S1 | 2026-11-08 |
 | Booking and inventory core | `src/modules/inventory/**` | Read only in S2 booking flow. Booking and payments: see the first row. Was Codex S1 | 2026-11-08 |
 | Pricing engine | `src/modules/pricing/**` | Read only in S2 booking flow. Was Codex S1 | 2026-11-08 |
