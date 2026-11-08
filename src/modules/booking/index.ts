@@ -9,6 +9,7 @@ import { confirmPayment as confirmPaymentImpl } from "./confirmation";
 import { getDb } from "@/lib/db";
 import { releaseExpiredHoldsInTx } from "./internal";
 import { acquireHold as acquireHoldImpl } from "./hold";
+import { cancelHeld as cancelHeldImpl } from "./cancel";
 import { readBooking } from "./read";
 import { bookings } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
@@ -101,6 +102,11 @@ export type ConfirmPaymentResult =
 
 export type BookingActor = { userId: string; role: "guest" | "reservations" | "sales" | "gm" };
 
+const actorSchema = z.object({
+  userId: z.string().min(1),
+  role: z.enum(["guest", "reservations", "sales", "gm"]),
+});
+
 export const getBookingInputSchema = z.object({ ref: z.string().min(1) });
 export type GetBookingInput = z.input<typeof getBookingInputSchema>;
 
@@ -118,6 +124,20 @@ export type ListForGuestInput = z.input<typeof listForGuestInputSchema>;
 
 /** Newest stay first. Every status; a HELD row past holdExpiresAt is not yet swept (UI says so). */
 export type ListForGuestResult = Ok<{ bookings: Booking[] }> | Err<"INVALID_INPUT">;
+
+// ---- cancelHeld (additive, S2 runbook contract addition 1) --------------
+
+export const cancelHeldInputSchema = z.object({ bookingId: z.uuid() });
+export type CancelHeldInput = z.input<typeof cancelHeldInputSchema>;
+
+/**
+ * Owner only. ok: this call moved HELD -> CANCELLED and released the stock. NOT_HELD: the booking
+ * had already left HELD (expired, confirmed, cancelled); its current state, never a throw.
+ */
+export type CancelHeldResult =
+  | Ok<{ booking: Booking }>
+  | Err<"INVALID_INPUT" | "NOT_FOUND" | "FORBIDDEN">
+  | Err<"NOT_HELD", { status: BookingStatus; booking: Booking }>;
 
 // ---- releaseExpiredHolds (cron, lazy expiry) --------------------------
 
@@ -145,6 +165,14 @@ export const booking = {
     return confirmPaymentImpl(parsed.data);
   },
 
+  /** Additive (contract addition 1): the owning guest abandons a hold. See cancel.ts. */
+  async cancelHeld(input: CancelHeldInput, actor: BookingActor): Promise<CancelHeldResult> {
+    const parsed = cancelHeldInputSchema.safeParse(input);
+    if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
+    if (!actorSchema.safeParse(actor).success) return { ok: false, code: "FORBIDDEN" };
+    return cancelHeldImpl(parsed.data.bookingId.toLowerCase(), actor);
+  },
+
   /** Additive read for "My bookings". Never writes; no lazy expiry. */
   async listForGuest(input: ListForGuestInput): Promise<ListForGuestResult> {
     const parsed = listForGuestInputSchema.safeParse(input);
@@ -169,15 +197,7 @@ export const booking = {
   async get(input: GetBookingInput, actor: BookingActor): Promise<GetBookingResult> {
     const parsed = getBookingInputSchema.safeParse(input);
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
-    if (
-      !z
-        .object({
-          userId: z.string().min(1),
-          role: z.enum(["guest", "reservations", "sales", "gm"]),
-        })
-        .safeParse(actor).success
-    )
-      return { ok: false, code: "FORBIDDEN" };
+    if (!actorSchema.safeParse(actor).success) return { ok: false, code: "FORBIDDEN" };
     return getDb().transaction(async (tx) => {
       const [row] = await tx
         .select({ id: bookings.id, guestId: bookings.guestId })
