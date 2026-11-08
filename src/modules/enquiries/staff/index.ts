@@ -3,6 +3,7 @@ import { getDetail } from "./detail";
 import { redraft } from "./drafting";
 import { reroute, updateFields, fieldsInputSchema } from "./routing";
 import { laneCounts, listInbox } from "./service";
+import { bell, markAllRead, markRead } from "./notifications";
 import { approveAndSend, closeEnquiry, listSentReplies, regenerateDraft, saveDraft } from "./send";
 import type { InboxActor } from "./rules";
 
@@ -29,11 +30,15 @@ export const inbox = {
   approveAndSend,
   close: closeEnquiry,
   sentReplies: listSentReplies,
+  bell,
+  markRead,
+  markAllRead,
 };
 export type { InboxPage, InboxRow, LaneCounts, Grounding } from "./service";
 export type { InboxDetail, Draft, TimelineEntry, StaffUser, Extracted } from "./detail";
 export type { FieldsInput, RerouteInput } from "./routing";
 export type { SentReply } from "./send";
+export type { Bell, BellItem } from "./notifications";
 export {
   LANES,
   LANE_LABELS,

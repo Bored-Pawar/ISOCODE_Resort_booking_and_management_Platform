@@ -368,3 +368,37 @@ describe("draft and send (tests 2, 3)", () => {
     expect(row.status).toBe("closed");
   });
 });
+
+describe("GM bell (Q7)", () => {
+  it("lists only my alerts, marks one and all read, and refuses other roles", async () => {
+    const a = await f.enquiry({ category: "complaint", isComplaint: true, ownerId: f.by.gm.id });
+    const b = await f.enquiry({ category: null, lane: "unsorted", status: "new" });
+    const [na, nb] = await db
+      .insert(t.notifications)
+      .values([
+        { userId: f.by.gm.id, enquiryId: a, kind: "complaint" },
+        { userId: f.by.gm.id, enquiryId: b, kind: "unsorted" },
+      ])
+      .returning();
+    // Another user's alert (a second GM) never shows and cannot be marked by this GM.
+    const [other] = await db
+      .insert(t.notifications)
+      .values({ userId: f.by.sales.id, enquiryId: a, kind: "complaint" })
+      .returning();
+    const gm = f.actor("gm");
+    const first = await inbox.bell(gm);
+    if (!first.ok) throw new Error();
+    expect(first.bell.unread).toBe(2);
+    expect(first.bell.items.map((i) => i.id).sort()).toEqual([na.id, nb.id].sort());
+    expect(await inbox.markRead({ id: other.id }, gm)).toEqual({ ok: true, changed: false });
+    expect(await inbox.markRead({ id: na.id }, gm)).toEqual({ ok: true, changed: true });
+    const second = await inbox.bell(gm);
+    expect(second.ok && second.bell.unread).toBe(1);
+    expect(second.ok && second.bell.items[0].id).toBe(nb.id); // unread first
+    expect(await inbox.markAllRead(gm)).toEqual({ ok: true, count: 1 });
+    const [o] = await db.select().from(t.notifications).where(eq(t.notifications.id, other.id));
+    expect(o.readAt).toBeNull();
+    expect(await inbox.bell(f.actor("reservations"))).toEqual({ ok: false, code: "FORBIDDEN" });
+    expect(await inbox.markAllRead(f.actor("sales"))).toEqual({ ok: false, code: "FORBIDDEN" });
+  });
+});

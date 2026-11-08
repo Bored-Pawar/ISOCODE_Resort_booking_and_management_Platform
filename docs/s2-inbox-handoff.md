@@ -15,20 +15,18 @@ Runbook: `docs/s2-inbox-runbook.md`. Branch `claude/inbox` in `../resort-inbox`,
 | 2.1 Q4 inbox list | done | feat(inbox): Q4 inbox lanes, filters and list |
 | 2.2 Q5 detail and routing | done | feat(inbox): Q5 detail, field edits, re-route and Retry AI |
 | 2.3 Q6 draft and send | done | feat(inbox): Q6 draft editor, approve and send to the mock outbox |
-| 2.4 Q7 GM bell | next | |
-| 2.5 Sales attention request | todo | |
+| 2.4 Q7 GM bell | done | feat(inbox): Q7 GM bell with unread count and mark read |
+| 2.5 Sales attention request | next | |
 | 2.6 Q2 unified enquiry form | todo | |
 | Gates, integration, review, screenshots | todo | |
 
-Last done: 2.3. `staff/send.ts`: saveDraft (new rupee figure vs the quote's total/GST -> warning, logged
-`draft:price-warning`), regenerate (`draftForStaff` with the model; keeps classification), approveAndSend
-(enquiry then draft row locked, conditional `sent_at IS NULL` update, `first_reply_at` COALESCE, one `sent`
-event), close. Confirm dialog shows channel, recipient and final text. `/dev/outbox?tab=replies` derived from
-`reply_drafts`. Static unit test: only `staff/send.ts` writes `sent_at`/`approved_by`.
-Next: 2.4 GM bell (StaffShell needs a bell slot; header on mobile, sidebar top on desktop).
+Last done: 2.4. `staff/notifications.ts` (bell, markRead, markAllRead; `notifications.gm` and
+`user_id = me` on every query). `StaffShell` has a `bell` slot: one slim header bar above content (GM only).
+`GmBell` reloads through `bellAction` on every pathname change (layouts stay mounted), no polling.
+Next: 2.5 attention request (`attentionPanel` slot in `_components/detail.tsx`; rules/SQL already in place).
 
 ## Gates (last run)
-typecheck, lint, format ok; unit (staff, modules) 336/336. Integration `inbox.test.ts` 10/10 on test-claude
+typecheck, lint, format ok; unit (staff, modules) 336/336. Integration `inbox.test.ts` 11/11 on test-claude
 (no other run active: checked node processes; only the resort-claude `next dev`).
 
 ## Open items / blockers
