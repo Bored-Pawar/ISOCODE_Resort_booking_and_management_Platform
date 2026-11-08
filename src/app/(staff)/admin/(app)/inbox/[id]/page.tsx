@@ -11,6 +11,11 @@ import { CloseButton, DraftPanel } from "../_components/draft-panel";
 import { InboxFrame } from "../_components/frame";
 import { inboxPage } from "../_lib/access";
 import { parseQuery, type SearchParams } from "../_lib/params";
+import { notFound } from "next/navigation";
+import { z } from "zod";
+
+const enquiryIdSchema = z.string().regex(/^ENQ-[\w-]{1,40}$/);
+import { safeError } from "@/lib/log";
 
 export const metadata = { title: "Enquiry" };
 
@@ -21,7 +26,7 @@ async function Loaded({ id, actor }: { id: string; actor: InboxActor }) {
   try {
     res = await inbox.detail(id, actor);
   } catch (error) {
-    console.error("inbox detail failed", error);
+    console.error("inbox detail failed", safeError(error));
     return <RetryError title="We could not load this enquiry" message="Please try again." />;
   }
   if (!res.ok)
@@ -51,7 +56,7 @@ async function Loaded({ id, actor }: { id: string; actor: InboxActor }) {
       }
       draftPanel={
         <DraftPanel
-          key={d.draft ? `${d.draft.id}:${d.draft.body}:${d.draft.sentAt}` : "none"}
+          key={d.draft ? `${d.draft.id}:${d.draft.version}:${d.draft.sentAt}` : "none"}
           enquiryId={q.id}
           draft={d.draft}
           canWork={d.can.work}
@@ -84,7 +89,16 @@ async function Content({ params, searchParams }: Props) {
   const access = await inboxPage();
   if ("forbidden" in access) return <Forbidden />;
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  const decoded = decodeURIComponent(id).slice(0, 40);
+  // Zod on the route param (CLAUDE.md rule 5); a malformed % sequence is a 404, not a crash.
+  let raw = "";
+  try {
+    raw = decodeURIComponent(id);
+  } catch {
+    notFound();
+  }
+  const parsedId = enquiryIdSchema.safeParse(raw);
+  if (!parsedId.success) notFound();
+  const decoded = parsedId.data;
   const query = parseQuery(sp, access.actor.role);
   return (
     <InboxFrame

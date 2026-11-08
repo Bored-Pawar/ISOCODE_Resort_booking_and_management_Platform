@@ -26,6 +26,7 @@ import {
   WaitingBadge,
 } from "./badges";
 import { LaneSelect } from "./lane-select";
+import { safeError } from "@/lib/log";
 
 async function Lanes({ query, actor }: { query: InboxQuery; actor: InboxActor }) {
   const lanes = lanesFor(actor.role);
@@ -33,7 +34,7 @@ async function Lanes({ query, actor }: { query: InboxQuery; actor: InboxActor })
   try {
     counts = await inbox.counts(actor);
   } catch (error) {
-    console.error("inbox counts failed", error);
+    console.error("inbox counts failed", safeError(error));
   }
   const href = (lane: string) => `/admin/inbox${queryString({ ...query, lane: lane as never })}`;
   return (
@@ -138,7 +139,7 @@ async function List({
   try {
     res = await inbox.list(query, actor);
   } catch (error) {
-    console.error("inbox list failed", error);
+    console.error("inbox list failed", safeError(error));
     return <RetryError title="We could not load the inbox" message="Please try again." />;
   }
   if (!res.ok)

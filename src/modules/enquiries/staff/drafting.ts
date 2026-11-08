@@ -21,17 +21,26 @@ export function storedClassification(row: Row) {
   };
 }
 
-/** Staff-confirmed facts override the message only for fields staff edited. */
+/**
+ * Staff-confirmed facts override the message for fields staff edited. Once staff edited dates or
+ * guests, the draft is grounded on these facts alone, so the other field is carried from the
+ * stored extraction too, but only when the server already grounded it `ok` against the message
+ * (an unsupported or missing value is never promoted to a fact). Without this, editing only the
+ * guests left the dates unsupported and the rebuilt draft lost its quote (review MAJOR 1).
+ */
 export function staffFactsOf(row: Row) {
   const x = (row.extracted ?? {}) as Extracted;
   const edited = new Set(x.staffEdited ?? []);
+  const anyEdited = edited.has("dates") || edited.has("guests");
+  const carried = (field: "dates" | "guests") =>
+    edited.has(field) || (anyEdited && x.grounding?.[field] === "ok");
   return {
     dates:
-      edited.has("dates") && x.dates?.from && x.dates?.to
+      carried("dates") && x.dates?.from && x.dates?.to
         ? { from: x.dates.from, to: x.dates.to }
         : null,
     guests:
-      edited.has("guests") && x.guests?.adults !== undefined
+      carried("guests") && x.guests?.adults !== undefined
         ? { adults: x.guests.adults, children: x.guests.children ?? 0 }
         : null,
     room: x.room ?? null,

@@ -14,7 +14,7 @@ async function saveFields(input: unknown, actor: InboxActor) {
   if (!res.ok || !res.requote) return { ...res, draft: "unchanged" as const };
   const { enquiryId } = fieldsInputSchema.parse(input);
   const draft = await redraft(enquiryId, false).catch((error) => {
-    console.error("inbox re-quote failed", error);
+    console.error("inbox re-quote failed", safeError(error));
     return "failed" as const;
   });
   return { ...res, draft };
@@ -54,3 +54,4 @@ export {
   type Lane,
   type ListInput,
 } from "./rules";
+import { safeError } from "@/lib/log";

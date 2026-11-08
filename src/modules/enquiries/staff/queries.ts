@@ -60,7 +60,9 @@ export function laneSql(lane: Lane, userId: string): SQL {
     case "attention":
       return attentionOpenSql;
     case "failed":
-      return sql`${e.aiStatus} = 'failed'`;
+      // A staff re-route during processing ends AI with STAFF_CHANGED: staff already sorted it,
+      // so it is not "Failed AI" work (review minor 5).
+      return sql`(${e.aiStatus} = 'failed' AND ${e.aiLastError} IS DISTINCT FROM 'STAFF_CHANGED')`;
   }
 }
 

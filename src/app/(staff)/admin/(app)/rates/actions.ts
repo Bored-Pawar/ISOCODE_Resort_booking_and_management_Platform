@@ -2,6 +2,7 @@
 
 import { admin, setRatesInputSchema, fieldErrors, type SetRatesResult } from "@/modules/admin";
 import { actionActor } from "../_lib/access";
+import { safeError } from "@/lib/log";
 
 /** A1 single cell or bulk set. `rates.edit` checked first; the service checks it again. */
 export async function setRatesAction(input: unknown): Promise<SetRatesResult> {
@@ -13,7 +14,7 @@ export async function setRatesAction(input: unknown): Promise<SetRatesResult> {
   try {
     return await admin.setRates(parsed.data, actor);
   } catch (error) {
-    console.error("setRates failed", error);
+    console.error("setRates failed", safeError(error));
     return { ok: false, code: "INVALID_INPUT", errors: { form: "Could not save. Try again." } };
   }
 }

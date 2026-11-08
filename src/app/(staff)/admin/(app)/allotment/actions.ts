@@ -11,6 +11,7 @@ import {
   type SetOnlineResult,
 } from "@/modules/admin";
 import { actionActor } from "../_lib/access";
+import { safeError } from "@/lib/log";
 
 /** A2 single cell or bulk set. `allotment.edit` checked first; the service checks it again. */
 export async function setAllotmentAction(input: unknown): Promise<SetAllotmentResult> {
@@ -22,7 +23,7 @@ export async function setAllotmentAction(input: unknown): Promise<SetAllotmentRe
   try {
     return await admin.setAllotment(parsed.data, actor);
   } catch (error) {
-    console.error("setAllotment failed", error);
+    console.error("setAllotment failed", safeError(error));
     return { ok: false, code: "INVALID_INPUT", errors: { form: "Could not save. Try again." } };
   }
 }
@@ -37,7 +38,7 @@ export async function bookingsInRangeAction(input: unknown) {
   try {
     return await admin.bookingsInRange(parsed.data, actor);
   } catch (error) {
-    console.error("bookingsInRange failed", error);
+    console.error("bookingsInRange failed", safeError(error));
     return {
       ok: false,
       code: "INVALID_INPUT",
@@ -56,7 +57,7 @@ export async function setOfflineAction(input: unknown): Promise<SetOfflineResult
   try {
     return await admin.setOffline(parsed.data, actor);
   } catch (error) {
-    console.error("setOffline failed", error);
+    console.error("setOffline failed", safeError(error));
     return { ok: false, code: "INVALID_INPUT", errors: { form: "Could not save. Try again." } };
   }
 }
@@ -71,7 +72,7 @@ export async function setOnlineAction(input: unknown): Promise<SetOnlineResult> 
   try {
     return await admin.setOnline(parsed.data, actor);
   } catch (error) {
-    console.error("setOnline failed", error);
+    console.error("setOnline failed", safeError(error));
     return { ok: false, code: "INVALID_INPUT", errors: { form: "Could not save. Try again." } };
   }
 }

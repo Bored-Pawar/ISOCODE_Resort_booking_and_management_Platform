@@ -9,6 +9,7 @@ import {
   type DeactivatePromoResult,
 } from "@/modules/admin";
 import { actionActor } from "../_lib/access";
+import { safeError } from "@/lib/log";
 
 /** A4 create. `promos.manage` first; the service checks it again and stores the code uppercase. */
 export async function createPromoAction(input: unknown): Promise<CreatePromoResult> {
@@ -20,7 +21,7 @@ export async function createPromoAction(input: unknown): Promise<CreatePromoResu
   try {
     return await admin.createPromo(parsed.data, actor);
   } catch (error) {
-    console.error("createPromo failed", error);
+    console.error("createPromo failed", safeError(error));
     return { ok: false, code: "INVALID_INPUT", errors: { form: "Could not save. Try again." } };
   }
 }
@@ -35,7 +36,7 @@ export async function deactivatePromoAction(input: unknown): Promise<DeactivateP
   try {
     return await admin.deactivatePromo(parsed.data, actor);
   } catch (error) {
-    console.error("deactivatePromo failed", error);
+    console.error("deactivatePromo failed", safeError(error));
     return { ok: false, code: "INVALID_INPUT", errors: { form: "Could not save. Try again." } };
   }
 }

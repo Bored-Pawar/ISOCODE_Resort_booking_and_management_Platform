@@ -5,6 +5,7 @@ import * as t from "@/db/schema";
 import { inbox, type Lane } from "@/modules/enquiries";
 import { connect, ensureMigrated, testUrl } from "./helpers";
 import { inboxFixture } from "./inbox-fixture";
+import { draftVersion } from "@/modules/enquiries/staff/version";
 
 vi.mock("next/server", async (orig) => ({
   ...(await orig<typeof import("next/server")>()),
@@ -313,14 +314,14 @@ describe("draft and send (tests 2, 3)", () => {
         promptVersion: "v",
       })
       .returning();
-    return { id, draftId: d.id };
+    return { id, draftId: d.id, version: draftVersion(d.body, d.quote) };
   }
 
   it("approve and send twice concurrently: one sent_at, one sent event, first_reply_at once", async () => {
-    const { id, draftId } = await withDraft();
+    const { id, draftId, version } = await withDraft();
     const send = () =>
       inbox.approveAndSend(
-        { enquiryId: id, draftId, body: "Final reply" },
+        { enquiryId: id, draftId, body: "Final reply", version },
         f.actor("reservations"),
       );
     const results = await Promise.all([send(), send(), send()]);
@@ -344,10 +345,9 @@ describe("draft and send (tests 2, 3)", () => {
       .where(and(eq(t.enquiryEvents.enquiryId, id), eq(t.enquiryEvents.action, "sent")));
     expect(sent).toHaveLength(1);
     // A later edit or regenerate cannot change a sent reply.
-    expect(await inbox.saveDraft({ enquiryId: id, body: "x" }, f.actor("reservations"))).toEqual({
-      ok: false,
-      code: "ALREADY_SENT",
-    });
+    expect(
+      await inbox.saveDraft({ enquiryId: id, body: "x", version }, f.actor("reservations")),
+    ).toEqual({ ok: false, code: "ALREADY_SENT" });
     // The outbox lists it for the role that can see it, not for sales.
     expect((await inbox.sentReplies(f.actor("reservations"))).some((r) => r.enquiryId === id)).toBe(
       true,
@@ -356,13 +356,15 @@ describe("draft and send (tests 2, 3)", () => {
   });
 
   it("sales approving, editing or closing a room enquiry is FORBIDDEN and writes nothing", async () => {
-    const { id, draftId } = await withDraft();
+    const { id, draftId, version } = await withDraft();
     const sales = f.actor("sales");
-    expect(await inbox.approveAndSend({ enquiryId: id, draftId, body: "x" }, sales)).toEqual({
+    expect(
+      await inbox.approveAndSend({ enquiryId: id, draftId, body: "x", version }, sales),
+    ).toEqual({
       ok: false,
       code: "FORBIDDEN",
     });
-    expect(await inbox.saveDraft({ enquiryId: id, body: "x" }, sales)).toMatchObject({
+    expect(await inbox.saveDraft({ enquiryId: id, body: "x", version }, sales)).toMatchObject({
       code: "FORBIDDEN",
     });
     expect(await inbox.close({ enquiryId: id }, sales)).toMatchObject({ code: "FORBIDDEN" });
@@ -374,9 +376,9 @@ describe("draft and send (tests 2, 3)", () => {
   });
 
   it("sending unsaved edits with a new rupee figure logs the price warning before sent", async () => {
-    const { id, draftId } = await withDraft();
+    const { id, draftId, version } = await withDraft();
     const res = await inbox.approveAndSend(
-      { enquiryId: id, draftId, body: "From ₹24,800. For you, ₹9,999." },
+      { enquiryId: id, draftId, body: "From ₹24,800. For you, ₹9,999.", version },
       f.actor("reservations"),
     );
     expect(res.ok).toBe(true);
@@ -388,9 +390,9 @@ describe("draft and send (tests 2, 3)", () => {
   });
 
   it("a typed rupee figure saves with a warning and is logged as edited", async () => {
-    const { id } = await withDraft();
+    const { id, version } = await withDraft();
     const res = await inbox.saveDraft(
-      { enquiryId: id, body: "From ₹24,800. For you, ₹20,000." },
+      { enquiryId: id, body: "From ₹24,800. For you, ₹20,000.", version },
       f.actor("reservations"),
     );
     expect(res).toEqual({ ok: true, priceWarning: true });
@@ -403,6 +405,66 @@ describe("draft and send (tests 2, 3)", () => {
     expect(await inbox.close({ enquiryId: id }, f.actor("reservations"))).toEqual({ ok: true });
     const [row] = await db.select().from(t.enquiries).where(eq(t.enquiries.id, id));
     expect(row.status).toBe("closed");
+  });
+});
+
+describe("stale drafts (review MAJOR 2)", () => {
+  it("a draft rebuilt after the page loaded refuses save and send; nothing is written", async () => {
+    const id = await f.enquiry({ category: "room", ownerId: f.by.reservations.id });
+    const [d] = await db
+      .insert(t.replyDrafts)
+      .values({
+        enquiryId: id,
+        body: "From ₹24,800 (room only, including ₹2,657.14 GST).",
+        quote: { totalPaise: 2_480_000, gstPaise: 265_714 },
+        provider: "rules",
+        promptVersion: "v",
+      })
+      .returning();
+    const seen = draftVersion(d.body, d.quote);
+    // Someone else's field edit rebuilds the draft in place: same id, new quote and body.
+    await db
+      .update(t.replyDrafts)
+      .set({
+        body: "From ₹31,000 (room only).",
+        quote: { totalPaise: 3_100_000, gstPaise: 330_000 },
+      })
+      .where(eq(t.replyDrafts.id, d.id));
+    const res = f.actor("reservations");
+    expect(
+      await inbox.approveAndSend(
+        { enquiryId: id, draftId: d.id, body: d.body, version: seen },
+        res,
+      ),
+    ).toEqual({ ok: false, code: "STALE_DRAFT" });
+    expect(await inbox.saveDraft({ enquiryId: id, body: "Mine", version: seen }, res)).toEqual({
+      ok: false,
+      code: "STALE_DRAFT",
+    });
+    const [after] = await db.select().from(t.replyDrafts).where(eq(t.replyDrafts.id, d.id));
+    expect(after).toMatchObject({
+      sentAt: null,
+      approvedBy: null,
+      body: "From ₹31,000 (room only).",
+    });
+    expect(
+      await db.select().from(t.enquiryEvents).where(eq(t.enquiryEvents.enquiryId, id)),
+    ).toEqual([]);
+    // With the current version the send goes through.
+    const fresh = draftVersion(after.body, after.quote);
+    expect(
+      (
+        await inbox.approveAndSend(
+          { enquiryId: id, draftId: d.id, body: after.body, version: fresh },
+          res,
+        )
+      ).ok,
+    ).toBe(true);
+  });
+  it("a missing or malformed version is invalid input", async () => {
+    expect(
+      await inbox.saveDraft({ enquiryId: "ENQ-x", body: "x" }, f.actor("reservations")),
+    ).toEqual({ ok: false, code: "INVALID_INPUT" });
   });
 });
 

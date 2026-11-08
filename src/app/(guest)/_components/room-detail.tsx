@@ -25,6 +25,7 @@ import { Gallery } from "./gallery";
 import { RetryError } from "./retry-error";
 import { SearchForm } from "./search-form";
 import { SearchSummary } from "./search-summary";
+import { safeError } from "@/lib/log";
 
 type Params = Promise<{ slug: string }>;
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -52,7 +53,7 @@ export async function RoomDetail({
   try {
     room = await catalog.getRoomTypeBySlug(slug);
   } catch (error) {
-    console.error("room detail failed", error);
+    console.error("room detail failed", safeError(error));
     return (
       <RetryError
         title="We could not load this room"
@@ -222,7 +223,7 @@ async function stayPanel(
       result.ok ? [toPlanView(plan, result.quote)] : [],
     );
   } catch (error) {
-    console.error("room detail stay failed", error);
+    console.error("room detail stay failed", safeError(error));
     return (
       <Card>
         <RetryError

@@ -6,6 +6,7 @@ import { RetryError } from "@/app/(guest)/_components/retry-error";
 import { Forbidden } from "../_components/forbidden";
 import { staffPage } from "../_lib/access";
 import { PromosBoard } from "./promos-board";
+import { safeError } from "@/lib/log";
 
 export const metadata = { title: "Promo codes" };
 
@@ -16,7 +17,7 @@ async function Content() {
   try {
     res = await admin.listPromos(access.actor);
   } catch (error) {
-    console.error("promo list failed", error);
+    console.error("promo list failed", safeError(error));
     return <RetryError title="We could not load promo codes" message="Please try again." />;
   }
   if (!res.ok) return <Forbidden />;

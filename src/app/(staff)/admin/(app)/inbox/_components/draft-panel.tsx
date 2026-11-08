@@ -60,11 +60,19 @@ export function DraftPanel({
   const warn = addsNewPrice(quoteText(quote), body);
   const dirty = !!draft && body.trim() !== draft.body;
 
-  const run = (fn: () => Promise<{ ok: boolean; message: string }>, after?: () => void) =>
+  const run = (
+    fn: () => Promise<{ ok: boolean; message: string; stale?: boolean }>,
+    after?: () => void,
+  ) =>
     start(async () => {
       setError(null);
       const res = await fn();
-      if (!res.ok) setError(res.message);
+      if (!res.ok && res.stale) {
+        // The panel remounts with the new draft (keyed by its version), so say it in a toast.
+        dialog.current?.close();
+        toast(res.message, "error");
+        router.refresh();
+      } else if (!res.ok) setError(res.message);
       else {
         toast(res.message, "success");
         after?.();
@@ -154,7 +162,9 @@ export function DraftPanel({
                 size="sm"
                 disabled={!dirty}
                 loading={pending}
-                onClick={() => run(() => saveDraftAction({ enquiryId, body }))}
+                onClick={() =>
+                  run(() => saveDraftAction({ enquiryId, body, version: draft.version }))
+                }
               >
                 Save draft
               </Button>
@@ -201,7 +211,13 @@ export function DraftPanel({
                 loading={pending}
                 onClick={() =>
                   run(
-                    () => approveAndSendAction({ enquiryId, draftId: draft.id, body }),
+                    () =>
+                      approveAndSendAction({
+                        enquiryId,
+                        draftId: draft.id,
+                        body,
+                        version: draft.version,
+                      }),
                     () => dialog.current?.close(),
                   )
                 }
