@@ -84,3 +84,9 @@ B1+B2 review-fix exceptions: `inventory/index.ts` may call the internal booking-
 2. **Webhooks** (`/api/inbound/email`, `/api/inbound/whatsapp`): authenticated by the `x-inbound-secret` header against `INBOUND_WEBHOOK_SECRET` (constant-time, fails closed when unset), not by a session, so they do not call `requireRole()`. Payloads follow Postmark inbound JSON and the Meta Cloud API webhook. Idempotent on the provider message id; a repeat returns the original enquiry id.
 3. **`/dev`** exists only when `DEV_TOOLS_ENABLED=true`. `proxy.ts` answers 404 otherwise and redirects signed-out visitors to `/dev/login`; every page and server action also calls `requireDevStaff()` (flag plus `requireRole` for staff). Guests get a 404. All pages are `noindex` and nothing links to `/dev` from guest or staff navigation.
 4. **Web form** (`/enquire`) is a public entry point validated with Zod; spam control beyond a honeypot field (rate limiting) is deferred to H2.
+
+## Machine and public entry points without a session role (B10 minor fix 3)
+CLAUDE.md rule 5 requires `requireRole()` or `requireGuestOwner()` on every server action and route handler. These are the recorded exemptions; each still validates its input with Zod.
+1. **Cron** (`/api/cron/expire-holds`): a machine endpoint with no user session. It requires `Authorization: Bearer <CRON_SECRET>` (fails closed when `CRON_SECRET` is unset or the header is wrong) instead of `requireRole()`, and only calls `booking.releaseExpiredHolds()`.
+2. **Inbound webhooks** and the **`/enquire` form**: see "Enquiry intake and the dev area" above.
+3. **`/book` room cart (B6 step 1)**: a server-rendered page, not an action. It reads the cart from the URL and calls the public `catalog`, `inventory.availability` and `pricing.quote` reads, which take no hold and write nothing (lazy expiry aside, which is booking-owned). The hold itself is taken later by `acquireBookingHold`, which calls `requireRole('guest')`.
