@@ -22,11 +22,17 @@ export const roomTypes = pgTable(
     description: text("description").notNull(),
     totalUnits: integer("total_units").notNull(),
     maxAdults: integer("max_adults").notNull(),
+    /** Stored, not enforced (B10 rule 1). */
     maxChildren: integer("max_children").notNull(),
+    /** B10: adults + children per room may not exceed this. */
+    maxOccupancy: integer("max_occupancy").notNull(),
     amenities: jsonb("amenities").$type<string[]>().notNull().default([]),
     sort: integer("sort").notNull().default(0),
   },
-  (t) => [check("room_types_total_units_check", sql`${t.totalUnits} > 0`)],
+  (t) => [
+    check("room_types_total_units_check", sql`${t.totalUnits} > 0`),
+    check("room_types_max_occupancy_check", sql`${t.maxOccupancy} >= ${t.maxAdults}`),
+  ],
 );
 
 export const roomPhotos = pgTable("room_photos", {

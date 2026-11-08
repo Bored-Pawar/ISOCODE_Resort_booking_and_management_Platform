@@ -13,7 +13,10 @@ export const guestUsers = [
   { email: "ravi@guest.example", name: "Ravi Menon", phone: "+910000000012" },
 ] as const;
 
-/** Assumption A9. Website allotment is ~40% of total units, rest is agency stock. */
+/**
+ * Assumption A9. Website allotment is ~40% of total units, rest is agency stock.
+ * B10: maxOccupancy caps adults + children per room; maxChildren is stored, not enforced.
+ */
 export const roomTypeSeeds = [
   {
     slug: "plantation-room",
@@ -24,6 +27,7 @@ export const roomTypeSeeds = [
     allotment: 16,
     maxAdults: 2,
     maxChildren: 1,
+    maxOccupancy: 3,
     baseRupees: 6200,
     amenities: ["Plantation view", "Balcony", "Wi-Fi", "Tea and coffee kit", "Hot water"],
     photoAlts: [
@@ -41,6 +45,7 @@ export const roomTypeSeeds = [
     allotment: 10,
     maxAdults: 3,
     maxChildren: 1,
+    maxOccupancy: 4,
     baseRupees: 9500,
     amenities: ["Sitting area", "Stone bath", "Plantation view", "Wi-Fi", "Tea and coffee kit"],
     photoAlts: ["Suite with sitting area", "Bath with stone finish", "View from the bed"],
@@ -54,6 +59,7 @@ export const roomTypeSeeds = [
     allotment: 3,
     maxAdults: 3,
     maxChildren: 2,
+    maxOccupancy: 5,
     baseRupees: 12500,
     amenities: ["Private sit-out", "Living room", "Garden view", "Wi-Fi", "Kitchenette"],
     photoAlts: ["Villa exterior in the garden", "Living room", "Private sit-out"],
@@ -67,6 +73,7 @@ export const roomTypeSeeds = [
     allotment: 2,
     maxAdults: 4,
     maxChildren: 2,
+    maxOccupancy: 6,
     baseRupees: 18000,
     amenities: ["Private plunge pool", "Living room", "Hill view", "Wi-Fi", "Butler on call"],
     photoAlts: ["Villa with a private plunge pool", "Bedroom", "Pool at dusk"],
