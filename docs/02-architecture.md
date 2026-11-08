@@ -14,7 +14,7 @@ Why: one developer, about 72 hours, single deploy. Microservices add networking 
 | ORM | Drizzle (raw SQL allowed for locking queries) |
 | Auth | Auth.js credentials, `users.role` |
 | Validation | Zod on every input and every AI output |
-| AI | Vercel AI SDK `generateObject`, provider set by env (see `04-ai-router.md`) |
+| AI | Vercel AI SDK 7 `generateText` + `Output.object`, provider set by env (see `04-ai-router.md`) |
 | Tests | Vitest (unit + Postgres integration), Playwright (one end to end booking) |
 | Deploy | Vercel + Neon, Vercel Cron |
 | Package manager | pnpm |
