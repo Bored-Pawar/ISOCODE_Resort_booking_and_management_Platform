@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useReducer, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Button, Card, DataGrid, Input, Select, useToast, type GridRow } from "@/components/ui";
@@ -17,6 +17,11 @@ import { MAX_RATE_RUPEES } from "@/modules/admin/schemas";
 import type { RateGridRow } from "@/modules/admin";
 import { CheckGroup, dateColumns, DateStepper, DayPicker } from "../_components/grid-dates";
 import { setRatesAction } from "./actions";
+import { cellKey, emptyOverlay, overlayReducer, shownPrice, type BulkScope } from "./rate-overlay";
+
+/** One counter for every save on this page; only the order matters (see `rate-overlay.ts`). */
+let saveVersion = 0;
+const nextVersion = () => ++saveVersion;
 
 type Room = { id: string; name: string; plans: string[] };
 
@@ -51,12 +56,18 @@ export function RatesBoard({
   const pathname = usePathname();
   const { toast } = useToast();
   const [bulkOpen, setBulkOpen] = useState(false);
-  /** Saved values shown until the refreshed server rows arrive (keyed by start date). */
-  const [saved, setSaved] = useState<{ start: string; prices: Record<string, number> }>({
-    start,
-    prices: {},
-  });
-  const overrides = saved.start === start ? saved.prices : {};
+  /** Saved prices shown only until refreshed server rows include them (audit M01). */
+  const [overlay, dispatch] = useReducer(overlayReducer, emptyOverlay);
+  const [seenRows, setSeenRows] = useState(rows);
+  if (rows !== seenRows) {
+    // New server rows: retire every overlay they now cover (adjusting state while rendering).
+    setSeenRows(rows);
+    const server = new Map<string, number>();
+    for (const r of rows)
+      for (const [date, paise] of Object.entries(r.prices))
+        server.set(cellKey(r.roomTypeId, r.ratePlanId, date), paise);
+    dispatch({ type: "rowsArrived", server: (key) => server.get(key) });
+  }
 
   const href = (next: { start?: string; room?: string }) => {
     const p = new URLSearchParams();
@@ -74,7 +85,11 @@ export function RatesBoard({
     const cells: GridRow["cells"] = {};
     const display: Record<string, string> = {};
     for (const c of columns) {
-      const paise = overrides[`${id}|${c.key}`] ?? r.prices[c.key];
+      const paise = shownPrice(
+        overlay,
+        cellKey(r.roomTypeId, r.ratePlanId, c.key),
+        r.prices[c.key],
+      );
       cells[c.key] = paise === undefined ? null : paise / 100;
       display[c.key] = paise === undefined ? "No rate" : formatInr(paise);
     }
@@ -99,7 +114,9 @@ export function RatesBoard({
     const problem = cellError(text);
     if (problem) return problem;
     const [roomTypeId, ratePlanId] = rowId.split("|");
+    const planCode = rows.find((r) => r.ratePlanId === ratePlanId)?.planCode ?? "";
     const rupees = parseRupees(text);
+    const version = nextVersion();
     const res = await setRatesAction({
       mode: "cells",
       cells: [{ roomTypeId, ratePlanId, date, rupees }],
@@ -108,10 +125,14 @@ export function RatesBoard({
       if (res.code === "FORBIDDEN") return "Your role cannot change rates.";
       return Object.values(res.errors)[0] ?? "Could not save. Try again.";
     }
-    setSaved((s) => ({
-      start,
-      prices: { ...(s.start === start ? s.prices : {}), [`${rowId}|${date}`]: rupees * 100 },
-    }));
+    dispatch({
+      type: "saved",
+      key: cellKey(roomTypeId, ratePlanId, date),
+      planCode,
+      value: rupees * 100,
+      version,
+    });
+    dispatch({ type: "refreshRequested", version });
     router.refresh();
   };
 
@@ -170,7 +191,9 @@ export function RatesBoard({
             from={start}
             to={addDays(start, GRID_DAYS - 1)}
             window={window}
-            onDone={(changed) => {
+            onDone={(changed, scope, version) => {
+              dispatch({ type: "bulkSaved", scope, version });
+              dispatch({ type: "refreshRequested", version });
               toast(
                 changed
                   ? `Updated ${changed} ${changed === 1 ? "price" : "prices"}.`
@@ -199,7 +222,7 @@ function BulkPanel({
   from: string;
   to: string;
   window: { first: string; last: string };
-  onDone: (changed: number) => void;
+  onDone: (changed: number, scope: BulkScope, version: number) => void;
 }) {
   const [roomIds, setRoomIds] = useState<string[]>(
     defaultRoom === "all" ? rooms.map((r) => r.id) : [defaultRoom],
@@ -219,22 +242,16 @@ function BulkPanel({
   const apply = () =>
     startTransition(async () => {
       setErrors({});
-      const res = await setRatesAction({
-        mode: "range",
-        roomTypeIds: roomIds,
-        planCodes: codes,
-        from,
-        to,
-        days,
-        rupees: parseRupees(price),
-      });
+      const scope: BulkScope = { roomTypeIds: roomIds, planCodes: codes, from, to, days };
+      const version = nextVersion();
+      const res = await setRatesAction({ mode: "range", ...scope, rupees: parseRupees(price) });
       if (!res.ok) {
         setErrors(
           res.code === "FORBIDDEN" ? { form: "Your role cannot change rates." } : res.errors,
         );
         return;
       }
-      onDone(res.changed);
+      onDone(res.changed, scope, version);
     });
 
   return (
