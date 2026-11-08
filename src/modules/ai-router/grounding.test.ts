@@ -4,6 +4,12 @@ import { classificationFixtures } from "./fixtures";
 const c = classificationFixtures["ENQ-4411"].classification;
 const today = "2026-11-08";
 describe("server extraction grounding", () => {
+  it.each(["Not 14-16 Nov", "Avoid 14-16 Nov", "14-16 Nov is not possible"])(
+    "rejects explicitly excluded dates: %s",
+    (dates) => {
+      expect(groundExtraction(`${dates} for 2 adults and 1 child`, c, today).eligible).toBe(false);
+    },
+  );
   it.each([
     "14-16 Nov 2026 for 2 adults and a child",
     "14 November to 16 November 2026 for two adults and one child",
@@ -71,6 +77,8 @@ describe("server extraction grounding", () => {
     "one or two adults",
     "1/2 adults",
     "INR 2 adults",
+    "–2 adults",
+    "not two adults",
   ])("does not truncate compound/invalid party evidence: %s", (party) => {
     expect(groundExtraction(`14-16 Nov for ${party} and 1 child`, c, today).eligible).toBe(false);
   });

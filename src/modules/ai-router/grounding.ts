@@ -28,6 +28,15 @@ export function groundedDates(raw: string, today: string): { from: string; to: s
       const prefix = raw.slice(Math.max(0, m.index! - 25), m.index);
       // A currency/rate expression cannot supply calendar evidence.
       if (/(?:₹|\b(?:rs\.?|inr|price|budget|cost|rate))\s*[:=]?\s*$/i.test(prefix)) return false;
+      if (
+        /\b(?:not|avoid|cancel(?:led)?|wrong|invalid|example|sample)\b[^.!?\n]{0,20}$/i.test(prefix)
+      )
+        return false;
+      const suffix = raw.slice(m.index! + m[0].length, m.index! + m[0].length + 45);
+      if (
+        /^\s*(?:(?:is|are)\s+)?(?:not|no longer)\s+(?:possible|wanted|valid|suitable)/i.test(suffix)
+      )
+        return false;
       parse(m).forEach((value, i) => found.push({ at: m.index! + i / 10, value }));
       for (let i = m.index!; i < m.index! + m[0].length; i++) chars[i] = " ";
     }
@@ -149,12 +158,12 @@ function countEvidence(text: string, label: string) {
     const prefix = tokenMatch ? before.slice(0, tokenMatch.index).trimEnd() : "";
     // Never take the final component of a compound, fraction, negative or ambiguous count.
     const compound = new RegExp(
-      `\\b(?:${Object.keys(numbers).join("|")}|thirty|forty|fifty|hundred|minus|negative|point|half|quarter)(?:[ -]+(?:or|to|and|of))?[ -]*$`,
+      `\\b(?:${Object.keys(numbers).join("|")}|thirty|forty|fifty|hundred|not|minus|negative|point|half|quarter)(?:[ -]+(?:or|to|and|of))?[ -]*$`,
       "i",
     );
     if (
       compound.test(prefix) ||
-      /\d\s*[./+−-]\s*$|(?:^|[\s(:,])[-−]\s*$|[₹$€£]\s*$|\b(?:inr|rs)\.?\s*$/i.test(prefix)
+      /\d\s*[,./⁄+−–—-]\s*$|(?:^|[\s(:,])[-−–—]\s*$|[₹$€£]\s*$|\b(?:inr|rs)\.?\s*$/i.test(prefix)
     )
       return undefined;
     const value =
