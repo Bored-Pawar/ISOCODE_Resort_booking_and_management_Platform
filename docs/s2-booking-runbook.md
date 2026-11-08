@@ -5,7 +5,7 @@ Goal: a guest can build a stay, sign in, hold, pay in test mode and see a confir
 Design sources: `01-booking-core.md` (state machine, late payment, pay gate), `05-design-system.md` (screens 4 and 5, HoldTimer, copy voice), `02-architecture.md` (security, perf budget), `07-backlog.md` (AC). Where this doc adds a rule, this doc wins until `01`/`07` are updated (part of this task).
 
 ## Locks for this run
-Claude Code holds: `src/modules/{booking,payments}/**`, `src/app/(guest)/**`, `src/app/api/payments/**`, `src/app/(staff)/admin/bookings/**`, `src/components/ui/hold-timer.tsx`. Read only: `src/db/**` (no schema change in this run), `pricing`, `inventory`, enquiries, ai-router. Codex is on R1 to R4; do not touch `src/modules/{enquiries,ai-router}/**`.
+Claude Code holds: `src/modules/{booking,payments}/**`, `src/app/(guest)/**`, `src/app/api/payments/**`, `src/app/(staff)/admin/bookings/**`, `src/components/ui/hold-timer.tsx`. Read only: `src/db/**` (no schema change in this run), `pricing`, `inventory`, enquiries, ai-router. Codex is on R1 to R4; do not touch `src/modules/{enquiries,ai-router}/**` or the `/enquire` form (it is being expanded into the single unified enquiry form with event fields). Booking pages only link to `/enquire` with prefill params; keep the existing param names (`checkIn`, `checkOut`, `adults`, `children`, `room`, `rooms`).
 
 ## Hard rules
 1. Never push to `main`, never merge. Never touch the Neon production branch or its credentials.
@@ -30,6 +30,9 @@ Claude Code holds: `src/modules/{booking,payments}/**`, `src/app/(guest)/**`, `s
 
 ### 1. R07 HoldTimer fix (before anything uses it)
 Fire `onExpire` once per target timestamp, not per callback identity. Unit test: rerender after zero with a new inline callback fires nothing; a new `expiresAt` arms it again. Add the under 2 minute warning state and an `onWarning` callback.
+
+### 1b. Three month booking window (agreed product decision)
+Direct online booking allows a check in date no later than today (IST) plus 3 calendar months. The stay may end after that date. There is no setting for it: one constant in `src/lib/booking-window.ts` with unit tests (month end edge cases, e.g. 30 Nov plus 3 months is 28 Feb). Enforce it in the home search, `/rooms`, room detail and `/book/details` with the copy "Online booking opens 3 months ahead. For later dates, send us an enquiry" and a prefilled `/enquire` link. The guest hold action rechecks it on the server and returns the same message. Services and contracts stay unchanged: this is a guest channel rule, not an inventory rule, so staff and enquiries are unaffected. Record it in `00` (assumption) and `06` (decision).
 
 ### 2. Promo code on the stay builder
 `/rooms` summary gets an optional promo field carried as the `promo` URL param and passed into `quote()`. `PROMO_INVALID` shows inline under the field ("This code isn't valid for these dates"), the stay stays usable without it. Continue carries `promo` and the `quoteHash` of the quote shown. Zero total stays are not supported by the payment schema: if `totalPaise` would be 0, show "This code can't be used online, send us an enquiry" with the prefilled `/enquire` link and keep Continue disabled.
@@ -68,7 +71,7 @@ Mock email: no outbox table, so the outbox is derived. `/booking/[ref]/email` re
 `/account` rows link to `/booking/[ref]`. A valid HELD row shows "Resume payment" (to the pay page) and "Cancel" (calls `cancelHeld`, confirm dialog, toast). Empty state already exists; keep it.
 
 ### 8. A5 staff bookings (P1, only if items 1 to 7 are green)
-`/admin/bookings`: dense table (ref, guest, dates, rooms, total, status, created), filters by status and check in range, detail with the `booking_events` timeline, and a "Refund pending" tab listing REFUND_PENDING payments. Read only; additive staff read `booking.listForStaff` with `requireRole` reservations, sales or gm. Record the addition in `01`.
+`/admin/bookings`: dense table (ref, guest, dates, rooms, total, status, created), filters by status and check in range, detail with the `booking_events` timeline, and a "Refund pending" tab listing REFUND_PENDING payments. Read only; additive staff read `booking.listForStaff` with `requireRole` reservations or gm (sales has no booking authority in current scope; hide the nav item for sales). Record the addition in `01`.
 
 ### 9. H1 Playwright happy path (P0)
 One test: search, add a room, continue, sign up inline, hold, pay (succeeds), see the confirmation ref. Runs against `pnpm dev` with the development DB in CI style env, skipped when `E2E_BASE_URL` is unset. If Playwright setup costs more than 30 minutes, record it as open and move on.
