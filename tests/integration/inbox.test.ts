@@ -402,3 +402,82 @@ describe("GM bell (Q7)", () => {
     expect(await inbox.markAllRead(f.actor("sales"))).toEqual({ ok: false, code: "FORBIDDEN" });
   });
 });
+
+describe("attention request (2.5, tests 2 and 5)", () => {
+  it("request then resolve: lane membership follows; a second request reopens it", async () => {
+    const id = await f.enquiry({ category: "wedding", ownerId: f.by.sales.id });
+    const inLane = async (role: "reservations" | "gm") => {
+      const res = await inbox.list({ lane: "attention", q: f.tag }, f.actor(role));
+      return res.ok && res.rows.some((r) => r.id === id);
+    };
+    expect(await inLane("reservations")).toBe(false);
+    expect((await inbox.detail(id, f.actor("reservations"))).ok).toBe(false);
+    expect(
+      await inbox.requestAttention(
+        { enquiryId: id, note: "Can we hold 12 rooms?" },
+        f.actor("sales"),
+      ),
+    ).toEqual({ ok: true });
+    expect(
+      await inbox.requestAttention({ enquiryId: id, note: "again" }, f.actor("sales")),
+    ).toEqual({ ok: false, code: "ALREADY_OPEN" });
+    expect(await inLane("reservations")).toBe(true);
+    expect(await inLane("gm")).toBe(true);
+    // Reservations can now open it (read only) and see the note, but not work it.
+    const seen = await inbox.detail(id, f.actor("reservations"));
+    expect(seen.ok && seen.detail.can).toMatchObject({ work: false, resolveAttention: true });
+    expect(
+      await inbox.reroute(
+        { enquiryId: id, category: "room", ownerId: f.by.reservations.id },
+        f.actor("reservations"),
+      ),
+    ).toEqual({ ok: false, code: "FORBIDDEN" });
+    // Sales cannot resolve (test 2): nothing written.
+    expect(await inbox.resolveAttention({ enquiryId: id, note: "ok" }, f.actor("sales"))).toEqual({
+      ok: false,
+      code: "FORBIDDEN",
+    });
+    expect(
+      await inbox.resolveAttention(
+        { enquiryId: id, note: "Yes, 12 rooms on hold" },
+        f.actor("reservations"),
+      ),
+    ).toEqual({ ok: true });
+    expect(await inLane("reservations")).toBe(false);
+    expect(await inLane("gm")).toBe(false);
+    expect(await inbox.resolveAttention({ enquiryId: id, note: "again" }, f.actor("gm"))).toEqual({
+      ok: false,
+      code: "NOT_OPEN",
+    });
+    expect(
+      await inbox.requestAttention({ enquiryId: id, note: "Dates moved" }, f.actor("sales")),
+    ).toEqual({ ok: true });
+    expect(await inLane("reservations")).toBe(true);
+    const events = await db.select().from(t.enquiryEvents).where(eq(t.enquiryEvents.enquiryId, id));
+    expect(events.map((e) => [e.fromValue, e.toValue])).toEqual(
+      expect.arrayContaining([
+        ["Can we hold 12 rooms?", "attention"],
+        ["attention", "seen: Yes, 12 rooms on hold"],
+        ["Dates moved", "attention"],
+      ]),
+    );
+    expect(events).toHaveLength(3);
+    // Count badge for reservations.
+    expect((await inbox.counts(f.actor("reservations"))).attention).toBeGreaterThanOrEqual(1);
+  });
+
+  it("no attention request on a complaint, and none from reservations", async () => {
+    const c = await f.enquiry({ category: "complaint", isComplaint: true, ownerId: f.by.gm.id });
+    expect(await inbox.requestAttention({ enquiryId: c, note: "x" }, f.actor("gm"))).toEqual({
+      ok: false,
+      code: "FORBIDDEN",
+    });
+    const r = await f.enquiry({ category: "room", ownerId: f.by.reservations.id });
+    expect(
+      await inbox.requestAttention({ enquiryId: r, note: "x" }, f.actor("reservations")),
+    ).toEqual({ ok: false, code: "FORBIDDEN" });
+    expect(await db.select().from(t.enquiryEvents).where(eq(t.enquiryEvents.enquiryId, r))).toEqual(
+      [],
+    );
+  });
+});

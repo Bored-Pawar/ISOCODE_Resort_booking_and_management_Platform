@@ -3,6 +3,8 @@ import { Card, EmptyState, Skeleton } from "@/components/ui";
 import { inbox, type InboxActor } from "@/modules/enquiries";
 import { RetryError } from "@/app/(guest)/_components/retry-error";
 import { Forbidden } from "../../_components/forbidden";
+import { isAttentionRequest } from "@/modules/enquiries/staff/rules";
+import { AttentionPanel } from "../_components/attention-panel";
 import { CHANNEL_LABEL } from "../_components/badges";
 import { Detail } from "../_components/detail";
 import { CloseButton, DraftPanel } from "../_components/draft-panel";
@@ -30,10 +32,23 @@ async function Loaded({ id, actor }: { id: string; actor: InboxActor }) {
     );
   const d = res.detail;
   const q = d.enquiry;
+  const latest = d.timeline.find(isAttentionRequest);
   return (
     <Detail
       detail={d}
       actor={actor}
+      attentionPanel={
+        <AttentionPanel
+          key={`${d.attentionOpen}:${latest?.id ?? ""}`}
+          enquiryId={q.id}
+          open={d.attentionOpen}
+          request={
+            d.attentionOpen && latest ? { note: latest.fromValue ?? "", by: latest.actor } : null
+          }
+          canRequest={d.can.requestAttention}
+          canResolve={d.can.resolveAttention}
+        />
+      }
       draftPanel={
         <DraftPanel
           key={d.draft ? `${d.draft.id}:${d.draft.body}:${d.draft.sentAt}` : "none"}

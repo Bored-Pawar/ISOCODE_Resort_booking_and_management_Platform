@@ -10,6 +10,8 @@ const svc = vi.hoisted(() => ({
   regenerateDraft: vi.fn(async () => ({ ok: true })),
   approveAndSend: vi.fn(async () => ({ ok: true, sentAt: "", channel: "email" })),
   close: vi.fn(async () => ({ ok: true })),
+  requestAttention: vi.fn(async () => ({ ok: true })),
+  resolveAttention: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/modules/enquiries", () => ({
   retryEnquiry: svc.retryEnquiry,
@@ -20,6 +22,8 @@ vi.mock("@/modules/enquiries", () => ({
     regenerateDraft: svc.regenerateDraft,
     approveAndSend: svc.approveAndSend,
     close: svc.close,
+    requestAttention: svc.requestAttention,
+    resolveAttention: svc.resolveAttention,
   },
 }));
 
@@ -29,7 +33,9 @@ import {
   approveAndSendAction,
   closeAction,
   regenerateAction,
+  requestAttentionAction,
   rerouteAction,
+  resolveAttentionAction,
   retryFailedEnquiry,
   saveDraftAction,
   saveFieldsAction,
@@ -99,5 +105,40 @@ describe("inbox actions check the permission before the service", () => {
       { userId: "u1", role: "sales" },
       { userId: "u1", role: "gm" },
     ]);
+  });
+});
+
+describe("attention actions check their own capability first", () => {
+  it("request: sales and gm only", async () => {
+    for (const role of ["reservations", "guest", null] as const) {
+      session(role);
+      expect(await requestAttentionAction({ enquiryId: "ENQ-1", note: "x" })).toMatchObject({
+        ok: false,
+      });
+    }
+    expect(svc.requestAttention).not.toHaveBeenCalled();
+    for (const role of ["sales", "gm"] as const) {
+      session(role);
+      expect(await requestAttentionAction({ enquiryId: "ENQ-1", note: "x" })).toMatchObject({
+        ok: true,
+      });
+    }
+    expect(svc.requestAttention).toHaveBeenCalledTimes(2);
+  });
+  it("resolve: reservations and gm only", async () => {
+    for (const role of ["sales", "guest", null] as const) {
+      session(role);
+      expect(await resolveAttentionAction({ enquiryId: "ENQ-1", note: "x" })).toMatchObject({
+        ok: false,
+      });
+    }
+    expect(svc.resolveAttention).not.toHaveBeenCalled();
+    for (const role of ["reservations", "gm"] as const) {
+      session(role);
+      expect(await resolveAttentionAction({ enquiryId: "ENQ-1", note: "x" })).toMatchObject({
+        ok: true,
+      });
+    }
+    expect(svc.resolveAttention).toHaveBeenCalledTimes(2);
   });
 });

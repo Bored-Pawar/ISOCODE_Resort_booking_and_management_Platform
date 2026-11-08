@@ -19,6 +19,8 @@ const MESSAGES: Record<string, string> = {
   INVALID_OWNER: "That owner's role cannot see this category. Pick another owner.",
   ALREADY_SENT: "This reply was already sent. Refresh to see it.",
   NO_DRAFT: "There is no draft yet. Use Generate draft.",
+  ALREADY_OPEN: "Reservations and the GM have already been asked. Wait for them to mark it seen.",
+  NOT_OPEN: "This request was already marked seen.",
 };
 const fail = (code: string): ActionResult => ({
   ok: false,
@@ -116,6 +118,36 @@ export async function closeAction(input: unknown): Promise<ActionResult> {
     return { ok: true, message: "Enquiry closed." };
   } catch (error) {
     console.error("close failed", error);
+    return fail("ERROR");
+  }
+}
+
+/** Sales and GM: "Ask reservations and GM to look" (`attention.request` checked first). */
+export async function requestAttentionAction(input: unknown): Promise<ActionResult> {
+  const actor = await inboxActor("attention.request");
+  if (!actor) return FORBIDDEN;
+  try {
+    const res = await inbox.requestAttention(input, actor);
+    if (!res.ok) return fail(res.code);
+    refresh();
+    return { ok: true, message: "Asked reservations and the GM to look." };
+  } catch (error) {
+    console.error("requestAttention failed", error);
+    return fail("ERROR");
+  }
+}
+
+/** Reservations and GM: "Mark seen" with a reply note (`attention.resolve` checked first). */
+export async function resolveAttentionAction(input: unknown): Promise<ActionResult> {
+  const actor = await inboxActor("attention.resolve");
+  if (!actor) return FORBIDDEN;
+  try {
+    const res = await inbox.resolveAttention(input, actor);
+    if (!res.ok) return fail(res.code);
+    refresh();
+    return { ok: true, message: "Marked seen. Sales can read your note in the timeline." };
+  } catch (error) {
+    console.error("resolveAttention failed", error);
     return fail("ERROR");
   }
 }

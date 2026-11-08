@@ -204,7 +204,12 @@ export async function getDetail(
           can(actor.role, "enquiries.unsorted") &&
           r.aiStatus === "failed" &&
           r.aiLastError === "ATTEMPTS_EXHAUSTED",
-        requestAttention: work && can(actor.role, "attention.request") && !open,
+        requestAttention:
+          work &&
+          can(actor.role, "attention.request") &&
+          !open &&
+          !vis.isComplaint &&
+          vis.category !== "complaint",
         resolveAttention: can(actor.role, "attention.resolve") && open,
       },
     },

@@ -16,20 +16,22 @@ Runbook: `docs/s2-inbox-runbook.md`. Branch `claude/inbox` in `../resort-inbox`,
 | 2.2 Q5 detail and routing | done | feat(inbox): Q5 detail, field edits, re-route and Retry AI |
 | 2.3 Q6 draft and send | done | feat(inbox): Q6 draft editor, approve and send to the mock outbox |
 | 2.4 Q7 GM bell | done | feat(inbox): Q7 GM bell with unread count and mark read |
-| 2.5 Sales attention request | next | |
-| 2.6 Q2 unified enquiry form | todo | |
+| 2.5 Sales attention request | done | feat(inbox): sales attention request and mark seen |
+| 2.6 Q2 unified enquiry form | next | |
 | Gates, integration, review, screenshots | todo | |
 
-Last done: 2.4. `staff/notifications.ts` (bell, markRead, markAllRead; `notifications.gm` and
-`user_id = me` on every query). `StaffShell` has a `bell` slot: one slim header bar above content (GM only).
-`GmBell` reloads through `bellAction` on every pathname change (layouts stay mounted), no polling.
-Next: 2.5 attention request (`attentionPanel` slot in `_components/detail.tsx`; rules/SQL already in place).
+Last done: 2.5. `staff/attention.ts`: request (`attention.request`, own lanes, never a complaint, not
+while open) and resolve (`attention.resolve`, while open). Reservations can open (read only) a non-complaint
+enquiry once sales asked; working it still needs own lanes. Panel on the detail; notes in the timeline.
+Next: 2.6 unified `/enquire` form (Codex lock lifted to this branch by the runbook).
 
 ## Gates (last run)
-typecheck, lint, format ok; unit (staff, modules) 336/336. Integration `inbox.test.ts` 11/11 on test-claude
+typecheck, lint, format ok; unit (staff, modules) 336/336. Integration `inbox.test.ts` 13/13 on test-claude
 (no other run active: checked node processes; only the resort-claude `next dev`).
 
 ## Open items / blockers
+- `/admin` overview still shows enquiry counts as "Coming with the inbox" (`_lib/overview.ts`, an admin page,
+  read only per the runbook locks). `inbox.counts` can feed it; needs scrum master OK.
 - `enquiry_events` has no note column and no schema change is allowed: attention request stores the note in
   `from_value` (to_value `attention`); resolve stores `to_value = 'seen: <reply note>'` (from_value `attention`).
 - No index on `enquiry_events.enquiry_id` and summary search is ILIKE on jsonb: lane/visibility use the indexed

@@ -4,6 +4,7 @@ import { redraft } from "./drafting";
 import { reroute, updateFields, fieldsInputSchema } from "./routing";
 import { laneCounts, listInbox } from "./service";
 import { bell, markAllRead, markRead } from "./notifications";
+import { requestAttention, resolveAttention } from "./attention";
 import { approveAndSend, closeEnquiry, listSentReplies, regenerateDraft, saveDraft } from "./send";
 import type { InboxActor } from "./rules";
 
@@ -33,6 +34,8 @@ export const inbox = {
   bell,
   markRead,
   markAllRead,
+  requestAttention,
+  resolveAttention,
 };
 export type { InboxPage, InboxRow, LaneCounts, Grounding } from "./service";
 export type { InboxDetail, Draft, TimelineEntry, StaffUser, Extracted } from "./detail";
