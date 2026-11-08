@@ -1,0 +1,8 @@
+{
+  "typecheck": { "command": "pnpm typecheck", "exitCode": 0 },
+  "unitRegression": { "command": "pnpm test --reporter=json --outputFile=docs/reviews/ollama-benchmark/unit-regression.json", "exitCode": 0, "passed": 321, "failed": 0 },
+  "lint": { "command": "pnpm exec eslint src/modules/ai-provider/execute.ts src/modules/ai-provider/provider.test.ts tests/unit/ollama-benchmark.test.ts tests/benchmarks/ollama --no-warn-ignored", "exitCode": 0 },
+  "originalIsolatedChecks": { "evidence": "isolated-checks.json", "passed": 63, "scope": "Original timeout, fixture/mocked HTTP checks before the user amendment; updated timeout checks are included in the full 321-test regression." },
+  "databaseIntegration": "Not run; shared integration database untouched.",
+  "productionBehaviorChange": "Only the explicitly approved local-provider attempt timeout (30 minutes); hosted remains 10 seconds."
+}

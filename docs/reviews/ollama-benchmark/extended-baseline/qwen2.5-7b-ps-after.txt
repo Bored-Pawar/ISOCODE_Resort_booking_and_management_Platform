@@ -1,0 +1,2 @@
+NAME          ID              SIZE      PROCESSOR          CONTEXT    RUNNER      UNTIL              
+qwen2.5:7b    845dbda0ea48    5.2 GB    18%/82% CPU/GPU    4096       llamacpp    4 minutes from now

@@ -13,6 +13,7 @@ import { bookingFixture, twoRoomBookingFixture } from "@/modules/booking/fixture
 import { enquiries } from "@/modules/enquiries";
 import { enquiriesFixture } from "@/modules/enquiries/fixtures";
 import { aiRouter, classificationSchema } from "@/modules/ai-router";
+import { classificationFixtures } from "@/modules/ai-router/fixtures";
 import { roomTypesFixture } from "@/modules/catalog/fixtures";
 
 const line = { roomTypeId: "rt-plantation-room", ratePlanId: "rp-plantation-cp", adults: 2 };
@@ -71,9 +72,9 @@ describe("fixtures are internally consistent", () => {
   });
   it("classification fixtures satisfy the schema", async () => {
     for (const id of ["ENQ-4410", "ENQ-4411", "ENQ-4412", "ENQ-COMPLAINT", "ENQ-UNSURE"]) {
-      const r = await aiRouter.process({ enquiryId: id });
-      expect(r.ok).toBe(true);
-      if (r.ok) expect(classificationSchema.safeParse(r.classification).success).toBe(true);
+      expect(
+        classificationSchema.safeParse(classificationFixtures[id].classification).success,
+      ).toBe(true);
     }
   });
   it("catalog fixtures match assumption A9 (76 keys); the DB catalog is checked by seed.test", () => {
@@ -114,7 +115,7 @@ describe("stubs return discriminated results, never throw", () => {
       (await enquiries.ingest({ channel: "web", senderName: "", senderContact: "", rawText: "" }))
         .ok,
     ).toBe(false);
-    expect(await aiRouter.process({ enquiryId: "nope" })).toEqual({ ok: false, code: "NOT_FOUND" });
+    expect(await aiRouter.process({ enquiryId: "" })).toEqual({ ok: false, code: "INVALID_INPUT" });
   });
   it("the three brief enquiries are verbatim", async () => {
     const list = enquiriesFixture;

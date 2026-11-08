@@ -1,7 +1,14 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import { BadgePercent, BedDouble, CalendarRange, IndianRupee, LayoutDashboard } from "lucide-react";
+import {
+  BadgePercent,
+  BedDouble,
+  CalendarRange,
+  Inbox,
+  IndianRupee,
+  LayoutDashboard,
+} from "lucide-react";
 import { StaffShell } from "@/components/layout/staff-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +19,7 @@ import { signOutAction } from "@/lib/auth/actions";
 
 const ICONS: Record<NavIcon, React.ReactNode> = {
   overview: <LayoutDashboard strokeWidth={1.5} />,
+  inbox: <Inbox strokeWidth={1.5} />,
   bookings: <CalendarRange strokeWidth={1.5} />,
   rates: <IndianRupee strokeWidth={1.5} />,
   allotment: <BedDouble strokeWidth={1.5} />,

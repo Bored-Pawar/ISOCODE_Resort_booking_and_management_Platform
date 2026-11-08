@@ -109,6 +109,8 @@ Points: 1 trivial, 2 small, 3 medium, 5 large, 8 hard.
 | R4 | As the system, I draft replies with real prices | `{{QUOTE}}` filled from `pricing.quote()`, price guard rejects model numbers, template fallback; tests | 5 | P0 | R3, B1 |
 | R5 | As the team, we measure AI quality | `pnpm eval:ai` on 30 labelled enquiries, results saved for the TDD | 2 | P1 | R3, F3 |
 
+Approved R2 recovery policy (2026-11-08 audit remediation): lazy bounded sweeps on ingest and staff inbox load plus one daily safety-net sweep from existing `/api/cron/expire-holds` (`CRON_SECRET`, 00:00 UTC / 05:30 IST; 60-second route budget). Claims use `SKIP LOCKED`, maximum five workers and three attempts per cycle; stale final failures become terminal unsorted rows. Authorized staff Retry resets only the exact failed generation and logs the actor. No separate schedule or cron route is added. See `04-ai-router.md` for the matching execution policy.
+
 ## H Quality (continuous, final check on Monday)
 | ID | Story | AC | Pts | P | Depends |
 |---|---|---|---|---|---|

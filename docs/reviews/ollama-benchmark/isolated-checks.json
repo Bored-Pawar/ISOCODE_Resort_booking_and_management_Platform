@@ -1,0 +1,901 @@
+{
+  "numTotalTestSuites": 11,
+  "numPassedTestSuites": 11,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 63,
+  "numPassedTests": 63,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1794147946882,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "benchmark scoring"
+          ],
+          "fullName": "benchmark scoring requires absent unknown fields and scores extraction separately",
+          "status": "passed",
+          "title": "requires absent unknown fields and scores extraction separately",
+          "duration": 2.55600000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) rejects invalid JSON through actual SDK/Zod path",
+          "status": "passed",
+          "title": "rejects invalid JSON through actual SDK/Zod path",
+          "duration": 43.64499999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) rejects schema mismatch through actual SDK/Zod path",
+          "status": "passed",
+          "title": "rejects schema mismatch through actual SDK/Zod path",
+          "duration": 8.125400000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) rejects calendar date through actual SDK/Zod path",
+          "status": "passed",
+          "title": "rejects calendar date through actual SDK/Zod path",
+          "duration": 4.711500000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) rejects date order through actual SDK/Zod path",
+          "status": "passed",
+          "title": "rejects date order through actual SDK/Zod path",
+          "duration": 3.0007000000000517,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) rejects guest total through actual SDK/Zod path",
+          "status": "passed",
+          "title": "rejects guest total through actual SDK/Zod path",
+          "duration": 3.5826999999999316,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) unavailable provider retries once and classification becomes unsorted fallback",
+          "status": "passed",
+          "title": "unavailable provider retries once and classification becomes unsorted fallback",
+          "duration": 260.58180000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) actual ten-second timers bound two stalled HTTP attempts",
+          "status": "passed",
+          "title": "actual ten-second timers bound two stalled HTTP attempts",
+          "duration": 8.891000000000076,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) bad prose falls back without changing valid extraction: null",
+          "status": "passed",
+          "title": "bad prose falls back without changing valid extraction: null",
+          "duration": 2.1479000000001633,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) bad prose falls back without changing valid extraction: Thanks for your enquiry.",
+          "status": "passed",
+          "title": "bad prose falls back without changing valid extraction: Thanks for your enquiry.",
+          "duration": 0.5945000000001528,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) bad prose falls back without changing valid extraction: Thank you. {{QUOTE}} {{QUOTE}}",
+          "status": "passed",
+          "title": "bad prose falls back without changing valid extraction: Thank you. {{QUOTE}} {{QUOTE}}",
+          "duration": 0.39239999999995234,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) bad prose falls back without changing valid extraction: Available at INR 999. {{QUOTE}}",
+          "status": "passed",
+          "title": "bad prose falls back without changing valid extraction: Available at INR 999. {{QUOTE}}",
+          "duration": 0.15599999999994907,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) bad prose falls back without changing valid extraction: Booking confirmed. {{QUOTE}}",
+          "status": "passed",
+          "title": "bad prose falls back without changing valid extraction: Booking confirmed. {{QUOTE}}",
+          "duration": 1.018000000000029,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) documents wrong perspective currently passing the guard",
+          "status": "passed",
+          "title": "documents wrong perspective currently passing the guard",
+          "duration": 1.2034000000001015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) documents benign complaint acknowledgement rejected by refund keyword",
+          "status": "passed",
+          "title": "documents benign complaint acknowledgement rejected by refund keyword",
+          "duration": 0.15629999999987376,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) documents explicit past stay passing validation",
+          "status": "passed",
+          "title": "documents explicit past stay passing validation",
+          "duration": 0.1998999999998432,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "isolated production-adapter fault checks (mocked HTTP)"
+          ],
+          "fullName": "isolated production-adapter fault checks (mocked HTTP) documents non-English booking promise bypassing English prose guard",
+          "status": "passed",
+          "title": "documents non-English booking promise bypassing English prose guard",
+          "duration": 0.6794999999999618,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1794147947720,
+      "endTime": 1794147948062.6794,
+      "status": "passed",
+      "message": "",
+      "name": "[USERPROFILE]/Isocode/resort-codex/tests/unit/ollama-benchmark.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "runs the real structured SDK path against a mocked Ollama-compatible HTTP response",
+          "status": "passed",
+          "title": "runs the real structured SDK path against a mocked Ollama-compatible HTTP response",
+          "duration": 63.75879999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1794147947613,
+      "endTime": 1794147947676.7588,
+      "status": "passed",
+      "message": "",
+      "name": "[USERPROFILE]/Isocode/resort-codex/src/modules/ai-provider/http.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "provider transport"
+          ],
+          "fullName": "provider transport selects google",
+          "status": "passed",
+          "title": "selects google",
+          "duration": 3.9617000000000644,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "provider transport"
+          ],
+          "fullName": "provider transport selects anthropic",
+          "status": "passed",
+          "title": "selects anthropic",
+          "duration": 0.7927000000000817,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "provider transport"
+          ],
+          "fullName": "provider transport selects local",
+          "status": "passed",
+          "title": "selects local",
+          "duration": 2.6802999999999884,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "provider transport"
+          ],
+          "fullName": "provider transport rules makes zero model calls",
+          "status": "passed",
+          "title": "rules makes zero model calls",
+          "duration": 0.9773999999999887,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "provider transport"
+          ],
+          "fullName": "provider transport missing config fails without network",
+          "status": "passed",
+          "title": "missing config fails without network",
+          "duration": 1.3505999999999858,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "provider transport"
+          ],
+          "fullName": "provider transport one structured call, no SDK retries",
+          "status": "passed",
+          "title": "one structured call, no SDK retries",
+          "duration": 6.97339999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "provider transport"
+          ],
+          "fullName": "provider transport invalid output/schema is not retried",
+          "status": "passed",
+          "title": "invalid output/schema is not retried",
+          "duration": 3.0778000000000247,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "provider transport"
+          ],
+          "fullName": "provider transport honours bounded Retry-After",
+          "status": "passed",
+          "title": "honours bounded Retry-After",
+          "duration": 10.198800000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "provider transport"
+          ],
+          "fullName": "provider transport long Retry-After falls back; diagnostics omit payload",
+          "status": "passed",
+          "title": "long Retry-After falls back; diagnostics omit payload",
+          "duration": 2.4517999999999347,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "provider transport"
+          ],
+          "fullName": "provider transport times out and aborts twice",
+          "status": "passed",
+          "title": "times out and aborts twice",
+          "duration": 3.689399999999978,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "provider transport"
+          ],
+          "fullName": "provider transport invalid keys are not retried",
+          "status": "passed",
+          "title": "invalid keys are not retried",
+          "duration": 2.27800000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "provider transport"
+          ],
+          "fullName": "provider transport has no domain/database imports",
+          "status": "passed",
+          "title": "has no domain/database imports",
+          "duration": 1.634800000000041,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1794147947645,
+      "endTime": 1794147947685.6348,
+      "status": "passed",
+      "message": "",
+      "name": "[USERPROFILE]/Isocode/resort-codex/src/modules/ai-provider/provider.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety fills canonicalized placeholders and still rejects disguised model prices",
+          "status": "passed",
+          "title": "fills canonicalized placeholders and still rejects disguised model prices",
+          "duration": 5.936999999999898,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: ₹12000",
+          "status": "passed",
+          "title": "rejects invented offer: ₹12000",
+          "duration": 0.2701999999999316,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: Rs. 12000",
+          "status": "passed",
+          "title": "rejects invented offer: Rs. 12000",
+          "duration": 0.40810000000010405,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: INR 12,000",
+          "status": "passed",
+          "title": "rejects invented offer: INR 12,000",
+          "duration": 0.17879999999991014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: twelve thousand rupees",
+          "status": "passed",
+          "title": "rejects invented offer: twelve thousand rupees",
+          "duration": 0.11189999999987776,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: 20% discount",
+          "status": "passed",
+          "title": "rejects invented offer: 20% discount",
+          "duration": 0.2159999999998945,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: free upgrade",
+          "status": "passed",
+          "title": "rejects invented offer: free upgrade",
+          "duration": 0.11920000000009168,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: only 12000 total",
+          "status": "passed",
+          "title": "rejects invented offer: only 12000 total",
+          "duration": 0.4234999999998763,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: USD 50",
+          "status": "passed",
+          "title": "rejects invented offer: USD 50",
+          "duration": 0.338799999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: confirmed",
+          "status": "passed",
+          "title": "rejects invented offer: confirmed",
+          "duration": 0.15429999999992106,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: pay now",
+          "status": "passed",
+          "title": "rejects invented offer: pay now",
+          "duration": 0.13020000000005894,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: we sent the email",
+          "status": "passed",
+          "title": "rejects invented offer: we sent the email",
+          "duration": 0.04919999999992797,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: A villa is available",
+          "status": "passed",
+          "title": "rejects invented offer: A villa is available",
+          "duration": 0.031199999999898864,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety rejects invented offer: Pool Villa for your stay",
+          "status": "passed",
+          "title": "rejects invented offer: Pool Villa for your stay",
+          "duration": 0.026299999999991996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety allows legitimate dates, headcounts and booking IDs",
+          "status": "passed",
+          "title": "allows legitimate dates, headcounts and booking IDs",
+          "duration": 0.23230000000012296,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety replaces unsafe/absent draft without losing classification",
+          "status": "passed",
+          "title": "replaces unsafe/absent draft without losing classification",
+          "duration": 1.6886999999999261,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety replaces unsafe/absent draft without losing classification",
+          "status": "passed",
+          "title": "replaces unsafe/absent draft without losing classification",
+          "duration": 0.3371999999999389,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety replaces unsafe/absent draft without losing classification",
+          "status": "passed",
+          "title": "replaces unsafe/absent draft without losing classification",
+          "duration": 0.17889999999988504,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety replaces unsafe/absent draft without losing classification",
+          "status": "passed",
+          "title": "replaces unsafe/absent draft without losing classification",
+          "duration": 0.14450000000010732,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety replaces unsafe/absent draft without losing classification",
+          "status": "passed",
+          "title": "replaces unsafe/absent draft without losing classification",
+          "duration": 0.20240000000012515,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety replaces unsafe/absent draft without losing classification",
+          "status": "passed",
+          "title": "replaces unsafe/absent draft without losing classification",
+          "duration": 0.22179999999980282,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety inserts only the trusted total and GST after checking model text",
+          "status": "passed",
+          "title": "inserts only the trusted total and GST after checking model text",
+          "duration": 0.31750000000010914,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "draft safety"
+          ],
+          "fullName": "draft safety no quote asks for details and makes no availability promise",
+          "status": "passed",
+          "title": "no quote asks for details and makes no availability promise",
+          "duration": 0.1589000000001306,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1794147948140,
+      "endTime": 1794147948152.159,
+      "status": "passed",
+      "message": "",
+      "name": "[USERPROFILE]/Isocode/resort-codex/src/modules/ai-router/draft.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "deterministic quote choice"
+          ],
+          "fullName": "deterministic quote choice a more specific named room never broadens to a shorter name it contains",
+          "status": "passed",
+          "title": "a more specific named room never broadens to a shorter name it contains",
+          "duration": 3.2524000000000797,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "deterministic quote choice"
+          ],
+          "fullName": "deterministic quote choice villa preference excludes cheaper plantation rooms",
+          "status": "passed",
+          "title": "villa preference excludes cheaper plantation rooms",
+          "duration": 3.9598000000000866,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "deterministic quote choice"
+          ],
+          "fullName": "deterministic quote choice respects a specific Pool Villa request",
+          "status": "passed",
+          "title": "respects a specific Pool Villa request",
+          "duration": 0.6838000000000193,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "deterministic quote choice"
+          ],
+          "fullName": "deterministic quote choice an unavailable requested villa never substitutes a plantation room",
+          "status": "passed",
+          "title": "an unavailable requested villa never substitutes a plantation room",
+          "duration": 1.25,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "deterministic quote choice"
+          ],
+          "fullName": "deterministic quote choice checks repeated units for a two-room request",
+          "status": "passed",
+          "title": "checks repeated units for a two-room request",
+          "duration": 1.0949999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "deterministic quote choice"
+          ],
+          "fullName": "deterministic quote choice missing rates never generate a price",
+          "status": "passed",
+          "title": "missing rates never generate a price",
+          "duration": 0.36550000000011096,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "deterministic quote choice"
+          ],
+          "fullName": "deterministic quote choice stable tie-break survives catalog order changes",
+          "status": "passed",
+          "title": "stable tie-break survives catalog order changes",
+          "duration": 0.6222999999999956,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "deterministic quote choice"
+          ],
+          "fullName": "deterministic quote choice missing fields/non-room enquiries do not read stock or rates",
+          "status": "passed",
+          "title": "missing fields/non-room enquiries do not read stock or rates",
+          "duration": 0.1915999999998803,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "deterministic quote choice"
+          ],
+          "fullName": "deterministic quote choice generic suites and private pool requests restrict types",
+          "status": "passed",
+          "title": "generic suites and private pool requests restrict types",
+          "duration": 0.4813000000001466,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1794147948147,
+      "endTime": 1794147948159.4812,
+      "status": "passed",
+      "message": "",
+      "name": "[USERPROFILE]/Isocode/resort-codex/src/modules/ai-router/quote-selection.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "the installed SDK serializes the full router schema and preserves classification when draft shape is bad",
+          "status": "passed",
+          "title": "the installed SDK serializes the full router schema and preserves classification when draft shape is bad",
+          "duration": 74.36689999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1794147947636,
+      "endTime": 1794147947710.367,
+      "status": "passed",
+      "message": "",
+      "name": "[USERPROFILE]/Isocode/resort-codex/src/modules/ai-router/wire.test.ts"
+    }
+  ],
+  "machineAccountPathRedacted": true
+}

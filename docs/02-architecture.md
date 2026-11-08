@@ -14,7 +14,7 @@ Why: one developer, about 72 hours, single deploy. Microservices add networking 
 | ORM | Drizzle (raw SQL allowed for locking queries) |
 | Auth | Auth.js credentials, `users.role` |
 | Validation | Zod on every input and every AI output |
-| AI | Vercel AI SDK `generateObject`, provider set by env (see `04-ai-router.md`) |
+| AI | Vercel AI SDK 7 `generateText` + `Output.object`, provider set by env (see `04-ai-router.md`) |
 | Tests | Vitest (unit + Postgres integration), Playwright (one end to end booking) |
 | Deploy | Vercel + Neon, Vercel Cron |
 | Package manager | pnpm |
@@ -34,6 +34,7 @@ src/
     payments/       PaymentProvider + MockProvider     [LOCKED]
     enquiries/      inbox, channels, audit
     ai-router/      classify, route, draft, fallback
+    ai-provider/    provider selection and structured SDK transport only
     admin/          admin services, export
   lib/              auth (requireRole, requireGuestOwner), db client, money, dates
   db/               schema/, migrations/, seed/         [LOCKED]
@@ -50,6 +51,10 @@ S1 approved narrow exception (R01): the `booking` module, as transaction owner, 
 B1+B2 review-fix exceptions: `inventory/index.ts` may call the internal booking-owned scoped lazy-expiry wrapper (mandatory stay date range; optional room type). It opens the expiry transaction inside booking and never calls the site-wide sweep. Seed code and tests may import the pure `pricing/calculation.ts` implementation directly to share price snapshot calculations. Public service contracts remain unchanged; see `01-booking-core.md` § Contracts.
 
 ## Security
+S2 approved D6 internal exception: only `ai-router` consumes `enquiries/internal.ts` queue claims, snapshot reads and transaction-aware settlement. Claims and settlement open short enquiries-owned transactions; no transaction spans a provider call. Settlement locks the enquiry, verifies attempt/timestamp generation and staff state, and atomically saves classification, an unapproved draft, alert and audit event. No schema/migration changes.
+
+Staff eligibility (D2): `users` has no active/disabled flag. All existing accounts with the exact target staff role are eligible, ordered `created_at ASC, id ASC`; missing staff keeps the row unsorted. The first GM receives complaint/unsorted alerts; without a GM account the complaint flag and unsorted lane remain visible, but a notification cannot be inserted without a recipient.
+
 1. Role checks inside every server action and route handler. Middleware only redirects. Staff entry points use `requirePermission(capability)` from `src/lib/auth/permissions.ts` (one role x capability table; `navFor` builds the staff nav from it, `enquiryVisibility` filters the inbox). A staff page the role cannot use renders the 403 screen; its actions return `FORBIDDEN`.
 2. Guests can read only their own bookings.
 3. Secrets only in env. `.env.example` lists names.
@@ -90,7 +95,7 @@ B1+B2 review-fix exceptions: `inventory/index.ts` may call the internal booking-
 
 ## Machine and public entry points without a session role (B10 minor fix 3)
 CLAUDE.md rule 5 requires `requireRole()` or `requireGuestOwner()` on every server action and route handler. These are the recorded exemptions; each still validates its input with Zod.
-1. **Cron** (`/api/cron/expire-holds`): a machine endpoint with no user session. It requires `Authorization: Bearer <CRON_SECRET>` (fails closed when `CRON_SECRET` is unset or the header is wrong) instead of `requireRole()`, and only calls `booking.releaseExpiredHolds()`.
+1. **Cron** (`/api/cron/expire-holds`): a machine endpoint with no user session. It requires `Authorization: Bearer <CRON_SECRET>` (fails closed when unset or wrong) instead of `requireRole()`. The approved M4 extension calls `booking.releaseExpiredHolds()` plus the additive `ai-router.recoverEnquiries` export for one bounded recovery batch, with a 60-second route duration. Existing public process/list signatures remain unchanged.
 2. **Inbound webhooks** and the **`/enquire` form**: see "Enquiry intake and the dev area" above.
 2a. **Mock payment webhook** (`/api/payments/mock`, B7): a machine endpoint with no user session. It requires a valid `x-payment-signature` (HMAC SHA-256 of the raw body with `PAYMENT_WEBHOOK_SECRET`, compared in constant time, fails closed when the secret is unset), then validates the body with Zod and only calls `booking.confirmPayment`. `MockProvider` delivers to the same handler function in process (no request-derived URL). The guest's pay action itself calls `requireRole('guest')`.
 3. **`/book` room cart (B6 step 1)**: a server-rendered page, not an action. It reads the cart from the URL and calls the public `catalog`, `inventory.availability` and `pricing.quote` reads, which take no hold and write nothing (lazy expiry aside, which is booking-owned). The hold itself is taken later by `acquireBookingHold`, which calls `requireRole('guest')`.

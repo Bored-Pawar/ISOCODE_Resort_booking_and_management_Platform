@@ -1,0 +1,122 @@
+[
+  {
+    "evidence": "baseline",
+    "model": "qwen3:4b-instruct",
+    "samples": 11,
+    "medianUtilizationPercent": 95,
+    "p95UtilizationPercent": 96,
+    "maxMemoryMiB": 3137,
+    "medianMemoryMiB": 3137,
+    "medianPowerW": 74.76
+  },
+  {
+    "evidence": "baseline",
+    "model": "qwen2.5:7b",
+    "samples": 285,
+    "medianUtilizationPercent": 4,
+    "p95UtilizationPercent": 13,
+    "maxMemoryMiB": 4099,
+    "medianMemoryMiB": 3699,
+    "medianPowerW": 15.5
+  },
+  {
+    "evidence": "controlled",
+    "model": "qwen3:4b-instruct",
+    "samples": 43,
+    "medianUtilizationPercent": 94,
+    "p95UtilizationPercent": 95,
+    "maxMemoryMiB": 3137,
+    "medianMemoryMiB": 3137,
+    "medianPowerW": 66.51
+  },
+  {
+    "evidence": "controlled",
+    "model": "qwen2.5:7b",
+    "samples": 38,
+    "medianUtilizationPercent": 45.5,
+    "p95UtilizationPercent": 60,
+    "maxMemoryMiB": 4113,
+    "medianMemoryMiB": 4111,
+    "medianPowerW": 51.715
+  },
+  {
+    "evidence": "extended-baseline",
+    "model": "qwen3:4b-instruct",
+    "samples": 45,
+    "medianUtilizationPercent": 94,
+    "p95UtilizationPercent": 96,
+    "maxMemoryMiB": 3137,
+    "medianMemoryMiB": 3137,
+    "medianPowerW": 70.67
+  },
+  {
+    "evidence": "extended-baseline",
+    "model": "qwen2.5:7b",
+    "samples": 106,
+    "medianUtilizationPercent": 49.5,
+    "p95UtilizationPercent": 61,
+    "maxMemoryMiB": 4113,
+    "medianMemoryMiB": 4113,
+    "medianPowerW": 53.730000000000004
+  },
+  {
+    "evidence": "extended-controlled",
+    "model": "qwen3:4b-instruct",
+    "samples": 125,
+    "medianUtilizationPercent": 95,
+    "p95UtilizationPercent": 96,
+    "maxMemoryMiB": 3137,
+    "medianMemoryMiB": 3137,
+    "medianPowerW": 66.35
+  },
+  {
+    "evidence": "extended-controlled",
+    "model": "qwen2.5:7b",
+    "samples": 299,
+    "medianUtilizationPercent": 51,
+    "p95UtilizationPercent": 62,
+    "maxMemoryMiB": 4113,
+    "medianMemoryMiB": 4113,
+    "medianPowerW": 53.49
+  },
+  {
+    "evidence": "improved-single",
+    "model": "qwen3:4b-instruct",
+    "samples": 18,
+    "medianUtilizationPercent": 94.5,
+    "p95UtilizationPercent": 100,
+    "maxMemoryMiB": 3139,
+    "medianMemoryMiB": 3139,
+    "medianPowerW": 74.695
+  },
+  {
+    "evidence": "improved-single",
+    "model": "qwen2.5:7b",
+    "samples": 42,
+    "medianUtilizationPercent": 48.5,
+    "p95UtilizationPercent": 60,
+    "maxMemoryMiB": 4113,
+    "medianMemoryMiB": 4113,
+    "medianPowerW": 53.185
+  },
+  {
+    "evidence": "two-call",
+    "model": "qwen3:4b-instruct",
+    "samples": 41,
+    "medianUtilizationPercent": 94,
+    "p95UtilizationPercent": 95,
+    "maxMemoryMiB": 3139,
+    "medianMemoryMiB": 3137,
+    "medianPowerW": 72.24
+  },
+  {
+    "evidence": "two-call",
+    "model": "qwen2.5:7b",
+    "samples": 48,
+    "medianUtilizationPercent": 53,
+    "p95UtilizationPercent": 63,
+    "maxMemoryMiB": 4115,
+    "medianMemoryMiB": 4111,
+    "medianPowerW": 53.504999999999995
+  }
+]

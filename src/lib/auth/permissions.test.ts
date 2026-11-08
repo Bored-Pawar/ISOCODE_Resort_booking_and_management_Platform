@@ -99,17 +99,18 @@ describe("requirePermission", () => {
 
 describe("navFor", () => {
   const hrefs = (role: Role) => navFor(role).map((n) => n.href);
-  it("reservations: overview, bookings, rates, allotment, promos", () => {
+  it("reservations: overview, inbox, bookings, rates, allotment, promos", () => {
     expect(hrefs("reservations")).toEqual([
       "/admin",
+      "/admin/inbox",
       "/admin/bookings",
       "/admin/rates",
       "/admin/allotment",
       "/admin/promos",
     ]);
   });
-  it("sales: overview only (inbox arrives with Codex Q4)", () => {
-    expect(hrefs("sales")).toEqual(["/admin"]);
+  it("sales: overview and the unsorted-enquiry queue only", () => {
+    expect(hrefs("sales")).toEqual(["/admin", "/admin/inbox"]);
   });
   it("gm: everything built", () => {
     expect(hrefs("gm")).toEqual(hrefs("reservations"));
