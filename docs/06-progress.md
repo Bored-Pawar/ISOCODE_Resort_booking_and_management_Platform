@@ -3,6 +3,9 @@
 Scrum master: Aditya Pawar. Deadline: 9 Nov 2026, 23:59 IST.
 Developers update this file after significant changes. Keep entries one line.
 
+## Codex R1–R4 main integration (2026-11-08)
+- Authorized after Claude's passing focused re-audit: clean `87e20d8`, verified booking PR #5/main `444840d`, base `e1e3d92`; normal merge `4118484` preserves both histories and resolves only admin navigation (Unsorted enquiries plus role-gated Bookings). AI remediation source is unchanged; protected source equals main. Typecheck/lint/build, 486 unit tests and 122 PostgreSQL tests (all 14 files, zero failed/skipped) pass on Codex's confirmed isolated Neon endpoint only. Comparable baseline 467 → 520; expanded regression total 608. Before-seed fixtures cleared; seed tests last leave expected synthetic demo data. Final fetch still `444840d`; secret/artifact review passes. PR-ready locally; report: `reviews/r1-r4-main-integration-report.md`; no push, main merge or deployment.
+
 ## Codex R1–R4 audit remediation (2026-11-08)
 - Phase 0: switched benchmark worktree to assigned `codex/r1-r4-ai-routing` at identical reviewed `39d168f`; all original dirty/untracked benchmark files preserved separately in `0f2ce67`. No merge/rebase/push; `origin/main` merge base remains `e1e3d92`. Audit copied byte-for-byte from detached audit worktree (SHA256 `3f46f2a33423366b77c1ab16d3f3472ff9fa740b4cc9c4cc331312cd93d64bfc`); actual scheduling/backlog path is `docs/07-backlog.md`.
 - B1: pure original-text grounding gates quote selection and final draft substitution, retains classification/routing, persists evidence and labels trusted quote basis/omitted children; 347 unit tests pass, including unsupported-input pricing spies and template-bypass regressions. No database calls or protected source edits.
