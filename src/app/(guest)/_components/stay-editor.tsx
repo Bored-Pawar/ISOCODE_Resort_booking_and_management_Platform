@@ -297,9 +297,9 @@ export function StayEditor({
                           Add room
                         </Button>
                       </div>
-                      {inStay > 0 || (blocked && !soldOut) ? (
+                      {inStay > 0 || (blocked && !soldOut && !atMax) ? (
                         <p id={`add-${room.id}-why`} className="text-small text-muted">
-                          {blocked && !soldOut
+                          {blocked && !soldOut && !atMax
                             ? blocked
                             : `${plural(inStay, "room")} in your stay, ${leftToAdd} more free`}
                         </p>
@@ -536,8 +536,8 @@ export function StayEditor({
           </div>
 
           <fieldset className="flex flex-col gap-3 border-t border-border pt-4">
-            <legend className="sr-only">Your group</legend>
-            <p className="text-small font-semibold">Your group</p>
+            {/* float-left keeps the legend inside the box instead of on the top border */}
+            <legend className="float-left mb-1 w-full text-small font-semibold">Your group</legend>
             <Stepper
               label="Adults"
               hint="Age 13 and over"

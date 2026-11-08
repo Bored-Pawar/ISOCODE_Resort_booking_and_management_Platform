@@ -80,7 +80,9 @@ async function Content() {
       ) : (
         <div className="mt-8 flex flex-col gap-10">
           {GROUPS.map(({ key, title }) => {
-            const group = rows.filter((r) => r.status.group === key);
+            const inGroup = rows.filter((r) => r.status.group === key);
+            // The list arrives newest stay first; upcoming reads better soonest first.
+            const group = key === "upcoming" ? [...inGroup].reverse() : inGroup;
             if (!group.length) return null;
             return (
               <section key={key} aria-labelledby={`bookings-${key}`}>
