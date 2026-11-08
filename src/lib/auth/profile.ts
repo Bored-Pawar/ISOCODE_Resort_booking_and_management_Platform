@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { users } from "@/db/schema";
 import { getDb } from "@/lib/db";
 
@@ -30,4 +30,17 @@ export async function updateGuestPhone(userId: string, phone: string | null): Pr
     .update(users)
     .set({ phone })
     .where(and(eq(users.id, userId), eq(users.role, "guest")));
+}
+
+/** Names and emails for staff screens (A5, dev outbox). Callers have already required a staff role. */
+export async function getGuestContacts(
+  ids: string[],
+): Promise<Map<string, { name: string; email: string }>> {
+  const unique = [...new Set(ids)];
+  if (!unique.length) return new Map();
+  const rows = await getDb()
+    .select({ id: users.id, name: users.name, email: users.email })
+    .from(users)
+    .where(inArray(users.id, unique));
+  return new Map(rows.map((r) => [r.id, { name: r.name, email: r.email }]));
 }

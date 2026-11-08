@@ -93,6 +93,8 @@ No outstanding image blocker: the `public/images/*` assets have been supplied. A
 ## Decisions log
 | Date | Decision |
 |---|---|
+| 2026-11-08 | B8 mock email: no outbox table, so the outbox is derived. `/booking/[ref]/email` renders the confirmation email for its owner; `/dev/outbox` (staff, `DEV_TOOLS_ENABLED`) lists the last 20 confirmed bookings with their rendered emails. Nothing is sent |
+| 2026-11-08 | Contract additions (S2 runbook): `booking.cancelHeld` (owner only) and `payments.MockProvider` plus the signed `/api/payments/mock` webhook (`PAYMENT_WEBHOOK_SECRET`, no new table). Additive staff read `booking.listForStaff` (reservations, gm). Failed and timed out payment attempts are not stored (no contract for it) |
 | 2026-11-08 | Three month online booking window (A10): check-in at most today IST + 3 calendar months, one constant in `src/lib/booking-window.ts`. Enforced in the guest search, `/rooms`, room detail, `/book/details` and rechecked in `acquireBookingHold` (`OUTSIDE_WINDOW`, guest action type only; `booking` service contract unchanged) |
 | 2026-11-08 | B10 approved: a booking is one order with 1 to 4 room lines (`booking_rooms`), one hold, one payment, one total. Supersedes the 2026-11-07 one-room-per-booking rule. Design: `s2-multiroom-change.md` |
 | 2026-11-08 | Occupancy rule: `1 <= adults <= max_adults` and `adults + children <= max_occupancy`; `max_children` stays in the schema, not enforced |

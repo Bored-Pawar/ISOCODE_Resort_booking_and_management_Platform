@@ -10,6 +10,8 @@ import { getDb } from "@/lib/db";
 import { releaseExpiredHoldsInTx } from "./internal";
 import { acquireHold as acquireHoldImpl } from "./hold";
 import { cancelHeld as cancelHeldImpl } from "./cancel";
+import { listForStaff as listForStaffImpl } from "./staff";
+import { isDateStr } from "@/lib/dates";
 import { readBooking } from "./read";
 import { bookings } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
@@ -139,6 +141,38 @@ export type CancelHeldResult =
   | Err<"INVALID_INPUT" | "NOT_FOUND" | "FORBIDDEN">
   | Err<"NOT_HELD", { status: BookingStatus; booking: Booking }>;
 
+// ---- staff reads (additive, read only; A5 and the dev outbox) ----------
+
+/** Roles with booking authority. Sales has none in the current scope (runbook item 8). */
+export const BOOKING_STAFF_ROLES = ["reservations", "gm"] as const;
+
+const isoDate = z.string().refine(isDateStr, "Expected a YYYY-MM-DD date");
+
+export const listForStaffInputSchema = z
+  .object({
+    status: z.enum(["HELD", "CONFIRMED", "EXPIRED", "CANCELLED"]).optional(),
+    /** Inclusive check-in range. */
+    checkInFrom: isoDate.optional(),
+    checkInTo: isoDate.optional(),
+    limit: z.number().int().min(1).max(200).default(50),
+  })
+  .refine((v) => !v.checkInFrom || !v.checkInTo || v.checkInFrom <= v.checkInTo, {
+    path: ["checkInTo"],
+    message: "checkInTo must not be before checkInFrom",
+  });
+export type ListForStaffInput = z.input<typeof listForStaffInputSchema>;
+export type ParsedListForStaffInput = z.output<typeof listForStaffInputSchema>;
+
+/** Newest created first. */
+export type ListForStaffResult = Ok<{ bookings: Booking[] }> | Err<"INVALID_INPUT" | "FORBIDDEN">;
+
+function isBookingStaff(actor: BookingActor): boolean {
+  return (
+    actorSchema.safeParse(actor).success &&
+    (BOOKING_STAFF_ROLES as readonly string[]).includes(actor.role)
+  );
+}
+
 // ---- releaseExpiredHolds (cron, lazy expiry) --------------------------
 
 export type ReleaseExpiredHoldsResult = Ok<{ released: number }>;
@@ -171,6 +205,14 @@ export const booking = {
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
     if (!actorSchema.safeParse(actor).success) return { ok: false, code: "FORBIDDEN" };
     return cancelHeldImpl(parsed.data.bookingId.toLowerCase(), actor);
+  },
+
+  /** Additive staff read (A5): reservations or gm only. Never writes; no lazy expiry. */
+  async listForStaff(input: ListForStaffInput, actor: BookingActor): Promise<ListForStaffResult> {
+    if (!isBookingStaff(actor)) return { ok: false, code: "FORBIDDEN" };
+    const parsed = listForStaffInputSchema.safeParse(input);
+    if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
+    return listForStaffImpl(parsed.data);
   },
 
   /** Additive read for "My bookings". Never writes; no lazy expiry. */
