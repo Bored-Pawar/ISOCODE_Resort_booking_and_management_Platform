@@ -6,12 +6,20 @@ import type { Classification } from "./schema";
 
 /** Respect specific type names first, then generic category words, never broaden a named request. */
 export function matchingRooms(rooms: RoomType[], text: string): RoomType[] {
-  const normalized = text.toLowerCase().replace(/[-_]/g, " ");
-  const named = rooms.filter(
-    (r) =>
-      normalized.includes(r.name.toLowerCase()) || normalized.includes(r.slug.replace(/-/g, " ")),
-  );
-  if (named.length) return named;
+  const normalize = (value: string) => value.toLowerCase().replace(/[-_]/g, " ");
+  const normalized = normalize(text);
+  const named = rooms.flatMap((room) => {
+    const term = [normalize(room.name), normalize(room.slug)].find((name) =>
+      normalized.includes(name),
+    );
+    return term ? [{ room, term }] : [];
+  });
+  // A longer explicit type name must not also match a shorter name contained inside it.
+  // Independent alternatives (e.g. Garden Villa or Pool Villa) remain eligible.
+  if (named.length)
+    return named
+      .filter((a) => !named.some((b) => b.term.length > a.term.length && b.term.includes(a.term)))
+      .map(({ room }) => room);
   const kind = /\b(?:pool|private pool)\b.*\bvilla\b|\bvilla\b.*\bprivate pool\b/i.test(normalized)
     ? "pool villa"
     : /\bvillas?\b/i.test(normalized)

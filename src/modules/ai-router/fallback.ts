@@ -37,8 +37,8 @@ export function rulesClassify(text: string, receivedAt: Date): Classification {
       dates.to = day(range[2]);
     }
   }
-  const adults = text.match(/\b(\d+)\s*adults?\b/i);
-  const children = text.match(/\b(\d+)\s*(?:children|child|kids?)\b/i);
+  const adults = text.match(/(?<![\w.])(-?\d+(?:\.\d+)?)\s*adults?\b/i);
+  const children = text.match(/(?<![\w.])(-?\d+(?:\.\d+)?)\s*(?:children|child|kids?)\b/i);
   const guests: Classification["guests"] = {};
   if (adults) guests.adults = Number(adults[1]);
   if (children) guests.children = Number(children[1]);

@@ -43,6 +43,20 @@ function setup(units = 3) {
   }));
 }
 describe("deterministic quote choice", () => {
+  it("a more specific named room never broadens to a shorter name it contains", () => {
+    const specific = {
+      ...roomTypesFixture[2],
+      id: "specific",
+      name: "Garden Villa North Wing",
+      slug: "garden-villa-north-wing",
+    };
+    expect(
+      matchingRooms([...roomTypesFixture, specific], "Garden Villa North Wing").map((r) => r.id),
+    ).toEqual(["specific"]);
+    expect(
+      matchingRooms(roomTypesFixture, "Garden Villa or Pool Villa").map((r) => r.name),
+    ).toEqual(["Garden Villa", "Pool Villa"]);
+  });
   it("villa preference excludes cheaper plantation rooms", async () => {
     setup();
     const quote = await selectQuote(villa, "Is a villa free 14-16 Nov for 2 adults and a child?");

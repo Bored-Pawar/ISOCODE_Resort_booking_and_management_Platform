@@ -10,27 +10,25 @@ it("the installed SDK serializes the full router schema and preserves classifica
   };
   vi.stubGlobal(
     "fetch",
-    vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            id: "synthetic",
-            object: "chat.completion",
-            created: 1,
-            model: "qwen3:4b",
-            choices: [
-              {
-                index: 0,
-                message: { role: "assistant", content: JSON.stringify(value) },
-                finish_reason: "stop",
-              },
-            ],
-            usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
-          }),
-          { headers: { "content-type": "application/json" } },
-        ),
+    vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          id: "synthetic",
+          object: "chat.completion",
+          created: 1,
+          model: "qwen3:4b",
+          choices: [
+            {
+              index: 0,
+              message: { role: "assistant", content: JSON.stringify(value) },
+              finish_reason: "stop",
+            },
+          ],
+          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        }),
+        { headers: { "content-type": "application/json" } },
       ),
+    ),
   );
   const r = await executeStructured(
     { schema: modelResponseSchema, prompt: "Synthetic", system: "Synthetic" },

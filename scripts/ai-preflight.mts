@@ -7,6 +7,12 @@ try {
   if (process.argv.includes("--activity")) {
     console.log(
       JSON.stringify(
+        await sql`select effective_from, min_paise, max_paise, count(*)::int as copies
+      from tax_slabs group by effective_from, min_paise, max_paise having count(*) > 1`,
+      ),
+    );
+    console.log(
+      JSON.stringify(
         await sql`select state, wait_event_type, wait_event, count(*)::int as connections,
       max(extract(epoch from clock_timestamp() - query_start))::int as longest_query_seconds
       from pg_stat_activity where datname = current_database() and pid <> pg_backend_pid()

@@ -4,27 +4,25 @@ import { executeStructured } from "./execute";
 import { selectProvider } from "./factory";
 afterEach(() => vi.unstubAllGlobals());
 it("runs the real structured SDK path against a mocked Ollama-compatible HTTP response", async () => {
-  const fetch = vi
-    .fn()
-    .mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          id: "synthetic",
-          object: "chat.completion",
-          created: 1,
-          model: "qwen3:4b",
-          choices: [
-            {
-              index: 0,
-              message: { role: "assistant", content: JSON.stringify({ answer: "safe" }) },
-              finish_reason: "stop",
-            },
-          ],
-          usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
-        }),
-        { headers: { "content-type": "application/json" } },
-      ),
-    );
+  const fetch = vi.fn().mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        id: "synthetic",
+        object: "chat.completion",
+        created: 1,
+        model: "qwen3:4b",
+        choices: [
+          {
+            index: 0,
+            message: { role: "assistant", content: JSON.stringify({ answer: "safe" }) },
+            finish_reason: "stop",
+          },
+        ],
+        usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+      }),
+      { headers: { "content-type": "application/json" } },
+    ),
+  );
   vi.stubGlobal("fetch", fetch);
   const selection = selectProvider({
     AI_PROVIDER: "local",

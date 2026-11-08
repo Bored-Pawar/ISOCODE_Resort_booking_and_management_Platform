@@ -111,6 +111,8 @@ describe("classification and routing", () => {
     expect(route(r.classification, r.status)).toMatchObject({ lane: "unsorted", notifyGm: true });
   });
   it("rules extracts critical villa details without inventing vague dates", () => {
+    expect(rulesClassify("A villa for -2 adults and 1 child", date).guests).toEqual({});
+    expect(rulesClassify("A villa for 1.5 adults", date).guests).toEqual({});
     expect(
       rulesClassify("Need 2 rooms for 3 nights from 26 Dec, family of 5 (2 kids).", date).category,
     ).toBe("room");

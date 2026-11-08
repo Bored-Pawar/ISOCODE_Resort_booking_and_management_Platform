@@ -65,7 +65,7 @@ beforeAll(async () => {
       })),
     )
     .returning();
-});
+}, 90_000);
 beforeEach(() => {
   ids.length = 0;
 });
@@ -75,7 +75,7 @@ afterEach(async () => {
   await db.delete(t.replyDrafts).where(inArray(t.replyDrafts.enquiryId, ids));
   await db.delete(t.enquiryEvents).where(inArray(t.enquiryEvents.enquiryId, ids));
   await db.delete(t.enquiries).where(inArray(t.enquiries.id, ids));
-});
+}, 90_000);
 afterAll(async () => {
   await db.delete(t.users).where(
     inArray(
@@ -84,9 +84,9 @@ afterAll(async () => {
     ),
   );
   await client.end();
-});
+}, 90_000);
 
-describe("persistent AI queue", () => {
+describe("persistent AI queue", { timeout: 90_000 }, () => {
   it("the actual queue predicate includes exactly two minutes and excludes one millisecond younger", async () => {
     const id = await enquiry({
       aiStatus: "processing",

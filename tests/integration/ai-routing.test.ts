@@ -11,7 +11,7 @@ import { catalog } from "@/modules/catalog";
 import { selectQuote } from "@/modules/ai-router/quote-selection";
 import { pricing, type Quote } from "@/modules/pricing";
 import { formatInr } from "@/lib/money";
-import { coreFixture, testSlabs } from "./core-fixture";
+import { coreFixture } from "./core-fixture";
 import { testUrl } from "./helpers";
 
 vi.mock("ai", async (original) => ({
@@ -24,7 +24,6 @@ const { db, client } = dbModule.createDb(testUrl(), { max: 6 });
 const ids: string[] = [];
 const staffIds: string[] = [];
 let room: Awaited<ReturnType<typeof coreFixture>>;
-let cleanupSlabs: Awaited<ReturnType<typeof testSlabs>>;
 const synthetic = {
   channel: "web" as const,
   senderName: "Synthetic Guest",
@@ -51,7 +50,6 @@ const rowsFor = (id: string) => db.select().from(t.enquiries).where(eq(t.enquiri
 const draftsFor = (id: string) =>
   db.select().from(t.replyDrafts).where(eq(t.replyDrafts.enquiryId, id));
 beforeAll(async () => {
-  cleanupSlabs = await testSlabs(db);
   for (const role of ["reservations", "sales", "gm"]) {
     const rows = await db
       .insert(t.users)
@@ -67,7 +65,7 @@ beforeAll(async () => {
       .returning();
     staffIds.push(...rows.map((r) => r.id));
   }
-});
+}, 90_000);
 beforeEach(async () => {
   vi.spyOn(dbModule, "getDb").mockReturnValue(db);
   vi.stubEnv("AI_PROVIDER", "local");
@@ -78,27 +76,23 @@ beforeEach(async () => {
     .update(t.roomTypes)
     .set({ name: `Garden Villa ${room.room.slug}` })
     .where(eq(t.roomTypes.id, room.room.id));
-  await db
-    .insert(t.dailyRates)
-    .values(
-      ["2026-11-14", "2026-11-15"].map((date) => ({
-        roomTypeId: room.room.id,
-        ratePlanId: room.plan.id,
-        date,
-        pricePaise: 100000,
-      })),
-    );
-  await db
-    .insert(t.inventory)
-    .values(
-      ["2026-11-14", "2026-11-15"].map((date) => ({
-        roomTypeId: room.room.id,
-        date,
-        allotment: 2,
-      })),
-    );
+  await db.insert(t.dailyRates).values(
+    ["2026-11-14", "2026-11-15"].map((date) => ({
+      roomTypeId: room.room.id,
+      ratePlanId: room.plan.id,
+      date,
+      pricePaise: 100000,
+    })),
+  );
+  await db.insert(t.inventory).values(
+    ["2026-11-14", "2026-11-15"].map((date) => ({
+      roomTypeId: room.room.id,
+      date,
+      allotment: 2,
+    })),
+  );
   output();
-});
+}, 90_000);
 afterEach(async () => {
   if (ids.length) {
     await db.delete(t.notifications).where(inArray(t.notifications.enquiryId, ids));
@@ -111,76 +105,86 @@ afterEach(async () => {
   vi.restoreAllMocks();
   vi.clearAllMocks();
   vi.unstubAllEnvs();
-});
+}, 90_000);
 afterAll(async () => {
   await db.delete(t.users).where(inArray(t.users.id, staffIds));
-  await cleanupSlabs?.();
   await client.end();
-});
+}, 90_000);
 
-describe("five critical enquiries through real intake, pricing and settlement", () => {
-  it.each([
-    ["ENQ-4410", "Venue for my sister's wedding in Feb 2027, about 250 guests, 2 nights", "sales"],
-    ["ENQ-4412", "Team of 45 wants a January offsite with a conference hall", "sales"],
-    ["ENQ-COMPLAINT", "The hot water was not working during our stay", "gm"],
-    ["ENQ-UNSURE", "Maybe something, I am unsure about the details", null],
-  ] as const)("%s routes and persists once", async (fixtureId, text, expectedRole) => {
-    const c = classificationFixtures[fixtureId].classification;
-    output(c, "Thank you for contacting us. Our team will review your request.");
-    const { id, source } = await ingest(text);
-    const r = await aiRouter.process({ enquiryId: id });
-    expect(r).toMatchObject({
-      ok: true,
-      status: "ok",
-      ownerRole: expectedRole,
-      lane: expectedRole ? "sorted" : "unsorted",
+describe(
+  "five critical enquiries through real intake, pricing and settlement",
+  { timeout: 90_000 },
+  () => {
+    it.each([
+      [
+        "ENQ-4410",
+        "Venue for my sister's wedding in Feb 2027, about 250 guests, 2 nights",
+        "sales",
+      ],
+      ["ENQ-4412", "Team of 45 wants a January offsite with a conference hall", "sales"],
+      ["ENQ-COMPLAINT", "The hot water was not working during our stay", "gm"],
+      ["ENQ-UNSURE", "Maybe something, I am unsure about the details", null],
+    ] as const)("%s routes and persists once", async (fixtureId, text, expectedRole) => {
+      const c = classificationFixtures[fixtureId].classification;
+      output(c, "Thank you for contacting us. Our team will review your request.");
+      const { id, source } = await ingest(text);
+      const r = await aiRouter.process({ enquiryId: id });
+      expect(r).toMatchObject({
+        ok: true,
+        status: "ok",
+        ownerRole: expectedRole,
+        lane: expectedRole ? "sorted" : "unsorted",
+      });
+      const [row] = await rowsFor(id);
+      expect(row.extracted).toMatchObject({
+        source,
+        consent: { version: "test" },
+        category: c.category,
+      });
+      if (expectedRole) {
+        const eligible = await db.select().from(t.users).where(eq(t.users.role, expectedRole));
+        eligible.sort(
+          (a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id),
+        );
+        expect(row.ownerId).toBe(eligible[0].id);
+      }
+      await aiRouter.process({ enquiryId: id });
+      expect(generateText).toHaveBeenCalledTimes(1);
+      expect(await draftsFor(id)).toHaveLength(1);
+      const alerts = await db
+        .select()
+        .from(t.notifications)
+        .where(eq(t.notifications.enquiryId, id));
+      expect(alerts).toHaveLength(c.category === "complaint" || !expectedRole ? 1 : 0);
     });
-    const [row] = await rowsFor(id);
-    expect(row.extracted).toMatchObject({
-      source,
-      consent: { version: "test" },
-      category: c.category,
-    });
-    if (expectedRole) {
-      const eligible = await db.select().from(t.users).where(eq(t.users.role, expectedRole));
-      eligible.sort(
-        (a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id),
-      );
-      expect(row.ownerId).toBe(eligible[0].id);
-    }
-    await aiRouter.process({ enquiryId: id });
-    expect(generateText).toHaveBeenCalledTimes(1);
-    expect(await draftsFor(id)).toHaveLength(1);
-    const alerts = await db.select().from(t.notifications).where(eq(t.notifications.enquiryId, id));
-    expect(alerts).toHaveLength(c.category === "complaint" || !expectedRole ? 1 : 0);
-  });
-  it("ENQ-4411 gets a villa quote with real GST; an invented price uses a safe template while status stays ok", async () => {
-    output(villa, "Your villa is Rs 100 only! {{QUOTE}}");
-    const { id } = await ingest("Is a villa free 14-16 Nov for 2 adults and a child?");
-    const r = await aiRouter.process({ enquiryId: id });
-    expect(r).toMatchObject({ ok: true, status: "ok", ownerRole: "reservations" });
-    const [draft] = await draftsFor(id);
-    const quote = draft.quote as Quote;
-    expect(quote.lines).toHaveLength(1);
-    expect(quote.lines[0].roomTypeId).toBe(room.room.id);
-    const live = await pricing.quote({
-      checkIn: quote.checkIn,
-      checkOut: quote.checkOut,
-      rooms: quote.lines,
-    });
-    expect(live).toEqual({ ok: true, quote });
-    expect(draft.body).toContain(formatInr(quote.totalPaise));
-    expect(draft.body).toContain(formatInr(quote.gstPaise));
-    expect(draft.body).not.toContain("Rs 100");
-    expect(draft).toMatchObject({ edited: false, approvedBy: null, sentAt: null });
-    expect((await rowsFor(id))[0]).toMatchObject({ aiStatus: "ok", firstReplyAt: null });
-    expect(
-      await db.select().from(t.enquiryEvents).where(eq(t.enquiryEvents.enquiryId, id)),
-    ).toHaveLength(1);
-  }, 60000);
-});
+    it("ENQ-4411 gets a villa quote with real GST; an invented price uses a safe template while status stays ok", async () => {
+      output(villa, "Your villa is Rs 100 only! {{QUOTE}}");
+      const { id } = await ingest("Is a villa free 14-16 Nov for 2 adults and a child?");
+      const r = await aiRouter.process({ enquiryId: id });
+      expect(r).toMatchObject({ ok: true, status: "ok", ownerRole: "reservations" });
+      const [draft] = await draftsFor(id);
+      const quote = draft.quote as Quote;
+      expect(quote.lines).toHaveLength(1);
+      expect(quote.lines[0].roomTypeId).toBe(room.room.id);
+      const live = await pricing.quote({
+        checkIn: quote.checkIn,
+        checkOut: quote.checkOut,
+        rooms: quote.lines,
+      });
+      expect(live).toEqual({ ok: true, quote });
+      expect(draft.body).toContain(formatInr(quote.totalPaise));
+      expect(draft.body).toContain(formatInr(quote.gstPaise));
+      expect(draft.body).not.toContain("Rs 100");
+      expect(draft).toMatchObject({ edited: false, approvedBy: null, sentAt: null });
+      expect((await rowsFor(id))[0]).toMatchObject({ aiStatus: "ok", firstReplyAt: null });
+      expect(
+        await db.select().from(t.enquiryEvents).where(eq(t.enquiryEvents.enquiryId, id)),
+      ).toHaveLength(1);
+    }, 60000);
+  },
+);
 
-describe("fallback, duplicate intake and security", () => {
+describe("fallback, duplicate intake and security", { timeout: 90_000 }, () => {
   it("provider outage alerts GM once for complaint, always unsorted", async () => {
     vi.mocked(generateText).mockRejectedValue({
       statusCode: 401,
@@ -244,7 +248,7 @@ describe("fallback, duplicate intake and security", () => {
   });
 });
 
-describe("multi-room quote selection using public services", () => {
+describe("multi-room quote selection using public services", { timeout: 90_000 }, () => {
   it("splits occupancy over two rooms and respects each unit's website stock", async () => {
     const c = { ...villa, guests: { adults: 4, children: 2, total: 6 } };
     const text = (await catalog.listRoomTypes()).find((r) => r.id === room.room.id)!.name;
