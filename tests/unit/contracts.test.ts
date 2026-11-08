@@ -1,32 +1,73 @@
 import { describe, expect, it } from "vitest";
-import { pricing, quoteFixture, computeQuoteHash, changedQuoteFixture } from "@/modules/pricing";
+import {
+  pricing,
+  quoteFixture,
+  computeQuoteHash,
+  changedQuoteFixture,
+  twoRoomQuoteFixture,
+  quoteInputSchema,
+} from "@/modules/pricing";
 import { inventory } from "@/modules/inventory";
-import { booking } from "@/modules/booking";
+import { booking, acquireHoldInputSchema } from "@/modules/booking";
+import { bookingFixture, twoRoomBookingFixture } from "@/modules/booking/fixtures";
 import { enquiries } from "@/modules/enquiries";
 import { enquiriesFixture } from "@/modules/enquiries/fixtures";
 import { aiRouter, classificationSchema } from "@/modules/ai-router";
 import { roomTypesFixture } from "@/modules/catalog/fixtures";
 
-const stay = {
-  roomTypeId: "rt-plantation-room",
-  ratePlanId: "rp-plantation-cp",
-  checkIn: "2026-11-14",
-  checkOut: "2026-11-16",
-  adults: 2,
-};
+const line = { roomTypeId: "rt-plantation-room", ratePlanId: "rp-plantation-cp", adults: 2 };
+const stay = { checkIn: "2026-11-14", checkOut: "2026-11-16", rooms: [line] };
 const guest = { userId: "user-guest-asha", role: "guest" as const };
 
 describe("fixtures are internally consistent", () => {
-  it("quote totals add up in integer paise", () => {
-    for (const q of [quoteFixture, changedQuoteFixture]) {
-      const rates = q.nights.reduce((s, n) => s + n.ratePaise, 0);
-      const gst = q.nights.reduce((s, n) => s + n.gstPaise, 0);
-      expect(rates).toBe(q.subtotalPaise);
-      expect(gst).toBe(q.gstPaise);
+  it("quote totals add up in integer paise: cells -> lines -> order (1-line and 2-line)", () => {
+    for (const q of [quoteFixture, changedQuoteFixture, twoRoomQuoteFixture]) {
+      const cells = q.lines.flatMap((l) => l.nights);
+      expect(cells.reduce((s, n) => s + n.ratePaise, 0)).toBe(q.subtotalPaise);
+      expect(cells.reduce((s, n) => s + n.gstPaise, 0)).toBe(q.gstPaise);
+      expect(q.lines.reduce((s, l) => s + l.totalPaise, 0)).toBe(q.totalPaise);
       expect(q.totalPaise).toBe(q.subtotalPaise - q.discountPaise + q.gstPaise);
+      expect(q.lines.map((l) => l.lineNo)).toEqual(q.lines.map((_, i) => i + 1));
       expect(computeQuoteHash(q)).toBe(q.quoteHash);
     }
     expect(quoteFixture.quoteHash).not.toBe(changedQuoteFixture.quoteHash);
+    expect(twoRoomQuoteFixture.lines).toHaveLength(2);
+    expect(twoRoomQuoteFixture.lines[0]).toEqual(quoteFixture.lines[0]);
+  });
+  it("booking fixtures mirror their quotes, one total per order", () => {
+    for (const [b, q] of [
+      [bookingFixture, quoteFixture],
+      [twoRoomBookingFixture, twoRoomQuoteFixture],
+    ] as const) {
+      expect(b.totalPaise).toBe(q.totalPaise);
+      expect(b.quoteHash).toBe(q.quoteHash);
+      expect(b.rooms.map((r) => [r.lineNo, r.roomTypeId, r.totalPaise])).toEqual(
+        q.lines.map((l) => [l.lineNo, l.roomTypeId, l.totalPaise]),
+      );
+    }
+  });
+  it("B10 schemas: 1 to 4 rooms, each line needs an adult", () => {
+    expect(quoteInputSchema.safeParse(stay).success).toBe(true);
+    expect(quoteInputSchema.safeParse({ ...stay, rooms: Array(4).fill(line) }).success).toBe(true);
+    expect(quoteInputSchema.safeParse({ ...stay, rooms: Array(5).fill(line) }).success).toBe(false);
+    expect(quoteInputSchema.safeParse({ ...stay, rooms: [] }).success).toBe(false);
+    expect(quoteInputSchema.safeParse({ ...stay, rooms: [{ ...line, adults: 0 }] }).success).toBe(
+      false,
+    );
+    expect(acquireHoldInputSchema.safeParse({ stay, quoteHash: "h", guestId: "g" }).success).toBe(
+      true,
+    );
+    expect(
+      acquireHoldInputSchema.safeParse({
+        stay: { ...stay, rooms: Array(5).fill(line) },
+        quoteHash: "h",
+        guestId: "g",
+      }).success,
+    ).toBe(false);
+  });
+  it("catalog fixtures carry max occupancy at or above max adults", () => {
+    expect(roomTypesFixture.map((r) => r.maxOccupancy)).toEqual([3, 4, 5, 6]);
+    expect(roomTypesFixture.every((r) => r.maxOccupancy >= r.maxAdults)).toBe(true);
   });
   it("classification fixtures satisfy the schema", async () => {
     for (const id of ["ENQ-4410", "ENQ-4411", "ENQ-4412", "ENQ-COMPLAINT", "ENQ-UNSURE"]) {

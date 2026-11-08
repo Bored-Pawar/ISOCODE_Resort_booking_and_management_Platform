@@ -9,7 +9,7 @@ import { booking } from "@/modules/booking";
 import { releaseExpiredHoldsInTx } from "@/modules/booking/internal";
 import { eachNight } from "@/lib/dates";
 import { connect, ensureMigrated, testUrl } from "./helpers";
-import { coreFixture, dates, testSlabs } from "./core-fixture";
+import { bookingsOfType, coreFixture, dates, testSlabs } from "./core-fixture";
 
 const sql = connect();
 const { db, client } = dbModule.createDb(testUrl(), { max: 5 });
@@ -27,6 +27,20 @@ afterEach(async () => {
   await f?.clean();
   vi.restoreAllMocks();
 });
+/** Availability for this fixture's room over the test dates (availability takes one room). */
+const avail = () => ({ roomTypeId: f.room.id, checkIn: f.stay.checkIn, checkOut: f.stay.checkOut });
+/** Scoped expiry for this fixture's room over the test dates. */
+const scope = () => ({
+  roomTypeIds: [f.room.id],
+  checkIn: f.stay.checkIn,
+  checkOut: f.stay.checkOut,
+});
+/** One unit of this fixture's room over the test dates. */
+const lock = () => ({
+  checkIn: f.stay.checkIn,
+  checkOut: f.stay.checkOut,
+  demand: [{ roomTypeId: f.room.id, units: 1 }],
+});
 afterAll(async () => {
   await cleanSlabs?.();
   await client.end();
@@ -39,7 +53,7 @@ describe("B2 database inventory", () => {
       .update(t.inventory)
       .set({ allotment: 4, sold: 1, held: 1 })
       .where(eq(t.inventory.roomTypeId, f.room.id));
-    const r = await inventory.availability(f.stay);
+    const r = await inventory.availability(avail());
     expect(r).toEqual({
       ok: true,
       rooms: [{ roomTypeId: f.room.id, availableUnits: 2, soldOut: false, blackedOut: false }],
@@ -48,24 +62,26 @@ describe("B2 database inventory", () => {
       .update(t.inventory)
       .set({ allotment: 2 })
       .where(and(eq(t.inventory.roomTypeId, f.room.id), eq(t.inventory.date, dates[1])));
-    const sold = await inventory.availability(f.stay);
+    const sold = await inventory.availability(avail());
     expect(sold.ok && sold.rooms[0].soldOut).toBe(true);
-    expect(await db.transaction((tx) => lockNights(tx, { ...f.stay, units: 1 }))).toEqual({
+    expect(await db.transaction((tx) => lockNights(tx, lock()))).toEqual({
       ok: false,
       code: "SOLD_OUT",
+      roomTypeId: f.room.id,
     });
   });
   it("treats missing nights as unavailable and returns no fabricated room for an unknown ID", async () => {
     await db
       .delete(t.inventory)
       .where(and(eq(t.inventory.roomTypeId, f.room.id), eq(t.inventory.date, dates[1])));
-    const r = await inventory.availability(f.stay);
+    const r = await inventory.availability(avail());
     expect(r.ok && r.rooms[0].availableUnits).toBe(0);
-    expect(await db.transaction((tx) => lockNights(tx, { ...f.stay, units: 1 }))).toEqual({
+    expect(await db.transaction((tx) => lockNights(tx, lock()))).toEqual({
       ok: false,
       code: "SOLD_OUT",
+      roomTypeId: f.room.id,
     });
-    expect(await inventory.availability({ ...f.stay, roomTypeId: "unknown" })).toEqual({
+    expect(await inventory.availability({ ...avail(), roomTypeId: "unknown" })).toEqual({
       ok: true,
       rooms: [],
     });
@@ -82,26 +98,27 @@ describe("B2 database inventory", () => {
         })
         .returning();
       try {
-        const open = await inventory.availability(f.stay);
+        const open = await inventory.availability(avail());
         expect(open.ok && open.rooms[0].blackedOut).toBe(false);
         await db
           .update(t.blackoutDates)
           .set({ startDate: dates[1] })
           .where(eq(t.blackoutDates.id, blackout.id));
-        const closed = await inventory.availability(f.stay);
+        const closed = await inventory.availability(avail());
         expect(closed.ok && closed.rooms[0]).toMatchObject({ blackedOut: true, soldOut: true });
-        expect(await db.transaction((tx) => lockNights(tx, { ...f.stay, units: 1 }))).toEqual({
-          ok: false,
-          code: "BLACKOUT",
-        });
+        expect(await db.transaction((tx) => lockNights(tx, lock()))).toEqual(
+          global
+            ? { ok: false, code: "BLACKOUT" }
+            : { ok: false, code: "BLACKOUT", roomTypeId: f.room.id },
+        );
       } finally {
         await db.delete(t.blackoutDates).where(eq(t.blackoutDates.id, blackout.id));
       }
     },
   );
   it("returns successful ordered nightly locks without taking inventory", async () => {
-    const r = await db.transaction((tx) => lockNights(tx, { ...f.stay, units: 1 }));
-    expect(r.ok && r.nights.map((n) => n.date)).toEqual(dates);
+    const r = await db.transaction((tx) => lockNights(tx, lock()));
+    expect(r.ok && r.nights[f.room.id].map((n) => n.date)).toEqual(dates);
     const stock = await db.select().from(t.inventory).where(eq(t.inventory.roomTypeId, f.room.id));
     expect(stock.every((n) => n.held === 0)).toBe(true);
   });
@@ -116,7 +133,8 @@ describe("B2 database inventory", () => {
       .values({
         ref: `TEST-${randomUUID()}`,
         guestId: fixture.guest.id,
-        ...fixture.stay,
+        checkIn: fixture.stay.checkIn,
+        checkOut: fixture.stay.checkOut,
         status: "HELD",
         quoteHash: "test",
         holdExpiresAt: new Date(0),
@@ -126,6 +144,16 @@ describe("B2 database inventory", () => {
         ...overrides,
       })
       .returning();
+    await db.insert(t.bookingRooms).values({
+      bookingId: b.id,
+      lineNo: 1,
+      roomTypeId: fixture.room.id,
+      ratePlanId: fixture.plan.id,
+      adults: 2,
+      subtotalPaise: 1,
+      gstPaise: 0,
+      totalPaise: 1,
+    });
     const nights = eachNight(b.checkIn, b.checkOut);
     await db
       .insert(t.inventory)
@@ -139,9 +167,9 @@ describe("B2 database inventory", () => {
   }
   it("releases an overdue hold before availability and records expiry exactly once", async () => {
     const b = await expiredHold();
-    const r = await inventory.availability(f.stay);
+    const r = await inventory.availability(avail());
     expect(r.ok && r.rooms[0].availableUnits).toBe(1);
-    expect(await db.transaction((tx) => releaseExpiredHoldsInTx(tx, f.stay))).toEqual({
+    expect(await db.transaction((tx) => releaseExpiredHoldsInTx(tx, scope()))).toEqual({
       released: 0,
     });
     const [expired] = await db.select().from(t.bookings).where(eq(t.bookings.id, b.id));
@@ -177,7 +205,7 @@ describe("B2 database inventory", () => {
       const before = await expiredHold(f, { checkIn: "2099-11-12", checkOut: f.stay.checkIn });
       const after = await expiredHold(f, { checkIn: f.stay.checkOut, checkOut: "2099-11-18" });
       const otherRoom = await expiredHold(other);
-      expect(await db.transaction((tx) => releaseExpiredHoldsInTx(tx, f.stay))).toEqual({
+      expect(await db.transaction((tx) => releaseExpiredHoldsInTx(tx, scope()))).toEqual({
         released: 1,
       });
       const rows = await db
@@ -231,10 +259,10 @@ describe("B2 database inventory", () => {
       .set({ allotment: 2, held: 2 })
       .where(eq(t.inventory.roomTypeId, f.room.id));
     const release = (clock: Date) =>
-      db.transaction((tx) => releaseExpiredHoldsInTx(tx, { ...f.stay, now: clock }));
+      db.transaction((tx) => releaseExpiredHoldsInTx(tx, { ...scope(), now: clock }));
     expect(await release(now)).toEqual({ released: 1 });
     expect(await release(now)).toEqual({ released: 0 });
-    const rows = await db.select().from(t.bookings).where(eq(t.bookings.roomTypeId, f.room.id));
+    const rows = await bookingsOfType(db, f.room.id);
     expect(Object.fromEntries(rows.map((b) => [b.id, b.status]))).toEqual({
       [atBoundary.id]: "EXPIRED",
       [later.id]: "HELD",
@@ -304,7 +332,7 @@ describe("B2 database inventory", () => {
         .update(t.inventory)
         .set({ held: 0 })
         .where(and(eq(t.inventory.roomTypeId, f.room.id), eq(t.inventory.date, outside.checkIn)));
-      const r = await inventory.availability(f.stay);
+      const r = await inventory.availability(avail());
       expect(r.ok && r.rooms[0].availableUnits).toBe(1);
       const rows = await db
         .select()
@@ -325,14 +353,14 @@ describe("B2 database inventory", () => {
   it("unknown or non-UUID room filters do not release another room's holds", async () => {
     const b = await expiredHold();
     for (const roomTypeId of ["unknown", randomUUID()]) {
-      expect(await inventory.availability({ ...f.stay, roomTypeId })).toEqual({
+      expect(await inventory.availability({ ...avail(), roomTypeId })).toEqual({
         ok: true,
         rooms: [],
       });
     }
     expect(
       await db.transaction((tx) =>
-        releaseExpiredHoldsInTx(tx, { ...f.stay, roomTypeId: "unknown" }),
+        releaseExpiredHoldsInTx(tx, { ...scope(), roomTypeIds: ["unknown"] }),
       ),
     ).toEqual({ released: 0 });
     const [unchanged] = await db.select().from(t.bookings).where(eq(t.bookings.id, b.id));

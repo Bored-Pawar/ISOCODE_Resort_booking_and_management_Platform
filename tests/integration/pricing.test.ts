@@ -34,36 +34,39 @@ describe("B1 database pricing", () => {
     const result = await pricing.quote(f.stay);
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error(result.code);
-    expect(result.quote.nights.map((n) => n.gstBp)).toEqual([500, 1800]);
+    expect(result.quote.lines[0].nights.map((n) => n.gstBp)).toEqual([500, 1800]);
     expect(result.quote.totalPaise).toBe(1672501);
     expect(await db.transaction((tx) => quoteInTx(tx, f.stay))).toEqual(result);
   });
   it("rejects missing rates, inactive/mismatched plans, nonexistent rooms, and over occupancy", async () => {
-    expect(await pricing.quote({ ...f.stay, adults: 3 })).toEqual({
+    expect(await pricing.quote(f.stayWith({ adults: 3 }))).toEqual({
       ok: false,
       code: "OVER_OCCUPANCY",
+      lineIndex: 0,
     });
-    expect(await pricing.quote({ ...f.stay, children: 2 })).toEqual({
+    expect(await pricing.quote(f.stayWith({ children: 2 }))).toEqual({
       ok: false,
       code: "OVER_OCCUPANCY",
+      lineIndex: 0,
     });
-    expect(await pricing.quote({ ...f.stay, roomTypeId: "unknown" })).toEqual({
+    expect(await pricing.quote(f.stayWith({ roomTypeId: "unknown" }))).toEqual({
       ok: false,
       code: "NO_RATE",
+      lineIndex: 0,
     });
     await db
       .delete(t.dailyRates)
       .where(and(eq(t.dailyRates.roomTypeId, f.room.id), eq(t.dailyRates.date, dates[1])));
-    expect(await pricing.quote(f.stay)).toEqual({ ok: false, code: "NO_RATE" });
+    expect(await pricing.quote(f.stay)).toEqual({ ok: false, code: "NO_RATE", lineIndex: 0 });
     await db.update(t.ratePlans).set({ active: false }).where(eq(t.ratePlans.id, f.plan.id));
-    expect(await pricing.quote(f.stay)).toEqual({ ok: false, code: "NO_RATE" });
+    expect(await pricing.quote(f.stay)).toEqual({ ok: false, code: "NO_RATE", lineIndex: 0 });
   });
   it("validates promo activity, whole-stay dates, minimum nights, and usage limit", async () => {
     const promo = await f.promo();
     const stay = { ...f.stay, promoCode: promo.code.toLowerCase() };
     const result = await pricing.quote(stay);
     expect(result.ok && result.quote.promo?.code).toBe(promo.code);
-    expect(result.ok && result.quote.nights.map((n) => n.gstBp)).toEqual([500, 500]);
+    expect(result.ok && result.quote.lines[0].nights.map((n) => n.gstBp)).toEqual([500, 500]);
     for (const patch of [
       { active: false },
       { validFrom: dates[1] },
@@ -100,7 +103,7 @@ describe("B1 database pricing", () => {
       .where(and(eq(t.dailyRates.roomTypeId, f.room.id), eq(t.dailyRates.date, dates[1])));
     const p = await f.promo({ kind: "flat", value: 600 });
     const r = await pricing.quote({ ...f.stay, promoCode: p.code });
-    expect(r.ok && r.quote.nights.map((n) => n.discountPaise)).toEqual([100, 500]);
+    expect(r.ok && r.quote.lines[0].nights.map((n) => n.discountPaise)).toEqual([100, 500]);
     expect(r.ok && r.quote.totalPaise).toBe(525);
   });
   it("matches a lowercase stored promo regardless of the guest input's case", async () => {
@@ -119,7 +122,7 @@ describe("B1 database pricing", () => {
       .returning();
     try {
       const r = await pricing.quote(f.stay);
-      expect(r.ok && r.quote.nights.map((n) => n.gstBp)).toEqual([500, 1200]);
+      expect(r.ok && r.quote.lines[0].nights.map((n) => n.gstBp)).toEqual([500, 1200]);
     } finally {
       await db.delete(t.taxSlabs).where(eq(t.taxSlabs.id, s.id));
     }

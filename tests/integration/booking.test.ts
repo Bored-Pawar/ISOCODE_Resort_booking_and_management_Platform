@@ -10,7 +10,7 @@ import { releaseExpiredHoldsInTx } from "@/modules/booking/internal";
 import { adjustNights } from "@/modules/inventory/internal";
 import * as bookingClock from "@/modules/booking/clock";
 import { connect, ensureMigrated, testUrl } from "./helpers";
-import { coreFixture, dates, testSlabs } from "./core-fixture";
+import { bookingsOfType, coreFixture, dates, reconcileTypes, testSlabs } from "./core-fixture";
 
 const sql = connect();
 const { db, client } = dbModule.createDb(testUrl(), { max: 24 });
@@ -60,11 +60,7 @@ async function stock() {
 }
 async function reconcile() {
   if (!f) return;
-  const mismatches =
-    await db.execute(query`SELECT i.date FROM inventory i WHERE i.room_type_id=${f.room.id}::uuid AND (
-    i.held <> (SELECT coalesce(sum(b.units),0) FROM bookings b WHERE b.room_type_id=i.room_type_id AND b.status='HELD' AND b.check_in<=i.date AND b.check_out>i.date)
-    OR i.sold <> (SELECT coalesce(sum(b.units),0) FROM bookings b WHERE b.room_type_id=i.room_type_id AND b.status='CONFIRMED' AND b.check_in<=i.date AND b.check_out>i.date))`);
-  expect(mismatches).toHaveLength(0);
+  expect(await reconcileTypes(db, [f.room.id])).toHaveLength(0);
 }
 async function extend() {
   await db
@@ -92,7 +88,7 @@ describe("B3 atomic holds", () => {
       [1, 0],
       [1, 0],
     ]);
-    const rows = await db.select().from(t.bookings).where(eq(t.bookings.roomTypeId, f.room.id));
+    const rows = await bookingsOfType(db, f.room.id);
     expect(rows).toHaveLength(1);
     expect(
       await db.select().from(t.bookingEvents).where(eq(t.bookingEvents.bookingId, rows[0].id)),
@@ -107,11 +103,9 @@ describe("B3 atomic holds", () => {
     const q = await quote();
     expect(
       await booking.acquireHold({ stay: f.stay, quoteHash: q.quoteHash, guestId: f.guest.id }),
-    ).toEqual({ ok: false, code: "SOLD_OUT" });
+    ).toEqual({ ok: false, code: "SOLD_OUT", roomTypeId: f.room.id });
     expect((await stock()).map((n) => n.held)).toEqual([0, 0]);
-    expect(
-      await db.select().from(t.bookings).where(eq(t.bookings.roomTypeId, f.room.id)),
-    ).toHaveLength(0);
+    expect(await bookingsOfType(db, f.room.id)).toHaveLength(0);
   });
 
   it("mandatory 6: allotment below committed stock is rejected", async () => {
@@ -226,15 +220,15 @@ describe("B3 atomic holds", () => {
     ).toEqual({ ok: false, code: "PROMO_INVALID" });
     expect(
       await booking.acquireHold({
-        stay: { ...f.stay, adults: 3 },
+        stay: f.stayWith({ adults: 3 }),
         quoteHash: q.quoteHash,
         guestId: f.guest.id,
       }),
-    ).toEqual({ ok: false, code: "OVER_OCCUPANCY" });
+    ).toEqual({ ok: false, code: "OVER_OCCUPANCY", lineIndex: 0 });
     await db.delete(t.dailyRates).where(eq(t.dailyRates.roomTypeId, f.room.id));
     expect(
       await booking.acquireHold({ stay: f.stay, quoteHash: q.quoteHash, guestId: f.guest.id }),
-    ).toEqual({ ok: false, code: "NO_RATE" });
+    ).toEqual({ ok: false, code: "NO_RATE", lineIndex: 0 });
   });
 
   it("a failed booking FK insert rolls stock back", async () => {
@@ -268,9 +262,7 @@ describe("B3 atomic holds", () => {
       booking.acquireHold({ stay: f.stay, quoteHash: q.quoteHash, guestId: f.guest.id }),
     ).rejects.toBeDefined();
     expect((await stock()).map((n) => n.held)).toEqual([0, 0]);
-    expect(
-      await db.select().from(t.bookings).where(eq(t.bookings.roomTypeId, f.room.id)),
-    ).toHaveLength(0);
+    expect(await bookingsOfType(db, f.room.id)).toHaveLength(0);
   });
 
   it.each(["40P01", "40001"])("retries the complete transaction once for %s", async (code) => {
@@ -291,9 +283,7 @@ describe("B3 atomic holds", () => {
     await hold();
     expect(attempts).toBe(2);
     expect((await stock()).map((n) => n.held)).toEqual([1, 1]);
-    expect(
-      await db.select().from(t.bookings).where(eq(t.bookings.roomTypeId, f.room.id)),
-    ).toHaveLength(1);
+    expect(await bookingsOfType(db, f.room.id)).toHaveLength(1);
   });
 
   it("returns SOLD_OUT after the second transaction conflict, with no committed changes", async () => {
@@ -495,7 +485,7 @@ describe("B5 payment lifecycle", () => {
       .where(eq(t.dailyRates.roomTypeId, f.room.id));
     const result = await pay(b);
     expect(result.ok && result.outcome).toBe("CONFIRMED");
-    expect(result.ok && result.booking.nights).toEqual(b.nights);
+    expect(result.ok && result.booking.rooms).toEqual(b.rooms);
     const [payment] = await db.select().from(t.payments).where(eq(t.payments.bookingId, b.id));
     expect(payment.amountPaise).toBe(b.totalPaise);
   });
@@ -585,7 +575,7 @@ describe("B5 payment lifecycle", () => {
       [1, 1],
       [1, 1],
     ]);
-    const rows = await db.select().from(t.bookings).where(eq(t.bookings.roomTypeId, f.room.id));
+    const rows = await bookingsOfType(db, f.room.id);
     expect(rows.map((r) => r.status).sort()).toEqual(["CONFIRMED", "HELD"]);
   });
 
@@ -614,7 +604,9 @@ describe("B5 payment lifecycle", () => {
         .update(t.bookings)
         .set({ status: "CANCELLED" })
         .where(and(eq(t.bookings.id, b.id), eq(t.bookings.status, "HELD")));
-      await adjustNights(tx, { roomTypeId: f.room.id, dates, heldDelta: -1, soldDelta: 0 });
+      await adjustNights(tx, {
+        changes: [{ roomTypeId: f.room.id, dates, heldDelta: -1, soldDelta: 0 }],
+      });
       await tx.insert(t.bookingEvents).values({
         bookingId: b.id,
         fromStatus: "HELD",
