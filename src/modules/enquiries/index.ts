@@ -13,6 +13,7 @@ import {
 } from "./types";
 
 export * from "./types";
+export { CONTACT_ERROR, isUsableContact, MIN_PHONE_DIGITS } from "./contact";
 
 const DEFAULT_LIST_LIMIT = 200;
 

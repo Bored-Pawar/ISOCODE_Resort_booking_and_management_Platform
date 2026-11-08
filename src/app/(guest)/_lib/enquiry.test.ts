@@ -76,6 +76,11 @@ describe("enquiry schema", () => {
     expect(parse({ contact: "+91 98765 43210" }).success).toBe(true);
     expect(firstError({ contact: "not-a-contact" })?.path).toBe("contact");
     expect(firstError({ contact: "12" })?.path).toBe("contact");
+    expect(firstError({ contact: "--------" })).toMatchObject({ path: "contact" });
+    expect(firstError({ contact: "(((())))" })?.path).toBe("contact");
+    expect(firstError({ contact: "98765 4321" })?.path).toBe("contact"); // 9 digits
+    expect(parse({ contact: "98765 43210" }).success).toBe(true);
+    expect(parse({ contact: "(0120) 4567-890" }).success).toBe(true);
   });
   it("requires consent", () => {
     const r = buildEnquirySchema(TODAY).safeParse({ ...valid, consent: undefined });

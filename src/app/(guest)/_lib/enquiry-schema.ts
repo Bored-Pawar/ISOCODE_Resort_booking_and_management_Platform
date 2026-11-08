@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { nightsBetween } from "@/lib/dates";
 import { isDateStr } from "@/lib/dates";
+import { CONTACT_ERROR, isUsableContact } from "@/modules/enquiries";
 import { ENQUIRY_LIMITS } from "./enquiry";
 
 const blank = (v: unknown) => (typeof v === "string" && v.trim() === "" ? undefined : v);
@@ -20,18 +21,11 @@ const optionalDate = z.preprocess(
   z.string().refine(isDateStr, "Enter a valid date").optional(),
 );
 
-const PHONE_RE = /^\+?[0-9 ()-]{8,18}$/;
-export const isEmail = (v: string) => z.email().safeParse(v).success;
-
 export function buildEnquirySchema(today: string) {
   return z
     .object({
       name: z.string().trim().min(2, "Enter your name").max(120),
-      contact: z
-        .string()
-        .trim()
-        .max(200)
-        .refine((v) => isEmail(v) || PHONE_RE.test(v), "Enter a valid email or phone number"),
+      contact: z.string().trim().max(200).refine(isUsableContact, CONTACT_ERROR),
       message: z
         .string()
         .trim()

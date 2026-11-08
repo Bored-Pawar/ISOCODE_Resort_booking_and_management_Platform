@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Err, Ok } from "@/lib/result";
+import { isUsableContact } from "./contact";
 
 export const enquiryChannelSchema = z.enum(["web", "email", "whatsapp", "event_form"]);
 export type EnquiryChannel = z.infer<typeof enquiryChannelSchema>;
@@ -8,7 +9,7 @@ export const ingestInputSchema = z.object({
   channel: enquiryChannelSchema,
   senderName: z.string().trim().min(1).max(120),
   /** Email address or phone number. Never sent to an AI provider. */
-  senderContact: z.string().trim().min(3).max(200),
+  senderContact: z.string().trim().min(3).max(200).refine(isUsableContact),
   rawText: z.string().trim().min(5).max(5000),
 });
 export type IngestInput = z.input<typeof ingestInputSchema>;

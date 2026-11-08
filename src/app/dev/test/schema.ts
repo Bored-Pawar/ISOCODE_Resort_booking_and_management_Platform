@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isUsableContact } from "@/modules/enquiries";
 
 export const SIM_CHANNELS = ["email", "whatsapp"] as const;
 export type SimChannel = (typeof SIM_CHANNELS)[number];
@@ -14,8 +15,12 @@ export const simulateSchema = z
     if (v.channel === "email" && !z.email().safeParse(v.contact).success) {
       ctx.addIssue({ code: "custom", path: ["contact"], message: "Enter a valid email address" });
     }
-    if (v.channel === "whatsapp" && !/^\+?[0-9 ()-]{8,18}$/.test(v.contact)) {
-      ctx.addIssue({ code: "custom", path: ["contact"], message: "Enter a valid phone number" });
+    if (v.channel === "whatsapp" && !isUsableContact(v.contact)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["contact"],
+        message: "Enter a phone number with at least 10 digits",
+      });
     }
   });
 
