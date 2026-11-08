@@ -59,9 +59,13 @@ async function quoteOf(stay: QuoteInput) {
   if (!r.ok) throw new Error(r.code);
   return r.quote;
 }
-async function holdCart(stay: QuoteInput, hash?: string): Promise<AcquireHoldResult> {
+async function holdCart(
+  stay: QuoteInput,
+  hash?: string,
+  guestId: string = T1.guest.id,
+): Promise<AcquireHoldResult> {
   const quoteHash = hash ?? (await quoteOf(stay)).quoteHash;
-  return booking.acquireHold({ stay, quoteHash, guestId: T1.guest.id });
+  return booking.acquireHold({ stay, quoteHash, guestId });
 }
 async function heldOk(stay: QuoteInput) {
   const r = await holdCart(stay);
@@ -140,7 +144,8 @@ describe("B10 multi-room holds on PostgreSQL", { timeout: 120_000 }, () => {
       const results = await Promise.all([
         holdCart(double, qd.quoteHash),
         holdCart(mixed, qm.quoteHash),
-        holdCart(mixed, qm.quoteHash),
+        // A second guest: one guest's identical carts are one hold (01 Contract note 7).
+        holdCart(mixed, qm.quoteHash, T2.guest.id),
       ]);
       const stock = await stockOf(T1);
       expect(stock.every(([held, sold]) => held + sold <= 2)).toBe(true);
