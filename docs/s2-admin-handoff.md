@@ -10,15 +10,18 @@ DB guard: `TEST_DATABASE_URL` host differs from Codex's test host and from both 
 ## Status
 | Item | State | Commit |
 |---|---|---|
-| Setup, locks row in `06` | done | (this commit) |
+| Setup, locks row in `06` | done | d1f48de |
+| 2.1 `permissions.ts` (table, `can`, `requirePermission`, `navFor`), A5 on `bookings.view` | done | 083b107 |
+| 2.3 R06 DataGrid: pure editor (`data-grid-editor.ts`), pending stable, errors caught, stale completions ignored | done | (this commit) |
 
-Last finished: setup. Next: 2.1 permissions.
+Last finished: 2.3. Next: 2.5 A1 rates.
 
 ## Gates (latest)
 Baseline only.
 
 ## Deviations
 1. `main` is checked out in another worktree, so the branch was cut from `origin/main` instead of `git switch main`.
+2. New file `src/components/ui/data-grid-editor.ts` (+ test) next to the locked `data-grid.tsx`: the R06 rules as a pure module, because no DOM test library is installed (same pattern as `hold-latch.ts`).
 
 ## Open items
 None yet.
