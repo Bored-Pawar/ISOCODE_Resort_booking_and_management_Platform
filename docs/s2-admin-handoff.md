@@ -25,6 +25,13 @@ DB guard: `TEST_DATABASE_URL` host differs from Codex's test host and from both 
 
 Last finished: hand off. Next: scrum master review of the PR; Codex wires the inbox to `permissions.ts` (see `06`).
 
+## Audit fix (2026-11-09, report `docs/reviews/s2-admin-rbac-implementation-audit.md`, reviewed fa21e36)
+Verdict FIX MAJORS: 0 blockers, 3 majors. Scrum master decisions approved in the assignment (incl. the additive booking read for M03).
+| Item | State | Commit |
+|---|---|---|
+| Audit report copied into `docs/reviews/` | done | c828d79 |
+| 0 Merge `origin/main` 9c62b7a (PR #6, R1 to R4): conflicts in `02` (kept both) and the staff layout (kept `navFor`; added "Unsorted enquiries" `/admin/inbox` for every staff role, matching its page guard). Gates: typecheck, lint, unit 621/621 (63 files), build pass | done | 4b1fa3c |
+
 ## Review (independent subagent, no context: runbook, `01`, `git diff main...HEAD`)
 No blockers. Major 1: a concurrent offline and online edit on the same blackout could lose the online part (one merged the row away while the other's `FOR UPDATE` skipped it). Fixed: `pg_advisory_xact_lock` first in `setOffline` and `setOnline`; holds never take it. Checked and found correct: permission on every entry point, stock invariants, lock order with holds, Zod, paise, window, parameterised SQL.
 
