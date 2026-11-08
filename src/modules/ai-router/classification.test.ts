@@ -92,6 +92,24 @@ describe("classification and routing", () => {
     const call = JSON.stringify(vi.mocked(executeStructured).mock.calls[0][0].prompt);
     expect(call).not.toMatch(/guest@example|98765|Synthetic|Guest/);
   });
+  it("a different introduced name is redacted without hiding room preference from provider", async () => {
+    vi.mocked(executeStructured).mockResolvedValue({
+      kind: "rules-only",
+      provider: "rules",
+      model: null,
+      latencyMs: 0,
+      attempts: 0,
+      rateLimits: 0,
+    });
+    await classifyMessage({
+      ...input,
+      senderName: "Mrs Shalini",
+      rawText: "My name is Priya and we want the Pool Villa.",
+    });
+    const payload = vi.mocked(executeStructured).mock.calls[0][0].prompt;
+    expect(payload).not.toMatch(/Priya|Shalini/);
+    expect(payload).toContain("Pool Villa");
+  });
   it("provider failure uses conservative rules and detects complaints", async () => {
     vi.mocked(executeStructured).mockResolvedValue({
       kind: "error",

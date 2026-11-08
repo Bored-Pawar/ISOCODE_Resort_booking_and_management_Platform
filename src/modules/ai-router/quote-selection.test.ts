@@ -50,6 +50,32 @@ const quoteFor = (c: typeof villa, text: string) =>
   );
 describe("deterministic quote choice", () => {
   it.each([
+    ["पूल विला", "Pool Villa"],
+    ["pool wala villa", "Pool Villa"],
+    ["गार्डन विला", "Garden Villa"],
+    ["bagiche wala villa", "Garden Villa"],
+    ["एस्टेट सुइट", "Estate Suite"],
+    ["estate suit", "Estate Suite"],
+    ["प्लांटेशन कमरा", "Plantation Room"],
+    ["plantation kamra", "Plantation Room"],
+  ])("matches only existing type for alias %s", (alias, name) => {
+    expect(matchingRooms(roomTypesFixture, alias).map((r) => r.name)).toEqual([name]);
+  });
+  it("named Pool Villa with no availability never quotes other available types", async () => {
+    setup();
+    vi.mocked(inventory.availability).mockResolvedValue({
+      ok: true,
+      rooms: roomTypesFixture.map((r) => ({
+        roomTypeId: r.id,
+        availableUnits: r.name === "Pool Villa" ? 0 : 3,
+        soldOut: r.name === "Pool Villa",
+        blackedOut: false,
+      })),
+    });
+    expect(await quoteFor(villa, "My name is Priya and we want the Pool Villa")).toBeNull();
+    expect(pricing.quote).not.toHaveBeenCalled();
+  });
+  it.each([
     "2027-02-30 to 2027-03-01 for -2 adults and 1.5 children",
     "14-16 Nov for -2 adults and 1 child",
     "14-16 Nov for 2 adults and 1.5 children",

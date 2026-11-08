@@ -4,6 +4,7 @@ import { pricing, type Quote, type QuoteRoomInput } from "@/modules/pricing";
 import { nightsBetween, todayIST } from "@/lib/dates";
 import type { Classification } from "./schema";
 import { groundExtraction } from "./grounding";
+import { roomPreference } from "./room-preference";
 
 export type SelectedQuote = Quote & { roomNames?: string[] };
 
@@ -23,13 +24,17 @@ export function matchingRooms(rooms: RoomType[], text: string): RoomType[] {
     return named
       .filter((a) => !named.some((b) => b.term.length > a.term.length && b.term.includes(a.term)))
       .map(({ room }) => room);
-  const kind = /\b(?:pool|private pool)\b.*\bvilla\b|\bvilla\b.*\bprivate pool\b/i.test(normalized)
-    ? "pool villa"
-    : /\bvillas?\b/i.test(normalized)
-      ? "villa"
-      : /\bsuites?\b/i.test(normalized)
-        ? "suite"
-        : null;
+  const preference = roomPreference(text);
+  if (preference.named.length) return rooms.filter((r) => preference.named.includes(r.slug));
+  const kind =
+    preference.kind ??
+    (/\b(?:pool|private pool)\b.*\bvilla\b|\bvilla\b.*\bprivate pool\b/i.test(normalized)
+      ? "pool villa"
+      : /\bvillas?\b/i.test(normalized)
+        ? "villa"
+        : /\bsuites?\b/i.test(normalized)
+          ? "suite"
+          : null);
   return kind ? rooms.filter((r) => r.name.toLowerCase().includes(kind)) : rooms;
 }
 

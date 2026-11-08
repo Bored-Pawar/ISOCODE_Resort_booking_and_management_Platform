@@ -1,5 +1,6 @@
 import { isDateStr } from "@/lib/dates";
 import type { Classification } from "./schema";
+import { roomPreference } from "./room-preference";
 
 export type Evidence = "ok" | "missing" | "unsupported";
 export type Grounding = {
@@ -191,7 +192,12 @@ export function groundExtraction(
       : adultOk && childOk && totalOk
         ? "ok"
         : "unsupported";
-  const grounding = { dates: dateStatus, guests: guestStatus, room: "missing" as Evidence };
+  const preference = roomPreference(rawText);
+  const grounding = {
+    dates: dateStatus,
+    guests: guestStatus,
+    room: (preference.named.length || preference.kind ? "ok" : "missing") as Evidence,
+  };
   return {
     grounding,
     eligible: dateStatus === "ok" && guestStatus === "ok",
