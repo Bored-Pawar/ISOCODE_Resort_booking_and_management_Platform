@@ -51,22 +51,23 @@ Availability comes from public `inventory.availability`, which retains booking-o
 
 ## Validation
 
-| Check                                          | Result                                                                     |
-| ---------------------------------------------- | -------------------------------------------------------------------------- |
-| Pre-integration `pnpm test`                    | PASS: 433 tests, 49 files                                                  |
-| `pnpm install --frozen-lockfile`               | PASS; merged lockfile unchanged                                            |
-| `pnpm typecheck`                               | PASS                                                                       |
-| `pnpm lint`                                    | PASS                                                                       |
-| Post-integration full `pnpm test`              | PASS: 486 tests, 57 files; zero failed                                     |
-| `pnpm build`                                   | PASS, all combined routes compiled/prerendered                             |
-| PostgreSQL integration, non-seed               | PASS: 115 tests, 13 files, 1963.23 s                                       |
-| PostgreSQL integration, seed last              | PASS: 7 tests, 1 file, 39.40 s                                             |
-| PostgreSQL aggregate                           | PASS: 122 tests, 14 files; zero failed/skipped                             |
-| Before-seed fixture cleanup                    | PASS: all checked application counts zero; no duplicate GST slabs          |
-| After-seed endpoint/data check                 | PASS: same isolated endpoint, expected demo counts, no duplicate GST slabs |
-| Prettier: resolved layout and package manifest | PASS                                                                       |
-| `git diff --check`                             | PASS                                                                       |
-| Secret and protected-source diff review        | PASS; details below                                                        |
+| Check                                                 | Result                                                                     |
+| ----------------------------------------------------- | -------------------------------------------------------------------------- |
+| Pre-integration `pnpm test`                           | PASS: 433 tests, 49 files                                                  |
+| `pnpm install --frozen-lockfile`                      | PASS; merged lockfile unchanged                                            |
+| `pnpm typecheck`                                      | PASS                                                                       |
+| `pnpm lint`                                           | PASS                                                                       |
+| Post-integration full `pnpm test`                     | PASS: 486 tests, 57 files; zero failed                                     |
+| `pnpm build`                                          | PASS, all combined routes compiled/prerendered                             |
+| PostgreSQL integration, non-seed                      | PASS: 115 tests, 13 files, 1963.23 s                                       |
+| PostgreSQL integration, seed last                     | PASS: 7 tests, 1 file, 39.40 s                                             |
+| PostgreSQL aggregate                                  | PASS: 122 tests, 14 files; zero failed/skipped                             |
+| Before-seed fixture cleanup                           | PASS: all checked application counts zero; no duplicate GST slabs          |
+| After-seed endpoint/data check                        | PASS: same isolated endpoint, expected demo counts, no duplicate GST slabs |
+| Prettier: resolved layout and package manifest        | PASS                                                                       |
+| Integration-only `git diff --check` (`87e20d8..HEAD`) | PASS                                                                       |
+| Full PR whitespace check                              | 11 pre-existing benchmark-evidence warnings; all other paths pass          |
+| Secret and protected-source diff review               | PASS; details below                                                        |
 
 The initial sandboxed unit startup failed with Windows `spawn EPERM`; it passed with authorized subprocess access. Git metadata lives outside this worktree, so fetch, index updates and commits require the same filesystem elevation. The initial restricted dependency install also failed to open pnpm's external store lock; the elevated frozen-lockfile install passed. A final GitHub fetch hit a transient DNS error; its retry succeeded and confirmed unchanged main. These are environment permission/network failures, not test assertion failures. Both PostgreSQL invocations passed on their first attempt, with no test retry or source adjustment.
 
@@ -113,9 +114,12 @@ The integration imports main's changes plus the single combined-navigation resol
 
 The PR diff was scanned for exact configured secret values/database passwords, credential-bearing PostgreSQL URLs, private keys and common provider/GitHub token formats: zero matches. No `.env.local`, database credentials, temporary SQL watcher, build output, machine-specific test JSON or newly generated benchmark output is staged. New command evidence stays in ignored `.tmp-r1-r4-integration/`. The branch already contained 110 intentional benchmark harness/evidence files relative to main; these are historical inputs to the completed audit/remediation and were neither regenerated nor silently removed. The original benchmark preservation commit is `0f2ce67`.
 
+The full `origin/main..HEAD` whitespace check reports ten trailing-space headers in historical `docs/reviews/ollama-benchmark/**/qwen*-ps-after.txt` captures and one blank line at EOF in `docs/reviews/r1-r4-ollama-model-benchmark.md`. These files are unchanged from the initial reviewed HEAD; the raw captures were preserved as evidence. The integration-only diff passes, and the full PR diff excluding these preserved benchmark artifacts also passes. This cosmetic exception is disclosed rather than reported as a clean full-PR whitespace gate.
+
 ## Remaining issues and PR preparation
 
 - No new integration blocker remains. All requested validation gates passed.
+- Full-PR whitespace warnings remain in the 11 unchanged benchmark-evidence locations above; they do not affect application behavior or test results.
 - The accepted M6 quality limitation remains: saved-output draft template fallback was 67.8% for controlled Qwen3 and 62.2% for Qwen2.5, above the under-30% target. Safety protections were not relaxed.
 - Existing documented live-provider, privacy-pattern, no-GM-account and hosting-interruption limitations remain. This run does not claim new live-model or browser/E2E validation.
 - Main's documented booking limitations remain unchanged, including refresh-hold stock races, zero-total payments and mock-email behavior.
