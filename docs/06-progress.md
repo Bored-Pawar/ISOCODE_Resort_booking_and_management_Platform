@@ -181,6 +181,7 @@ Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
 - Development and test Neon branches were reset, migrated (`0001`) and reseeded through the guarded scripts; production untouched.
 - Mandatory test 6 (allotment cut below committed is rejected) is **provisional until A2**: today it proves the database CHECK and the conditional update only; the A2 allotment editor must re-prove it through its own entry point (minor fix 4).
 - Known limit (minor fix 5): the lazy and cron expiry sweep is one statement over every matching expired hold, not batched. Fine at seed scale; batch it before real traffic.
+- Codex review of HEAD `370fd34` (APPROVE WITH FIXES) fixed on the branch, one commit each: F1 `/dev/test` simulator calls the inbound handlers in-process (no request-derived URL); F2 `typecheck` runs `next typegen` first, proven on a fresh clone; F3 search counts are no longer clamped (valid party: up to 24 guests that fit 4 rooms of any mix, else message plus enquiry link with the requested counts); F4 enquiry contact must be a valid email or a phone with 10+ digits (form and ingest); F5 `NO_RATE` from a missing tax slab carries `lineIndex`; F6 prefilled `/enquire` link wherever stock cannot fit the party.
 - B6 steps 2 and 3 (details, hold, pay) are next; `/book/details` is a placeholder and takes no hold.
 
 | ID | Task | Status |

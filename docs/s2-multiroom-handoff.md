@@ -38,7 +38,7 @@ The contract commit `96b2d7c` does not typecheck on its own; every later commit 
 ## Open items
 1. B6 steps 2 and 3 (details, `acquireBookingHold` with the `/book` hash, pay); the `R07` HoldTimer fix is due before then.
 2. Mobile `/book` shows the summary below the rooms plus a fixed total and Continue bar, rather than "collapsed at top" as `05` sketches for the steps.
-3. `MissingTaxSlab` still returns `NO_RATE` without a `lineIndex`, since it is not a line fault.
+3. ~~`MissingTaxSlab` returns `NO_RATE` without a `lineIndex`~~ Fixed in review fix F5: the failing line index is carried through.
 4. The integration suite takes about 20 minutes on Neon; the B10 race tests alone take about 5 minutes.
 5. The new test 1 deadlock check reads `pg_stat_database.deadlocks` after an 11s wait for stats to flush; it is reliable on a quiet test branch.
 6. Mandatory test 6 stays provisional until A2. The expiry sweep is not batched (known limit).
