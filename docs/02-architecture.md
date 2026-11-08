@@ -74,6 +74,7 @@ B1+B2 review-fix exceptions: `inventory/index.ts` may call the internal booking-
 | `INBOUND_WEBHOOK_SECRET` | Shared secret for `/api/inbound/email` and `/api/inbound/whatsapp`, sent in the `x-inbound-secret` header. Missing or wrong: 401 |
 | `DEV_TOOLS_ENABLED` | `true` turns on the hidden `/dev` area (UI kit, inbound simulator, dev login). Anything else, or unset: every `/dev` URL is a 404. Leave off in production |
 | `CRON_SECRET` | Vercel Cron auth |
+| `PAYMENT_WEBHOOK_SECRET` | B7 mock gateway: HMAC SHA-256 key for `/api/payments/mock` (signature in `x-payment-signature`, hex over the raw body). At least 16 characters. Missing or short: every webhook is 401, so test payments cannot confirm. Set per environment (F6 deploy note) |
 | `HOLD_MINUTES` | Default 10 |
 | `TEST_DATABASE_URL` | Required for `test:integration`. A separate Neon branch (direct string). No fallback; must not share a host with `DATABASE_URL*` |
 | `DB_PROTECTED_HOSTS` | Comma separated host fragments that `db:seed`, `db:reset` and the integration tests refuse to touch (e.g. the production endpoint) |
@@ -89,4 +90,5 @@ B1+B2 review-fix exceptions: `inventory/index.ts` may call the internal booking-
 CLAUDE.md rule 5 requires `requireRole()` or `requireGuestOwner()` on every server action and route handler. These are the recorded exemptions; each still validates its input with Zod.
 1. **Cron** (`/api/cron/expire-holds`): a machine endpoint with no user session. It requires `Authorization: Bearer <CRON_SECRET>` (fails closed when `CRON_SECRET` is unset or the header is wrong) instead of `requireRole()`, and only calls `booking.releaseExpiredHolds()`.
 2. **Inbound webhooks** and the **`/enquire` form**: see "Enquiry intake and the dev area" above.
+2a. **Mock payment webhook** (`/api/payments/mock`, B7): a machine endpoint with no user session. It requires a valid `x-payment-signature` (HMAC SHA-256 of the raw body with `PAYMENT_WEBHOOK_SECRET`, compared in constant time, fails closed when the secret is unset), then validates the body with Zod and only calls `booking.confirmPayment`. `MockProvider` delivers to the same handler function in process (no request-derived URL). The guest's pay action itself calls `requireRole('guest')`.
 3. **`/book` room cart (B6 step 1)**: a server-rendered page, not an action. It reads the cart from the URL and calls the public `catalog`, `inventory.availability` and `pricing.quote` reads, which take no hold and write nothing (lazy expiry aside, which is booking-owned). The hold itself is taken later by `acquireBookingHold`, which calls `requireRole('guest')`.
