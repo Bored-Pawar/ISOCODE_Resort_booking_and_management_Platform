@@ -125,6 +125,26 @@ describe("classification and routing", () => {
     expect(payload).not.toMatch(/Priya|Shalini/);
     expect(payload).toContain("Pool Villa");
   });
+  it("provider requests omit signature names, STD landlines and PIN addresses", async () => {
+    vi.mocked(executeStructured).mockResolvedValue({
+      kind: "error",
+      error: "UNAVAILABLE",
+      provider: "mock",
+      model: "test",
+      latencyMs: 1,
+      attempts: 2,
+      rateLimits: 0,
+    });
+    const result = await classifyMessage({
+      ...input,
+      rawText:
+        "Pool Villa for 2 adults.\nThanks,\nPriya Sharma\nLandline 080-2345-6789\nAddress: Flat 4B Palm Grove Mumbai 400050",
+    });
+    const payload = JSON.stringify(vi.mocked(executeStructured).mock.calls[0][0]);
+    expect(payload).not.toMatch(/Priya|Sharma|2345|6789|Palm|400050|4B/);
+    expect(payload).toContain("Pool Villa");
+    expect(JSON.stringify(result.response)).not.toMatch(/Priya|Sharma|2345|Palm|400050/);
+  });
   it("provider failure uses conservative rules and detects complaints", async () => {
     vi.mocked(executeStructured).mockResolvedValue({
       kind: "error",
