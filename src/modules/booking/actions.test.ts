@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/auth", () => ({ requireRole: vi.fn() }));
 import { requireRole } from "@/lib/auth";
 import { booking } from "./index";
-import { acquireBookingHold } from "./actions";
+import { acquireBookingHold, cancelHeldBooking } from "./actions";
 
 const input = {
   stay: {
@@ -84,6 +84,40 @@ describe("hold server action", () => {
       code: "OUTSIDE_WINDOW",
       message: "Online booking opens 3 months ahead. For later dates, send us an enquiry.",
     });
+    expect(service).not.toHaveBeenCalled();
+  });
+});
+
+describe("cancel server action", () => {
+  const id = "4f6c2a8e-1b3d-4c5e-9f7a-0b1c2d3e4f5a";
+  it("cancels as the session guest only", async () => {
+    vi.mocked(requireRole).mockResolvedValue({
+      id: "verified-guest",
+      role: "guest",
+      email: "g@test.example",
+      name: "Guest",
+    });
+    const service = vi
+      .spyOn(booking, "cancelHeld")
+      .mockResolvedValue({ ok: false, code: "FORBIDDEN" });
+    expect(await cancelHeldBooking({ bookingId: id, guestId: "attacker" })).toEqual({
+      ok: false,
+      code: "FORBIDDEN",
+    });
+    expect(service).toHaveBeenCalledWith(
+      { bookingId: id },
+      { userId: "verified-guest", role: "guest" },
+    );
+    expect(await cancelHeldBooking({ bookingId: "nope" })).toEqual({
+      ok: false,
+      code: "INVALID_INPUT",
+    });
+    expect(service).toHaveBeenCalledTimes(1);
+  });
+  it("rejects a signed-out request", async () => {
+    vi.mocked(requireRole).mockRejectedValue(new Error("UNAUTHENTICATED"));
+    const service = vi.spyOn(booking, "cancelHeld");
+    await expect(cancelHeldBooking({ bookingId: id })).rejects.toThrow("UNAUTHENTICATED");
     expect(service).not.toHaveBeenCalled();
   });
 });
