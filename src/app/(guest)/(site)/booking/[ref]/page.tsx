@@ -8,7 +8,8 @@ import { catalog } from "@/modules/catalog";
 import { stayHref } from "../../../_lib/cart";
 import { CHECK_IN_NOTE, confirmationLines, stateView } from "../../../_lib/confirmation";
 import { loadOwnBooking } from "../../../_lib/own-booking";
-import { cartFromBooking, payGate } from "../../../_lib/pay-flow";
+import { cartFromBooking, PAY_COPY, payGate } from "../../../_lib/pay-flow";
+import { booking } from "@/modules/booking";
 
 export const metadata: Metadata = { title: "Your booking", robots: { index: false } };
 
@@ -22,8 +23,13 @@ function holdLive(b: Parameters<typeof payGate>[0]) {
 /** B8 confirmation (05 screen 5). Owner only; a non-confirmed ref shows its real state. */
 async function Confirmation({ params }: { params: Params }) {
   const { ref } = await params;
-  const { booking: b } = await loadOwnBooking(ref, `/booking/${encodeURIComponent(ref)}`);
-  const types = await catalog.listRoomTypes();
+  const { user, booking: b } = await loadOwnBooking(ref, `/booking/${encodeURIComponent(ref)}`);
+  const [types, refunds] = await Promise.all([
+    catalog.listRoomTypes(),
+    b.status === "CONFIRMED" ? null : booking.refundPendingForGuest({ guestId: user.id }),
+  ]);
+  // Paid after the hold ended: say so, never "nothing happened" (S2 review fix).
+  const refundPending = !!refunds?.ok && refunds.bookingIds.includes(b.id);
   const view = stateView(b.status, holdLive(b));
 
   if (b.status !== "CONFIRMED") {
@@ -36,7 +42,9 @@ async function Confirmation({ params }: { params: Params }) {
         </p>
         <p className="font-display text-h2 tabular-nums">{b.ref}</p>
         <p className="text-body">{formatStay(b.checkIn, b.checkOut)}</p>
-        <p className="text-body text-muted">{view.message}</p>
+        <p className="text-body text-muted">
+          {refundPending ? PAY_COPY.refundPending : view.message}
+        </p>
         {view.action === "pay" ? (
           <ButtonLink href={`/book/pay/${encodeURIComponent(b.ref)}`}>Resume payment</ButtonLink>
         ) : view.action === "rebuild" ? (

@@ -13,6 +13,7 @@ import { plural } from "../../_lib/format";
 import { roomsSummary, statusView, type StatusView } from "../../_lib/account";
 import { RetryError } from "../../_components/retry-error";
 import { HeldActions } from "../../_components/held-actions";
+import { PAY_COPY } from "../../_lib/pay-flow";
 import Link from "next/link";
 
 export const metadata = { title: "My bookings" };
@@ -44,12 +45,15 @@ async function Content() {
 
   let list: Booking[];
   let names: Map<string, string>;
+  let refunds = new Set<string>();
   try {
     // The guest id comes from the session only.
-    const [result, types] = await Promise.all([
+    const [result, types, pending] = await Promise.all([
       booking.listForGuest({ guestId: user.id }),
       catalog.listRoomTypes(),
+      booking.refundPendingForGuest({ guestId: user.id }),
     ]);
+    if (pending.ok) refunds = new Set(pending.bookingIds);
     if (!result.ok) throw new Error(`listForGuest: ${result.code}`);
     list = result.bookings;
     names = new Map(types.map((t) => [t.id, t.name]));
@@ -111,6 +115,11 @@ async function Content() {
                           <p className="text-small text-muted">
                             {plural(b.rooms.length, "room")}: {roomsSummary(b.rooms, names)}
                           </p>
+                          {refunds.has(b.id) ? (
+                            <p className="mt-2 text-small text-warning" role="status">
+                              {PAY_COPY.refundPending}
+                            </p>
+                          ) : null}
                           {status.resumable ? (
                             <div className="mt-3">
                               <HeldActions bookingId={b.id} bookingRef={b.ref} />

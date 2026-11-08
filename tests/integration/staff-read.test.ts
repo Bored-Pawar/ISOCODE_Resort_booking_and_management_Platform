@@ -96,6 +96,15 @@ describe("staff booking reads (A5)", () => {
     expect(
       refunds.ok && refunds.payments.some((p) => p.bookingId === b.id && p.ref === b.ref),
     ).toBe(true);
+    // The owning guest sees the refund; nobody else's list has it.
+    expect(await booking.refundPendingForGuest({ guestId: f.guest.id })).toEqual({
+      ok: true,
+      bookingIds: [b.id],
+    });
+    expect(await booking.refundPendingForGuest({ guestId: randomUUID() })).toEqual({
+      ok: true,
+      bookingIds: [],
+    });
     expect(await booking.getForStaff({ ref: "CA-NONE0" }, staff)).toEqual({
       ok: false,
       code: "NOT_FOUND",

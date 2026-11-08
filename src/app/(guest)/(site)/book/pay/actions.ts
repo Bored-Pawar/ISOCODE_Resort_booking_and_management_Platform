@@ -7,7 +7,7 @@ import { booking, type Booking } from "@/modules/booking";
 import { acquireBookingHold } from "@/modules/booking/actions";
 import { MockProvider, TEST_OUTCOMES } from "@/modules/payments";
 import { detailsHref } from "../../../_lib/cart";
-import { holdStep } from "../../../_lib/hold-flow";
+import { holdStep, reusableHold } from "../../../_lib/hold-flow";
 import { cartFromBooking, payGate, type PayStep } from "../../../_lib/pay-flow";
 
 export type PayFormState = { step?: PayStep } | undefined;
@@ -92,12 +92,28 @@ export async function refreshHold(_: RefreshState, formData: FormData): Promise<
 
   const { stay, lines } = cartFromBooking(b);
   if (b.status === "HELD") {
+    // The server rechecks the rule the button follows: refresh only in the last 2 minutes.
+    if (payGate(b, Date.now()) === "open")
+      return {
+        message: "Your hold still has time. Pay now; refresh is offered in the last 2 minutes.",
+      };
     const cancelled = await booking.cancelHeld(
       { bookingId: b.id },
       { userId: guest.id, role: "guest" },
     );
     if (!cancelled.ok && cancelled.code === "NOT_HELD" && cancelled.status === "CONFIRMED")
       redirect(confirmationHref(b.ref));
+  }
+  // Double hold guard (as holdStay): another tab, or a replay of an old ref, may already have
+  // taken the fresh hold for this priced stay. Reuse it instead of holding the stock twice.
+  const listed = await booking.listForGuest({ guestId: guest.id, limit: 50 });
+  if (listed.ok) {
+    const again = reusableHold(
+      listed.bookings.filter((x) => x.id !== b.id),
+      { checkIn: b.checkIn, checkOut: b.checkOut, quoteHash: b.quoteHash },
+      Date.now(),
+    );
+    if (again) redirect(`/book/pay/${encodeURIComponent(again.ref)}`);
   }
   const held = await acquireBookingHold({
     stay: {

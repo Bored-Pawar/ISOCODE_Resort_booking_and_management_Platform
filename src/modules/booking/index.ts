@@ -17,8 +17,8 @@ import {
 } from "./staff";
 import { isDateStr } from "@/lib/dates";
 import { readBooking } from "./read";
-import { bookings } from "@/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { bookings, payments } from "@/db/schema";
+import { and, desc, eq } from "drizzle-orm";
 
 export type BookingStatus = "HELD" | "CONFIRMED" | "EXPIRED" | "CANCELLED";
 
@@ -265,6 +265,29 @@ export const booking = {
     const parsed = listRefundPendingInputSchema.safeParse(input);
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
     return listRefundPendingImpl(parsed.data.limit);
+  },
+
+  /**
+   * Additive read (S2 review fix): ids of this guest's bookings with a payment recorded as
+   * REFUND_PENDING (paid after the hold ended), so guest pages can say a refund is on its way.
+   * guestId comes from the verified session only.
+   */
+  async refundPendingForGuest(input: {
+    guestId: string;
+  }): Promise<Ok<{ bookingIds: string[] }> | Err<"INVALID_INPUT">> {
+    const parsed = z.object({ guestId: z.uuid() }).safeParse(input);
+    if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
+    const rows = await getDb()
+      .selectDistinct({ id: payments.bookingId })
+      .from(payments)
+      .innerJoin(bookings, eq(bookings.id, payments.bookingId))
+      .where(
+        and(
+          eq(bookings.guestId, parsed.data.guestId.toLowerCase()),
+          eq(payments.status, "REFUND_PENDING"),
+        ),
+      );
+    return { ok: true, bookingIds: rows.map((r) => r.id) };
   },
 
   /** Additive read for "My bookings". Never writes; no lazy expiry. */
