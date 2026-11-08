@@ -7,6 +7,7 @@ import { inventory } from "@/modules/inventory";
 import { pricing, type Quote } from "@/modules/pricing";
 import { lineIssues, toCartQuote, type CartQuote, type RoomCardView } from "../_lib/book";
 import { parseCartParams } from "../_lib/cart";
+import { parseNotice } from "../_lib/hold-flow";
 import { enquiryHref } from "../_lib/enquiry";
 import { guestsLabel } from "../_lib/format";
 import { partyFitsNoRoom } from "../_lib/rooms";
@@ -199,6 +200,7 @@ export async function StayBuilder({ searchParams }: { searchParams: Params }) {
         hasCartParam={hasCartParam}
         quote={quote}
         promoInvalid={promoInvalid}
+        notice={parseNotice(raw.notice)}
         dropped={cart.dropped}
         nights={nights}
         suggested={suggested}

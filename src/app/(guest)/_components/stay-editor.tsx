@@ -39,6 +39,7 @@ import {
   type Party,
 } from "../_lib/cart";
 import { enquiryHref } from "../_lib/enquiry";
+import { noticeMessage, type RoomsNotice } from "../_lib/hold-flow";
 import { guestsLabel, occupancyLabel, plural } from "../_lib/format";
 import { nightsByDate } from "../_lib/room-detail";
 import { SEARCH_LIMITS } from "../_lib/search";
@@ -62,6 +63,7 @@ export function StayEditor({
   hasCartParam,
   quote,
   promoInvalid,
+  notice,
   dropped,
   nights,
   suggested,
@@ -77,6 +79,8 @@ export function StayEditor({
   quote: CartQuote;
   /** The URL's promo code was refused by pricing; `quote` is the price without it. */
   promoInvalid: boolean;
+  /** Why the details step sent the guest back here (display only). */
+  notice: RoomsNotice | null;
   dropped: boolean;
   nights: number;
   /** A starting cart for the URL's group, or null when none fits in 4 rooms with free stock. */
@@ -147,6 +151,8 @@ export function StayEditor({
 
   const fresh = keyOf(group, lines, promo) === propsKey;
   const promoRefused = fresh && promoInvalid && !!promo;
+  // Shown until the guest changes the stay (every edit drops it from the URL).
+  const shownNotice = fresh ? notice : null;
   const shownQuote = fresh ? quote : null;
   const issues = lineIssues(rooms, lines, shownQuote);
   const pending = isPending || !fresh;
@@ -241,6 +247,19 @@ export function StayEditor({
   return (
     <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div className="flex min-w-0 flex-col gap-12">
+        {shownNotice ? (
+          <p
+            role="alert"
+            className="flex items-start gap-2 rounded-card border border-danger bg-surface p-4 text-body"
+          >
+            <CircleAlert
+              className="mt-1 size-[18px] shrink-0 text-danger"
+              strokeWidth={1.5}
+              aria-hidden
+            />
+            {noticeMessage(shownNotice)}
+          </p>
+        ) : null}
         {/* ---- Rooms and packages -------------------------------------------- */}
         <section aria-labelledby="rooms-heading" className="flex flex-col gap-4">
           <div>
@@ -346,6 +365,11 @@ export function StayEditor({
                           Add room
                         </Button>
                       </div>
+                      {shownNotice?.kind === "sold-out" && shownNotice.roomTypeId === room.id ? (
+                        <p role="alert" className="text-small text-danger">
+                          Just taken by another guest for these dates.
+                        </p>
+                      ) : null}
                       {inStay > 0 || (blocked && !soldOut && !atMax) ? (
                         <p id={`add-${room.id}-why`} className="text-small text-muted">
                           {blocked && !soldOut && !atMax
@@ -407,7 +431,11 @@ export function StayEditor({
           <ol className="flex flex-col gap-4" aria-live="polite">
             {lines.map((line, i) => {
               const room = roomById.get(line.roomTypeId);
-              const issue = issues[i];
+              const issue =
+                issues[i] ??
+                (shownNotice?.kind === "line" && shownNotice.lineIndex === i
+                  ? noticeMessage(shownNotice)
+                  : null);
               const priceLine = priced?.lines[i];
               const errorId = `room-${i}-error`;
               return (

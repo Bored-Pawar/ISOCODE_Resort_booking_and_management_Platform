@@ -40,7 +40,7 @@ export function gstBreakdown(cells: QuoteNight[]): GstLine[] {
 }
 
 /** Cells summed per date across rooms, in date order. */
-export function nightsByDate(quote: Pick<Quote, "lines">): PlanView["nights"] {
+export function nightsByDate(quote: { lines: { nights: QuoteNight[] }[] }): PlanView["nights"] {
   const byDate = new Map<string, PlanView["nights"][number]>();
   for (const n of quote.lines.flatMap((l) => l.nights)) {
     const d = byDate.get(n.date) ?? { date: n.date, ratePaise: 0, discountPaise: 0, gstPaise: 0 };
