@@ -1,7 +1,10 @@
 /** Validate model prose BEFORE adding server prices. Dates/headcounts/booking refs are permitted. */
+export const normalizeDraft = (value: string) =>
+  value.normalize("NFKC").replace(/[\u200b-\u200f\ufeff]/g, "");
+
 export function safeModelDraft(input: unknown, needsQuote: boolean): input is string {
   if (typeof input !== "string" || input.trim().length < 10 || input.length > 2500) return false;
-  const value = input.normalize("NFKC").replace(/[\u200b-\u200f\ufeff]/g, "");
+  const value = normalizeDraft(input);
   if (
     /\b(?:available|guarantee|plantation room|estate suite|garden villa|pool villa)\b|\bwe (?:have|can offer)\b/i.test(
       value,

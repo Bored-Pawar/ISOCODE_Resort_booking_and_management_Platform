@@ -5,6 +5,15 @@ import { classificationFixtures } from "./fixtures";
 import { quoteFixture } from "@/modules/pricing";
 const villa = classificationFixtures["ENQ-4411"].classification;
 describe("draft safety", () => {
+  it("fills canonicalized placeholders and still rejects disguised model prices", () => {
+    const draft = buildDraft(villa, "Thank you. ｛｛QUO\u200bTE｝｝", quoteFixture);
+    expect(draft.usedTemplate).toBe(false);
+    expect(draft.body).toContain("From ₹");
+    expect(draft.body).not.toMatch(/QUOTE|｛|\u200b/);
+    expect(
+      buildDraft(villa, "Thank you. R\u200bs １２３ {{QUOTE}}", quoteFixture).usedTemplate,
+    ).toBe(true);
+  });
   it.each([
     "₹12000",
     "Rs. 12000",
