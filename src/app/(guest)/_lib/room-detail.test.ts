@@ -1,40 +1,29 @@
 import { describe, expect, it } from "vitest";
 import { roomTypesFixture } from "@/modules/catalog/fixtures";
-import { quoteFixture } from "@/modules/pricing";
+import { quoteFixture, twoRoomQuoteFixture } from "@/modules/pricing/fixtures";
 import {
   availabilityNote,
-  bookHref,
+  cartLines,
   defaultPlanId,
   formatBp,
   gstBreakdown,
+  nightsByDate,
   toPlanView,
 } from "./room-detail";
 
-const night = (date: string, gstBp: number, gstPaise: number) => ({
-  date,
-  ratePaise: 1000,
-  discountPaise: 0,
-  gstBp,
-  gstPaise,
-});
+const cells = (q: typeof quoteFixture) => q.lines.flatMap((l) => l.nights);
 
 describe("gstBreakdown", () => {
-  it("groups nights by rate and sorts lowest first", () => {
-    const lines = gstBreakdown([
-      night("2026-11-20", 1800, 180),
-      night("2026-11-21", 500, 50),
-      night("2026-11-22", 1800, 181),
-    ]);
-    expect(lines).toEqual([
-      { bp: 500, paise: 50, nights: 1 },
-      { bp: 1800, paise: 361, nights: 2 },
-    ]);
-  });
-
-  it("sums to the quote's GST", () => {
-    const lines = gstBreakdown(quoteFixture.nights);
+  it("groups GST by rate and keeps the total", () => {
+    const lines = gstBreakdown(cells(quoteFixture));
+    expect(lines.map((l) => l.bp)).toEqual([500, 1800]);
     expect(lines.reduce((s, l) => s + l.paise, 0)).toBe(quoteFixture.gstPaise);
-    expect(lines.reduce((s, l) => s + l.nights, 0)).toBe(quoteFixture.nights.length);
+    expect(lines.reduce((s, l) => s + l.nights, 0)).toBe(cells(quoteFixture).length);
+  });
+  it("counts room-nights over a 2-room cart", () => {
+    const lines = gstBreakdown(cells(twoRoomQuoteFixture));
+    expect(lines.reduce((s, l) => s + l.nights, 0)).toBe(4);
+    expect(lines.reduce((s, l) => s + l.paise, 0)).toBe(twoRoomQuoteFixture.gstPaise);
   });
 });
 
@@ -46,33 +35,40 @@ describe("formatBp", () => {
   });
 });
 
-describe("toPlanView and bookHref", () => {
+describe("toPlanView", () => {
   const plan = roomTypesFixture[0].ratePlans[1];
-  const view = toPlanView(plan, quoteFixture);
 
   it("keeps the quote's money untouched, in paise", () => {
+    const view = toPlanView(plan, quoteFixture);
     expect(view.totalPaise).toBe(quoteFixture.totalPaise);
     expect(view.gstPaise).toBe(quoteFixture.gstPaise);
-    expect(view.nights).toHaveLength(quoteFixture.nights.length);
+    expect(view.nights).toHaveLength(2);
     expect(view.code).toBe("CP");
+    expect(view.lines).toEqual([
+      { roomTypeId: "rt-plantation-room", ratePlanId: "rp-plantation-cp", adults: 2, children: 0 },
+    ]);
   });
 
-  it("builds a booking link with ids, stay and the quote hash", () => {
-    const href = bookHref(
-      { roomTypeId: "r1", checkIn: "2026-11-20", checkOut: "2026-11-22", adults: 2, children: 1 },
-      view,
-    );
-    const url = new URL(href, "http://x");
-    expect(url.pathname).toBe("/book");
-    expect(Object.fromEntries(url.searchParams)).toEqual({
-      roomTypeId: "r1",
-      ratePlanId: plan.id,
-      checkIn: "2026-11-20",
-      checkOut: "2026-11-22",
-      adults: "2",
-      children: "1",
-      quoteHash: quoteFixture.quoteHash,
-    });
+  it("sums a 2-room cart per date for display and keeps cart order", () => {
+    const view = toPlanView(plan, twoRoomQuoteFixture);
+    expect(view.totalPaise).toBe(twoRoomQuoteFixture.totalPaise);
+    expect(view.lines.map((l) => l.roomTypeId)).toEqual(["rt-plantation-room", "rt-estate-suite"]);
+    const byDate = nightsByDate(twoRoomQuoteFixture);
+    expect(byDate.map((d) => d.date)).toEqual(["2026-11-14", "2026-11-15"]);
+    expect(byDate.reduce((s, d) => s + d.ratePaise, 0)).toBe(twoRoomQuoteFixture.subtotalPaise);
+    expect(byDate.reduce((s, d) => s + d.gstPaise, 0)).toBe(twoRoomQuoteFixture.gstPaise);
+  });
+
+  it("builds cart lines from a split", () => {
+    expect(
+      cartLines("r", "p", [
+        { adults: 2, children: 0 },
+        { adults: 1, children: 1 },
+      ]),
+    ).toEqual([
+      { roomTypeId: "r", ratePlanId: "p", adults: 2, children: 0 },
+      { roomTypeId: "r", ratePlanId: "p", adults: 1, children: 1 },
+    ]);
   });
 });
 

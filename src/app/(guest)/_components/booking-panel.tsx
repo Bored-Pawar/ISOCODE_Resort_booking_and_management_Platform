@@ -5,35 +5,43 @@ import { Check, TriangleAlert } from "lucide-react";
 import { Badge, ButtonLink, PriceBlock } from "@/components/ui";
 import { formatInr } from "@/lib/money";
 import { cn } from "@/lib/utils";
-import {
-  bookHref,
-  defaultPlanId,
-  formatBp,
-  type BookBase,
-  type PlanView,
-} from "../_lib/room-detail";
+import { bookHref, type CartStay } from "../_lib/cart";
+import { plural } from "../_lib/format";
+import { defaultPlanId, formatBp, type PlanView } from "../_lib/room-detail";
 
 /**
  * Rate plan choice, price with GST breakdown and the Reserve link. All prices arrive as props
- * (quoted on the server); the only state is which plan is selected. On small screens a fixed bar
- * repeats the selected total and Reserve so the action is always in reach.
+ * (quoted on the server for the party's room cart); the only state is which plan is selected. On
+ * small screens a fixed bar repeats the selected total and Reserve so the action is always in reach.
+ * Reserve carries the cart in the URL in a stable line order (B10).
  */
 export function BookingPanel({
   plans,
-  base,
+  stay,
+  roomsNeeded,
   nights,
   availability,
 }: {
   plans: PlanView[];
-  base: BookBase;
+  /** The original search: dates and the whole party (for the guests-left counter on /book). */
+  stay: CartStay;
+  /** Rooms of this type the whole party needs; more than the cart has means stock is short. */
+  roomsNeeded: number;
   nights: number;
   availability: { tone: "success" | "warning"; text: string };
 }) {
   const [selectedId, setSelectedId] = useState(() => defaultPlanId(plans));
   const plan = plans.find((p) => p.id === selectedId) ?? plans[0];
   if (!plan) return null;
-  const href = bookHref(base, plan);
+  const href = bookHref(stay, plan.lines);
   const multiRate = plan.gst.length > 1;
+  const rooms = plan.lines.length;
+  const short = roomsNeeded > rooms;
+  const roomsNote = short
+    ? `Your group needs ${plural(roomsNeeded, "room")} of this type and only ${rooms} ${rooms === 1 ? "is" : "are"} free. Reserve ${rooms === 1 ? "it" : "them"} and add another room type on the next step.`
+    : rooms > 1
+      ? `Priced as ${rooms} rooms for your group. You can change the rooms, or add another room, on the next step.`
+      : "Need more space? You can add another room on the next step.";
 
   return (
     <>
@@ -94,7 +102,7 @@ export function BookingPanel({
             <tbody>
               <tr className="border-t border-border">
                 <th scope="row" className="py-1 text-left font-normal text-muted">
-                  Room · {nights} night{nights === 1 ? "" : "s"}
+                  {rooms > 1 ? `${rooms} rooms` : "Room"} · {plural(nights, "night")}
                 </th>
                 <td className="py-1 text-right">{formatInr(plan.subtotalPaise)}</td>
               </tr>
@@ -110,7 +118,7 @@ export function BookingPanel({
                 <tr key={g.bp} className="border-t border-border">
                   <th scope="row" className="py-1 text-left font-normal text-muted">
                     GST {formatBp(g.bp)}
-                    {multiRate ? ` · ${g.nights} night${g.nights === 1 ? "" : "s"}` : ""}
+                    {multiRate ? ` · ${plural(g.nights, rooms > 1 ? "room-night" : "night")}` : ""}
                   </th>
                   <td className="py-1 text-right">{formatInr(g.paise)}</td>
                 </tr>
@@ -128,6 +136,7 @@ export function BookingPanel({
         <ButtonLink href={href} className="w-full">
           Reserve
         </ButtonLink>
+        <p className="text-small text-muted">{roomsNote}</p>
         <p className="text-small text-muted">You will not be charged yet.</p>
       </div>
 
@@ -138,7 +147,8 @@ export function BookingPanel({
             {formatInr(plan.totalPaise)}
           </p>
           <p className="text-small text-muted">
-            {nights} night{nights === 1 ? "" : "s"} · {plan.name}
+            {rooms > 1 ? `${rooms} rooms · ` : ""}
+            {plural(nights, "night")} · {plan.name}
           </p>
         </div>
         <ButtonLink href={href}>Reserve</ButtonLink>

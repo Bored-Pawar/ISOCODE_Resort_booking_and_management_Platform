@@ -265,7 +265,7 @@ export function Showcase({ quoteFixture }: { quoteFixture: Quote }) {
             <PriceBlock
               totalPaise={quoteFixture.totalPaise}
               gstPaise={quoteFixture.gstPaise}
-              nights={quoteFixture.nights}
+              nights={quoteFixture.lines[0].nights}
             />
           </Row>
           <Row label="Loading">

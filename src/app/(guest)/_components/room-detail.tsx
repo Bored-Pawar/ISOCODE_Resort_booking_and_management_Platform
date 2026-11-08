@@ -9,8 +9,8 @@ import { inventory } from "@/modules/inventory";
 import { pricing } from "@/modules/pricing";
 import { enquiryHref } from "../_lib/enquiry";
 import { guestsLabel, occupancyLabel } from "../_lib/format";
-import { fitsParty } from "../_lib/rooms";
-import { availabilityNote, toPlanView, type PlanView } from "../_lib/room-detail";
+import { offerFor, roomsNeeded, type Offer } from "../_lib/cart";
+import { availabilityNote, cartLines, toPlanView, type PlanView } from "../_lib/room-detail";
 import {
   parseSearchParams,
   toSearchParams,
@@ -82,7 +82,7 @@ export async function RoomDetail({
         <h1 className="font-display text-display-sm font-medium md:text-display">{room.name}</h1>
         <p className="mt-2 flex items-center gap-2 text-small text-muted">
           <Users className="size-[18px]" strokeWidth={1.5} aria-hidden />
-          {occupancyLabel(room.maxAdults, room.maxChildren)}
+          {occupancyLabel(room)}
         </p>
         <p className="mt-3 max-w-read text-body text-muted">{room.description}</p>
       </header>
@@ -145,26 +145,25 @@ export async function RoomDetail({
 /** Availability, quotes and the booking card for a valid stay. Never throws. */
 async function stayPanel(room: RoomType, values: SearchValues, listHref: string) {
   const party = { adults: values.adults, children: values.children };
+  const group = enquiryHref({
+    room: room.slug,
+    checkIn: values.checkIn,
+    checkOut: values.checkOut,
+    adults: values.adults,
+    children: values.children,
+  });
 
-  if (!fitsParty(room, party)) {
+  // B10: the party may take up to 4 rooms of this type; beyond that it is a group enquiry.
+  if (roomsNeeded(room, party) === null) {
     return (
       <Card className="flex flex-col gap-3">
-        <p className="text-h2 font-medium">Too many guests for this room</p>
+        <p className="text-h2 font-medium">Your group needs more than 4 of these rooms</p>
         <p className="text-body text-muted">
-          It takes {occupancyLabel(room.maxAdults, room.maxChildren).toLowerCase()}, and your group
-          is {guestsLabel(values.adults, values.children)}. Booking for a group?
+          Each room takes {occupancyLabel(room).toLowerCase()}, and your group is{" "}
+          {guestsLabel(values.adults, values.children)}. We book groups of more than 4 rooms by
+          enquiry.
         </p>
-        <ButtonLink
-          href={enquiryHref({
-            room: room.slug,
-            checkIn: values.checkIn,
-            checkOut: values.checkOut,
-            adults: values.adults,
-            children: values.children,
-          })}
-        >
-          Send a group enquiry
-        </ButtonLink>
+        <ButtonLink href={group}>Send a group enquiry</ButtonLink>
         <ButtonLink href={listHref} variant="secondary">
           See other rooms
         </ButtonLink>
@@ -174,6 +173,7 @@ async function stayPanel(room: RoomType, values: SearchValues, listHref: string)
 
   let plans: PlanView[];
   let units: number;
+  let offer: Offer;
   try {
     const availability = await inventory.availability({
       roomTypeId: room.id,
@@ -183,19 +183,17 @@ async function stayPanel(room: RoomType, values: SearchValues, listHref: string)
     if (!availability.ok) throw new Error(`availability: ${availability.code}`);
     const a = availability.rooms.find((r) => r.roomTypeId === room.id);
     units = a && !a.soldOut && !a.blackedOut ? a.availableUnits : 0;
+    offer = offerFor(room, party, units);
 
     plans = [];
-    if (units >= 1) {
+    if (offer.split.length) {
       const results = await Promise.all(
         room.ratePlans.map(async (plan) => ({
           plan,
           result: await pricing.quote({
-            roomTypeId: room.id,
-            ratePlanId: plan.id,
             checkIn: values.checkIn,
             checkOut: values.checkOut,
-            adults: values.adults,
-            children: values.children,
+            rooms: cartLines(room.id, plan.id, offer.split),
           }),
         })),
       );
@@ -234,13 +232,13 @@ async function stayPanel(room: RoomType, values: SearchValues, listHref: string)
   return (
     <BookingPanel
       plans={plans}
-      base={{
-        roomTypeId: room.id,
+      stay={{
         checkIn: values.checkIn,
         checkOut: values.checkOut,
         adults: values.adults,
         children: values.children,
       }}
+      roomsNeeded={offer.needed ?? offer.split.length}
       nights={nightsBetween(values.checkIn, values.checkOut)}
       availability={availabilityNote(units)}
     />

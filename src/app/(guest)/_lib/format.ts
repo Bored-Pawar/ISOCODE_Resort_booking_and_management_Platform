@@ -4,10 +4,11 @@ export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;
 }
 
-/** "Up to 2 adults, 1 child" */
-export function occupancyLabel(adults: number, children: number): string {
-  const a = plural(adults, "adult");
-  return children > 0 ? `Up to ${a}, ${plural(children, "child", "children")}` : `Up to ${a}`;
+/** B10 rule 1: "Up to 3 guests, at most 2 adults" (children fill the rest). */
+export function occupancyLabel(room: { maxAdults: number; maxOccupancy: number }): string {
+  return room.maxOccupancy > room.maxAdults
+    ? `Up to ${plural(room.maxOccupancy, "guest")}, at most ${plural(room.maxAdults, "adult")}`
+    : `Up to ${plural(room.maxAdults, "adult")}`;
 }
 
 /** "2 adults · 1 child" */

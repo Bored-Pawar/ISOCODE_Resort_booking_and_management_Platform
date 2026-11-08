@@ -37,7 +37,7 @@ export async function RoomHighlights() {
               <p className="mt-1 text-small text-muted">{room.description}</p>
               <p className="mt-2 flex items-center gap-2 text-small text-muted">
                 <Users className="size-[18px]" strokeWidth={1.5} aria-hidden />
-                {occupancyLabel(room.maxAdults, room.maxChildren)}
+                {occupancyLabel(room)}
               </p>
               <span className="mt-3 inline-flex h-11 items-center text-small font-semibold text-accent group-hover:underline">
                 View room

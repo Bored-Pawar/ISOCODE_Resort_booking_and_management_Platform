@@ -9,8 +9,8 @@ import { enquiryHref } from "../_lib/enquiry";
 import { guestsLabel } from "../_lib/format";
 import {
   classifyRoom,
-  needsQuote,
   partyFitsNoRoom,
+  partyPlan,
   type PlanQuote,
   type RoomAvailabilityView,
   type RoomListItem,
@@ -91,17 +91,16 @@ export async function RoomsResults({ searchParams }: { searchParams: Params }) {
       rooms.map(async (room) => {
         const a = byRoom.get(room.id);
         let quotes: PlanQuote[] = [];
-        if (needsQuote(room, a, party)) {
+        // B10: price the party's cart of this type (1 to 4 rooms), only when it is free.
+        const split = partyPlan(room, a, party);
+        if (split) {
           const results = await Promise.all(
             room.ratePlans.map(async (plan) => ({
               plan,
               result: await pricing.quote({
-                roomTypeId: room.id,
-                ratePlanId: plan.id,
                 checkIn: values.checkIn,
                 checkOut: values.checkOut,
-                adults: values.adults,
-                children: values.children,
+                rooms: split.map((line) => ({ roomTypeId: room.id, ratePlanId: plan.id, ...line })),
               }),
             })),
           );
@@ -141,7 +140,7 @@ export async function RoomsResults({ searchParams }: { searchParams: Params }) {
       ) : tooManyGuests ? (
         <EmptyState
           icon={<Users strokeWidth={1.5} />}
-          message={`No single room takes ${guests}. Booking for a group?`}
+          message={`Your group (${guests}) needs more than 4 rooms. We can arrange it for you.`}
           action={
             <ButtonLink
               href={enquiryHref({

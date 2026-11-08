@@ -60,7 +60,7 @@ export function RoomCard({
         </div>
         <p className="flex items-center gap-2 text-small text-muted">
           <Users className="size-[18px]" strokeWidth={1.5} aria-hidden />
-          {occupancyLabel(room.maxAdults, room.maxChildren)}
+          {occupancyLabel(room)}
         </p>
 
         <div className="mt-auto flex flex-col gap-3 pt-2">
@@ -72,6 +72,7 @@ export function RoomCard({
                   gstPaise={item.cheapest.quote.gstPaise}
                 />
                 <p className="text-small text-muted">
+                  {item.rooms > 1 ? `${item.rooms} rooms for your group · ` : ""}
                   {plural(nights, "night")} · {item.plansPriced > 1 ? "from " : ""}
                   {item.cheapest.planName}
                 </p>
@@ -93,10 +94,24 @@ export function RoomCard({
             </>
           ) : null}
 
+          {item.kind === "short" ? (
+            <>
+              <p className="text-small text-muted">
+                Your group needs {plural(item.rooms, "room")} of this type and only{" "}
+                {item.availableUnits} {item.availableUnits === 1 ? "is" : "are"} free. Reserve{" "}
+                {item.availableUnits === 1 ? "it" : "them"} and add another room type on the next
+                step.
+              </p>
+              <ButtonLink href={href} variant="secondary" className="self-start">
+                View room
+              </ButtonLink>
+            </>
+          ) : null}
+
           {item.kind === "over-occupancy" ? (
             <>
               <p className="text-small text-muted">
-                Too many guests for this room. Booking for a group?
+                Your group would need more than 4 of these rooms. Booking for a group?
               </p>
               <ButtonLink
                 href={enquiryHrefFromQuery(query, room.slug)}
