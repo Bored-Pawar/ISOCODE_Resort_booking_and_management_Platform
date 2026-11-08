@@ -39,7 +39,13 @@ const suiteLine = {
 };
 
 /** 1-line cart: 2 adults in a Plantation Room, bed and breakfast, 2 nights. */
-export const quoteFixture: Quote = calculateQuote(stay, dates, [plantationLine], null, FIXTURE_SLABS);
+export const quoteFixture: Quote = calculateQuote(
+  stay,
+  dates,
+  [plantationLine],
+  null,
+  FIXTURE_SLABS,
+);
 
 /** 2-line cart: the Plantation Room above plus an Estate Suite for 2 adults and 1 child. */
 export const twoRoomQuoteFixture: Quote = calculateQuote(

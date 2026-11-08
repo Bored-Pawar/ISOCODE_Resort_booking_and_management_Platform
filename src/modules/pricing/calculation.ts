@@ -66,7 +66,13 @@ export function buildNight(
   slabs: readonly Slab[],
 ): QuoteNight {
   const gstBp = pickGstBp(ratePaise - discountPaise, slabs, date);
-  return { date, ratePaise, discountPaise, gstBp, gstPaise: applyBp(ratePaise - discountPaise, gstBp) };
+  return {
+    date,
+    ratePaise,
+    discountPaise,
+    gstBp,
+    gstPaise: applyBp(ratePaise - discountPaise, gstBp),
+  };
 }
 
 /** Single-line helper kept for tests and seed tooling. */
