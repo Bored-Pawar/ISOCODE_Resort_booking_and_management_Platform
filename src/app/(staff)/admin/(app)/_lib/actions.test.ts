@@ -23,6 +23,7 @@ import {
   setOfflineAction,
   setOnlineAction,
 } from "../allotment/actions";
+import { createPromoAction, deactivatePromoAction } from "../promos/actions";
 
 const R = "8b0f2c62-4d3b-4a63-9a8e-0b9c1d2e3f40";
 const session = (role: Role | null) =>
@@ -68,6 +69,20 @@ const ACTIONS: [string, () => Promise<{ ok: boolean; code?: string }>][] = [
     "setOnlineAction",
     () => setOnlineAction({ roomTypeId: R, from: "2099-01-01", to: "2099-01-02" }),
   ],
+  [
+    "createPromoAction",
+    () =>
+      createPromoAction({
+        code: "SAVE10",
+        kind: "pct",
+        value: 10,
+        validFrom: "2099-01-01",
+        validTo: "2099-02-01",
+        minNights: 1,
+        maxUses: null,
+      }),
+  ],
+  ["deactivatePromoAction", () => deactivatePromoAction({ id: R })],
 ];
 
 beforeEach(() => {
