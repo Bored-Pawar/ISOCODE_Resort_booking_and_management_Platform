@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "eval:ai": "tsx --tsconfig tsconfig.json --env-file-if-exists=.env.local scripts/eval-ai.mts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

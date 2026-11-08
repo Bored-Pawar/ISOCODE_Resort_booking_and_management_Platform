@@ -4,6 +4,16 @@ import postgres from "postgres";
 const target = assertSafeDestructiveTarget({ ...process.env, DB_TARGET: "test" });
 const sql = postgres(target.url, { max: 1, prepare: false });
 try {
+  if (process.argv.includes("--activity")) {
+    console.log(
+      JSON.stringify(
+        await sql`select state, wait_event_type, wait_event, count(*)::int as connections,
+      max(extract(epoch from clock_timestamp() - query_start))::int as longest_query_seconds
+      from pg_stat_activity where datname = current_database() and pid <> pg_backend_pid()
+      group by state, wait_event_type, wait_event`,
+      ),
+    );
+  }
   const [row] = await sql`select current_database() as database, version() as version,
     (select count(*)::int from information_schema.tables where table_schema = 'public') as tables`;
   console.log(
