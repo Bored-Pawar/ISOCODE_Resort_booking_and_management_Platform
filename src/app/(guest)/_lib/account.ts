@@ -6,6 +6,8 @@ export type StatusView = {
   tone: "success" | "warning" | "neutral" | "danger";
   /** Upcoming bookings first, then past stays, then holds that lapsed or were cancelled. */
   group: "upcoming" | "past" | "closed";
+  /** A live hold: the row offers Resume payment and Cancel. */
+  resumable?: true;
 };
 
 /**
@@ -20,7 +22,7 @@ export function statusView(
   switch (b.status) {
     case "HELD":
       return b.holdExpiresAt && Date.parse(b.holdExpiresAt) > now
-        ? { label: "Held, awaiting payment", tone: "warning", group: "upcoming" }
+        ? { label: "Held, awaiting payment", tone: "warning", group: "upcoming", resumable: true }
         : { label: "Hold expired", tone: "neutral", group: "closed" };
     case "CONFIRMED":
       return b.checkOut > today

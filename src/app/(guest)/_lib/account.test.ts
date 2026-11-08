@@ -9,11 +9,12 @@ describe("statusView", () => {
     const held = { status: "HELD" as const, checkOut: "2026-11-20" };
     expect(
       statusView({ ...held, holdExpiresAt: "2026-11-08T10:05:00Z" }, now, today),
-    ).toMatchObject({ label: "Held, awaiting payment", group: "upcoming" });
+    ).toMatchObject({ label: "Held, awaiting payment", group: "upcoming", resumable: true });
     expect(
       statusView({ ...held, holdExpiresAt: "2026-11-08T10:00:00Z" }, now, today),
     ).toMatchObject({ label: "Hold expired", group: "closed" });
     expect(statusView({ ...held, holdExpiresAt: null }, now, today).group).toBe("closed");
+    expect(statusView({ ...held, holdExpiresAt: null }, now, today).resumable).toBeUndefined();
   });
   it("splits confirmed stays at check-out", () => {
     const c = { status: "CONFIRMED" as const, holdExpiresAt: null };

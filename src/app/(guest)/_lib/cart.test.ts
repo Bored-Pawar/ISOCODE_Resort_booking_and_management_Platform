@@ -84,6 +84,7 @@ describe("cart URL", () => {
       checkIn: stay.checkIn,
       checkOut: stay.checkOut,
       party: { adults: 5, children: 1 },
+      promo: "",
       lines: [lineB, lineA],
       dropped: false,
     });
@@ -93,6 +94,16 @@ describe("cart URL", () => {
     expect(url.pathname).toBe("/book/details");
     expect(url.searchParams.getAll("room")).toEqual([encodeLine(lineB), encodeLine(lineA)]);
     expect(url.searchParams.get("quoteHash")).toBe("h-123");
+  });
+  it("carries a promo code, normalised, and drops an unreadable one", () => {
+    const url = new URL(detailsHref({ ...stay, promo: " welcome10 " }, [lineA], "h"), "http://x");
+    expect(url.searchParams.get("promo")).toBe("WELCOME10");
+    expect(parseCartParams({ promo: "hills1000" }).promo).toBe("HILLS1000");
+    expect(parseCartParams({ promo: "bad code!" }).promo).toBe("");
+    expect(parseCartParams({ promo: "X".repeat(33) }).promo).toBe("");
+    expect(
+      new URL(stayHref({ ...stay, promo: "" }, [lineA]), "http://x").searchParams.has("promo"),
+    ).toBe(false);
   });
   it("never writes or keeps more than 4 lines", () => {
     const five = Array(5).fill(lineA);

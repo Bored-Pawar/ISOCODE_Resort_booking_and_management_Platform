@@ -30,10 +30,39 @@ async function insertWithRef(tx: Tx, values: (ref: string) => PgInsertValue<type
   }
 }
 
+/**
+ * One query: this guest's unexpired HELD booking for exactly this stay. Same dates and
+ * quote_hash, and identical room lines in line_no order (quoteHash excludes occupancy, so the
+ * party per line is compared too). Newest first if more than one exists from before this rule.
+ */
+async function liveHoldFor(tx: Tx, guestId: string, input: AcquireHoldInput) {
+  const lines = input.stay.rooms.map(
+    (r) =>
+      `${r.roomTypeId.toLowerCase()}.${r.ratePlanId.toLowerCase()}.${r.adults}.${r.children ?? 0}`,
+  );
+  const wanted = sql`ARRAY[${sql.join(
+    lines.map((l) => sql`${l}`),
+    sql`, `,
+  )}]::text[]`;
+  const [row] = await tx.execute<{ id: string }>(sql`
+    SELECT b.id FROM bookings b
+    WHERE b.guest_id = ${guestId}::uuid AND b.status = 'HELD'
+      AND b.hold_expires_at > clock_timestamp()
+      AND b.check_in = ${input.stay.checkIn}::date AND b.check_out = ${input.stay.checkOut}::date
+      AND b.quote_hash = ${input.quoteHash}
+      AND (SELECT array_agg(r.room_type_id::text || '.' || r.rate_plan_id::text || '.' ||
+             r.adults || '.' || r.children ORDER BY r.line_no)
+           FROM booking_rooms r WHERE r.booking_id = b.id) = ${wanted}
+    ORDER BY b.created_at DESC LIMIT 1
+  `);
+  return row?.id ?? null;
+}
+
 /** Input has already passed the frozen schema. guestId is supplied by the trusted server action. */
 export async function acquireHold(input: AcquireHoldInput): Promise<AcquireHoldResult> {
   if (!z.uuid().safeParse(input.guestId).success) return { ok: false, code: "INVALID_INPUT" };
   const minutes = holdMinutes();
+  const guestId = input.guestId.toLowerCase();
   const { stay } = input;
   const dates = eachNight(stay.checkIn, stay.checkOut);
   // B10 rule 4: demand = count of lines per room type.
@@ -41,6 +70,15 @@ export async function acquireHold(input: AcquireHoldInput): Promise<AcquireHoldR
   for (let attempt = 0; ; attempt++) {
     try {
       return await getDb().transaction(async (tx): Promise<AcquireHoldResult> => {
+        // Idempotent per guest and exact stay (S2 review M1). First lock in the transaction:
+        // one guest's holds are serialized; other guests are unaffected. Lock order is guest
+        // advisory lock, then bookings rows, then inventory in (room_type_id, date) order.
+        await tx.execute(
+          sql`SELECT pg_advisory_xact_lock(hashtextextended(${`hold:${guestId}`}, 0))`,
+        );
+        const live = await liveHoldFor(tx, guestId, input);
+        // A live hold for this exact stay: return it, take no stock, write no event.
+        if (live) return { ok: true, booking: (await readBooking(tx, live))! };
         await releaseExpiredHoldsInTx(tx, {
           roomTypeIds: demand.map((d) => d.roomTypeId),
           checkIn: stay.checkIn,

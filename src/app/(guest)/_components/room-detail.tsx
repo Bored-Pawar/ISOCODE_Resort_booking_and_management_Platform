@@ -15,6 +15,7 @@ import { partyForRoom } from "../_lib/stay";
 import {
   parseSearchParams,
   toSearchParams,
+  needsEnquiry,
   validateSearch,
   type SearchValues,
 } from "../_lib/search";
@@ -110,6 +111,23 @@ export async function RoomDetail({
             {issue.code === "missing-dates"
               ? "Choose your dates and guests to see what this room costs and whether it is free."
               : issue.message}
+            {needsEnquiry(issue) ? (
+              <>
+                {" "}
+                <Link
+                  href={enquiryHref({
+                    checkIn: values.checkIn,
+                    checkOut: values.checkOut,
+                    adults: values.adults,
+                    children: values.children,
+                    room: room.slug,
+                  })}
+                  className="font-semibold text-accent hover:underline"
+                >
+                  Send us an enquiry
+                </Link>
+              </>
+            ) : null}
           </p>
           <SearchForm today={today} defaults={values} action={action} submitLabel="Show prices" />
           <p className="mt-4 text-small text-muted">

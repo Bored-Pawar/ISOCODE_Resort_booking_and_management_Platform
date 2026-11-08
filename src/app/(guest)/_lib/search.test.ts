@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { enquiryHref } from "./enquiry";
 import {
   formCount,
+  needsEnquiry,
   parseSearchParams,
   toSearchParams,
   validateSearch,
@@ -41,6 +42,19 @@ describe("validateSearch", () => {
     expect(
       validateSearch({ ...ok, checkIn: "2026-11-14", checkOut: "2026-11-29" }, today)?.code,
     ).toBe("too-long");
+  });
+
+  it("takes check-in up to 3 calendar months ahead; the stay may end later", () => {
+    expect(
+      validateSearch({ ...ok, checkIn: "2027-02-10", checkOut: "2027-02-14" }, today),
+    ).toBeNull();
+    const far = validateSearch({ ...ok, checkIn: "2027-02-11", checkOut: "2027-02-12" }, today);
+    expect(far?.code).toBe("too-far");
+    expect(far?.message).toBe(
+      "Online booking opens 3 months ahead. For later dates, send us an enquiry.",
+    );
+    expect(needsEnquiry(far)).toBe(true);
+    expect(needsEnquiry(validateSearch({ ...ok, checkIn: "2026-11-09" }, today))).toBe(false);
   });
 
   it("needs at least one adult and caps the party at 24 guests", () => {

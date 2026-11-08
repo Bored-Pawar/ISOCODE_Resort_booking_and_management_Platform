@@ -13,6 +13,11 @@ const tools = [
     title: "Inbound simulator",
     note: "Send email and WhatsApp enquiries through the real webhooks.",
   },
+  {
+    href: "/dev/outbox",
+    title: "Outbox",
+    note: "Confirmation emails for the last 20 confirmed bookings. Derived, never sent.",
+  },
 ];
 
 export default function DevIndex() {

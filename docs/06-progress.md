@@ -43,9 +43,10 @@ Coordination records, not enforcement. The scrum master assigns ownership in cha
 
 | Area | Paths | Owner | Since |
 |---|---|---|---|
-| Database schema, migrations and seed | `src/db/**` | Codex (S1; exclusive coordination lock, only B1–B5-required changes) | 2026-11-08 |
-| Booking and inventory core | `src/modules/{inventory,booking,payments}/**` | Codex (S1; B1–B5, not B7 gateway) | 2026-11-08 |
-| Pricing engine | `src/modules/pricing/**` | Codex (S1; B1 and transaction helper) | 2026-11-08 |
+| S2 booking flow (runbook `s2-booking-runbook.md`) | `src/modules/{booking,payments}/**`, `src/app/(guest)/**`, `src/app/api/payments/**`, `src/app/(staff)/admin/bookings/**`, `src/components/ui/hold-timer.tsx` | Claude Code, branch `claude/booking-flow` only. Read only: `src/db/**`, pricing, inventory. Codex keeps `src/modules/{enquiries,ai-router}/**` (R1 to R4) | 2026-11-08 17:45 IST |
+| Database schema, migrations and seed | `src/db/**` | Read only in S2 booking flow (no schema change). Was Codex S1 | 2026-11-08 |
+| Booking and inventory core | `src/modules/inventory/**` | Read only in S2 booking flow. Booking and payments: see the first row. Was Codex S1 | 2026-11-08 |
+| Pricing engine | `src/modules/pricing/**` | Read only in S2 booking flow. Was Codex S1 | 2026-11-08 |
 | Guest browsing and catalog | `src/app/(guest)/**`, `src/modules/catalog/**` and guest-screen-local components | Claude Code (S1; G1–G3) | 2026-11-08 |
 | Enquiry intake and dev area | `src/modules/enquiries/**`, `src/app/api/inbound/**`, `src/app/dev/**`, `src/app/(guest)/(site)/enquire/**`, `src/lib/auth/{password-field,sign-up-schema}*` | Claude Code (S1; Q1–Q3, dev area, password UX) | 2026-11-08 |
 
@@ -127,6 +128,10 @@ No outstanding image blocker: the `public/images/*` assets have been supplied. A
 ## Decisions log
 | Date | Decision |
 |---|---|
+| 2026-11-08 | S2 review M1 and M2 (scrum master): the double-hold guard moves into the `acquireHold` transaction. First statement is a per-guest `pg_advisory_xact_lock(hashtextextended('hold:' || guestId, 0))`; lock order is guest advisory lock, bookings rows, inventory `(room_type_id, date)`. Then one query for a live hold of the same guest and exact stay (dates, `quote_hash`, identical lines in `line_no` order): match returns it with no stock and no event (`01` Contract note 7). The `listForGuest` prechecks in `holdStay` and `refreshHold` are deleted; `listForGuest` is batched (at most 4 data queries) |
+| 2026-11-08 | B8 mock email: no outbox table, so the outbox is derived. `/booking/[ref]/email` renders the confirmation email for its owner; `/dev/outbox` (staff, `DEV_TOOLS_ENABLED`) lists the last 20 confirmed bookings with their rendered emails. Nothing is sent |
+| 2026-11-08 | Contract additions (S2 runbook): `booking.cancelHeld` (owner only) and `payments.MockProvider` plus the signed `/api/payments/mock` webhook (`PAYMENT_WEBHOOK_SECRET`, no new table). Additive staff read `booking.listForStaff` (reservations, gm). Failed and timed out payment attempts are not stored (no contract for it) |
+| 2026-11-08 | Three month online booking window (A10): check-in at most today IST + 3 calendar months, one constant in `src/lib/booking-window.ts`. Enforced in the guest search, `/rooms`, room detail, `/book/details` and rechecked in `acquireBookingHold` (`OUTSIDE_WINDOW`, guest action type only; `booking` service contract unchanged) |
 | 2026-11-08 | B10 approved: a booking is one order with 1 to 4 room lines (`booking_rooms`), one hold, one payment, one total. Supersedes the 2026-11-07 one-room-per-booking rule. Design: `s2-multiroom-change.md` |
 | 2026-11-08 | Occupancy rule: `1 <= adults <= max_adults` and `adults + children <= max_occupancy`; `max_children` stays in the schema, not enforced |
 | 2026-11-08 | S2 lock holder: Claude Code holds `src/db/**`, pricing, inventory, booking, payments, guest and catalog, on branch `claude/multiroom` only (overnight runbook); Codex idle |
@@ -232,3 +237,18 @@ Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
 | ID | Task | Status |
 |---|---|---|
 | SB | Stay builder, view-only room detail, header account menu, My bookings | done on `claude/stay-builder`, awaiting review |
+
+## Claude Code S2 booking flow (2026-11-08, branch `claude/booking-flow`)
+- Built per `s2-booking-runbook.md` (items 1 to 9); evidence, test counts, deviations and open items in `s2-booking-handoff.md`. Not merged.
+- Contract additions recorded in `01`: `booking.cancelHeld`, staff reads `listForStaff`, `getForStaff`, `listRefundPending`; `payments.MockProvider` and `/api/payments/mock` (`PAYMENT_WEBHOOK_SECRET`). Guest action type `AcquireBookingHoldResult` adds `OUTSIDE_WINDOW` (service contract unchanged).
+- Derived outbox and failed attempts not stored: see the decisions log.
+
+| ID | Task | Status |
+|---|---|---|
+| R07 | HoldTimer fires once per target; warning state and `onWarning` | done on `claude/booking-flow`, awaiting review |
+| B6 | Promo on `/rooms`, `/book/details` (inline sign up, hold, price changed, notices, double hold guard), `/book/pay/[ref]` (timer, pay gate, Refresh hold) | done on `claude/booking-flow`, awaiting review |
+| B7 | `MockProvider` (succeeds, declined, timeout), signed webhook to `confirmPayment`, retry with a new attempt | done on `claude/booking-flow`, awaiting review |
+| B8 | `/booking/[ref]` confirmation, `.ics`, mock email view and `/dev/outbox` | done on `claude/booking-flow`, awaiting review |
+| B9 | My bookings link to the booking; Resume payment and Cancel for a live hold | done on `claude/booking-flow`, awaiting review |
+| A5 | `/admin/bookings` list, filters, detail timeline, Refund pending (reservations, gm) | done on `claude/booking-flow`, awaiting review |
+| H1 | Playwright booking happy path (`pnpm test:e2e`, needs `E2E_BASE_URL`) | booking path done and passing locally; the staff draft approval path waits for Q6 |

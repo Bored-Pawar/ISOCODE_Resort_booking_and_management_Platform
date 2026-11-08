@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, DateRange, FieldNote, Stepper, type DateRangeValue } from "@/components/ui";
 import { addDays, isDateStr } from "@/lib/dates";
+import { enquiryHref } from "../_lib/enquiry";
 import {
   DEFAULT_GUESTS,
   formCount,
+  needsEnquiry,
   SEARCH_LIMITS,
   toSearchParams,
   validateSearch,
@@ -94,6 +97,14 @@ export function SearchForm({
       {formIssue ? (
         <div className="mt-4">
           <FieldNote error={formIssue.message} />
+          {needsEnquiry(formIssue) ? (
+            <Link
+              href={enquiryHref({ ...dates, adults, children })}
+              className="mt-1 inline-flex min-h-11 items-center text-small font-semibold text-accent hover:underline"
+            >
+              Send us an enquiry
+            </Link>
+          ) : null}
         </div>
       ) : null}
     </form>
