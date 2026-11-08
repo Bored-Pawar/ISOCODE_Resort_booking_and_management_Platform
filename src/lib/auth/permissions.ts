@@ -4,7 +4,6 @@
  * filter (`enquiryVisibility`). Hiding a nav item is never the check: every page loader, server
  * action and route handler calls `requirePermission` itself.
  */
-import { requireRole } from "./guards";
 import type { Role, SessionUser } from "./types";
 
 export type StaffRole = "reservations" | "sales" | "gm";
@@ -54,6 +53,8 @@ export function rolesFor(cap: Capability): StaffRole[] {
  * UNAUTHENTICATED without a session and FORBIDDEN when the role lacks the capability.
  */
 export async function requirePermission(cap: Capability): Promise<SessionUser> {
+  // Loaded on use, so services and tests can import `can` without the Auth.js config.
+  const { requireRole } = await import("./guards");
   return requireRole(...rolesFor(cap));
 }
 
