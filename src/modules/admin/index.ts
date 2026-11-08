@@ -11,7 +11,13 @@ import {
   readRates,
   setRates,
 } from "@/modules/pricing/admin";
-import { readAllotment, setAllotment } from "@/modules/inventory/admin";
+import {
+  bookingsInRange,
+  readAllotment,
+  setAllotment,
+  setOffline,
+  setOnline,
+} from "@/modules/inventory/admin";
 
 export * from "./rules";
 export * from "./schemas";
@@ -23,10 +29,13 @@ export type {
   SetRatesResult,
 } from "@/modules/pricing/admin";
 export type {
+  AffectedBooking,
   AllotmentGridRow,
   BlackoutRow,
   RejectedAllotment,
   SetAllotmentResult,
+  SetOfflineResult,
+  SetOnlineResult,
 } from "@/modules/inventory/admin";
 
 export const admin = {
@@ -37,4 +46,7 @@ export const admin = {
   deactivatePromo,
   setAllotment,
   readAllotment,
+  bookingsInRange,
+  setOffline,
+  setOnline,
 };

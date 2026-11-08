@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { SlidersHorizontal, X } from "lucide-react";
+import { CalendarOff, SlidersHorizontal, X } from "lucide-react";
 import { Button, Card, DataGrid, Input, Select, useToast, type GridRow } from "@/components/ui";
 import { addDays } from "@/lib/dates";
 import {
@@ -15,6 +15,7 @@ import {
 import type { AllotmentGridRow, BlackoutRow, RejectedAllotment } from "@/modules/admin";
 import { CheckGroup, dateColumns, DateStepper, DayPicker } from "../_components/grid-dates";
 import { setAllotmentAction } from "./actions";
+import { AvailabilityPanel } from "./availability-panel";
 
 const dayFmt = new Intl.DateTimeFormat("en-IN", {
   weekday: "short",
@@ -58,7 +59,7 @@ export function AllotmentBoard({
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
-  const [panel, setPanel] = useState<"none" | "bulk">("none");
+  const [panel, setPanel] = useState<"none" | "bulk" | "online">("none");
   /** Rejected cells keep their red state and reason until the next save or another 30 days. */
   const [rejected, setRejected] = useState<{ start: string; cells: Record<string, string> }>({
     start,
@@ -158,7 +159,21 @@ export function AllotmentBoard({
           ))}
         </Select>
         <DateStepper start={start} window={window} hrefFor={(s) => href({ start: s })} />
-        <div className="flex gap-2 sm:ml-auto">
+        <div className="flex flex-wrap gap-2 sm:ml-auto">
+          {canToggle ? (
+            <Button
+              variant="secondary"
+              onClick={() => setPanel((p) => (p === "online" ? "none" : "online"))}
+              aria-expanded={panel === "online"}
+            >
+              {panel === "online" ? (
+                <X className="size-[18px]" aria-hidden />
+              ) : (
+                <CalendarOff className="size-[18px]" aria-hidden />
+              )}
+              {panel === "online" ? "Close online dates" : "Online dates"}
+            </Button>
+          ) : null}
           <Button
             variant="secondary"
             onClick={() => setPanel((p) => (p === "bulk" ? "none" : "bulk"))}
@@ -207,6 +222,19 @@ export function AllotmentBoard({
                   : `Updated ${updated} ${updated === 1 ? "night" : "nights"}.`,
                 list.length ? "error" : "success",
               );
+              router.refresh();
+            }}
+          />
+        ) : null}
+        {panel === "online" && canToggle ? (
+          <AvailabilityPanel
+            rooms={rows.map((r) => ({ id: r.roomTypeId, name: r.name }))}
+            defaultRoom={room}
+            from={start}
+            to={addDays(start, 6)}
+            window={window}
+            onDone={(message) => {
+              toast(message, "success");
               router.refresh();
             }}
           />

@@ -14,12 +14,13 @@ DB guard: `TEST_DATABASE_URL` host differs from Codex's test host and from both 
 | 2.1 `permissions.ts` (table, `can`, `requirePermission`, `navFor`), A5 on `bookings.view` | done | 083b107 |
 | 2.3 R06 DataGrid: pure editor (`data-grid-editor.ts`), pending stable, errors caught, stale completions ignored | done | 791f230 |
 | 2.5 A1 `/admin/rates`: grid, cell edit, bulk panel with presets and preview, `pricing/admin.ts` `setRates` | done | bbe961c |
-| 2.6 A2 `/admin/allotment`: grid (allotment, sold · held), cell and bulk, `inventory/admin.ts` `setAllotment`, rejected cells red with reason; test 6 final | done | (this commit) |
+| 2.6 A2 `/admin/allotment`: grid (allotment, sold · held), cell and bulk, `inventory/admin.ts` `setAllotment`, rejected cells red with reason; test 6 final | done | 185864d |
+| 2.7 A3 online dates on `/admin/allotment`: offline with reason (merge), online (delete/trim/split), warning list first, hatched cells | done | (this commit) |
 
-Last finished: 2.6. Next: 2.7 A3 online/offline.
+Last finished: 2.7. Next: 2.2 staff shell by role.
 
 ## Gates (latest)
-After 2.5: typecheck, lint pass; unit 386/386 (47 files); integration `admin-rates` 8/8, `admin-allotment` 9/9 on test-claude (race test repeated 5x, stable).
+After 2.5: typecheck, lint pass; unit 386/386 (47 files); integration `admin-rates` 8/8, `admin-allotment` 9/9, `admin-availability` 6/6 on test-claude (race test repeated 5x, stable).
 
 ## Deviations
 1. `main` is checked out in another worktree, so the branch was cut from `origin/main` instead of `git switch main`.
@@ -29,4 +30,5 @@ After 2.5: typecheck, lint pass; unit 386/386 (47 files); integration `admin-rat
 5. 403 is a rendered screen, not an HTTP 403: the staff layout streams inside `<Suspense>`, so the status is already sent. Actions return `FORBIDDEN`.
 
 ## Open items
-None yet.
+1. A3 warning list reads `booking.listForStaff` (public contract): it looks back 60 days for stays that began before the range and at most 200 per status.
+2. A room type cannot be brought online inside an all-rooms blackout (`ALL_ROOMS_OFFLINE`, nothing changes); bring all rooms online for those dates first.

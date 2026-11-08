@@ -19,8 +19,13 @@ export { rejectionMessage } from "@/modules/admin/rules";
 import {
   fieldErrors,
   setAllotmentInputSchema,
+  setOfflineInputSchema,
+  setOnlineInputSchema,
   type SetAllotmentInput,
+  type SetOfflineInput,
+  type SetOnlineInput,
 } from "@/modules/admin/schemas";
+import { booking, type Booking } from "@/modules/booking";
 
 type AdminInvalid = Err<"INVALID_INPUT", { errors: Record<string, string> }>;
 type Forbidden = Err<"FORBIDDEN">;
@@ -220,4 +225,199 @@ async function readBlackouts(db: Db | Tx, from: string, to: string): Promise<Bla
     ORDER BY start_date, room_type_id NULLS FIRST
   `);
   return [...rows];
+}
+
+// ---- A3 online / offline -----------------------------------------------------------------------
+
+/** Longest stay assumed when looking back for bookings that started before a range. */
+const LOOKBACK_DAYS = 60;
+
+export type AffectedBooking = Pick<Booking, "id" | "ref" | "status" | "checkIn" | "checkOut"> & {
+  /** Lines of the chosen room type (all lines for all rooms). */
+  rooms: number;
+};
+
+/**
+ * Live bookings (HELD or CONFIRMED) with a night inside `from`..`to` for the room type (or any
+ * room type). They stand: going offline blocks only new holds. Read through the public booking
+ * staff read; stays checking in more than 60 days before `from` are not looked for (known limit).
+ */
+export async function bookingsInRange(
+  input: { roomTypeId: string | null; from: string; to: string },
+  actor: AdminActor,
+): Promise<Ok<{ bookings: AffectedBooking[] }> | AdminInvalid | Forbidden> {
+  if (!can(actor.role, "availability.toggle")) return { ok: false, code: "FORBIDDEN" };
+  const parsed = setOnlineInputSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, code: "INVALID_INPUT", errors: fieldErrors(parsed.error) };
+  const { roomTypeId, from, to } = parsed.data;
+  const lists = await Promise.all(
+    (["HELD", "CONFIRMED"] as const).map((status) =>
+      booking.listForStaff(
+        { status, checkInFrom: addDays(from, -LOOKBACK_DAYS), checkInTo: to, limit: 200 },
+        { userId: actor.userId, role: actor.role },
+      ),
+    ),
+  );
+  const found: AffectedBooking[] = [];
+  for (const list of lists) {
+    if (!list.ok) return { ok: false, code: "FORBIDDEN" };
+    for (const b of list.bookings) {
+      if (!(b.checkIn <= to && b.checkOut > from)) continue;
+      const lines = b.rooms.filter((r) => roomTypeId === null || r.roomTypeId === roomTypeId);
+      if (!lines.length) continue;
+      found.push({
+        id: b.id,
+        ref: b.ref,
+        status: b.status,
+        checkIn: b.checkIn,
+        checkOut: b.checkOut,
+        rooms: lines.length,
+      });
+    }
+  }
+  found.sort((a, b) => a.checkIn.localeCompare(b.checkIn) || a.ref.localeCompare(b.ref));
+  return { ok: true, bookings: found };
+}
+
+/** Locks the stock rows a blackout change covers, ordered like the hold path. */
+async function lockRange(tx: Tx, roomTypeId: string | null, from: string, to: string) {
+  const scope = roomTypeId ? sql`AND room_type_id = ${roomTypeId}::uuid` : sql``;
+  await tx.execute(sql`
+    SELECT room_type_id FROM inventory
+    WHERE date BETWEEN ${from}::date AND ${to}::date ${scope}
+    ORDER BY room_type_id, date FOR UPDATE
+  `);
+}
+
+const sameScope = (roomTypeId: string | null) =>
+  roomTypeId ? sql`room_type_id = ${roomTypeId}::uuid` : sql`room_type_id IS NULL`;
+
+const BLACKOUT_COLUMNS = sql`id, room_type_id AS "roomTypeId", start_date::text AS "startDate",
+  end_date::text AS "endDate", reason`;
+
+export type SetOfflineResult =
+  Ok<{ blackout: BlackoutRow; merged: number }> | AdminInvalid | Err<"NOT_FOUND"> | Forbidden;
+
+/**
+ * Takes a room type (or all rooms, `roomTypeId: null`) offline from `from` to `to` inclusive by
+ * writing a blackout with a reason. Blackouts of the same scope that overlap or touch the range
+ * are merged into one row (their reasons kept). Stock rows in the range are locked first in
+ * (room_type_id, date) order, so a hold already past its blackout check commits before this,
+ * and every later hold sees the blackout (BLACKOUT). Existing bookings stand.
+ */
+export async function setOffline(
+  input: SetOfflineInput,
+  actor: AdminActor,
+  opts: { db?: Db; now?: Date } = {},
+): Promise<SetOfflineResult> {
+  if (!can(actor.role, "availability.toggle")) return { ok: false, code: "FORBIDDEN" };
+  const parsed = setOfflineInputSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, code: "INVALID_INPUT", errors: fieldErrors(parsed.error) };
+  const { roomTypeId, from, to, reason } = parsed.data;
+  const outside = windowError(from, to, opts.now);
+  if (outside) return { ok: false, code: "INVALID_INPUT", errors: { form: outside } };
+  const db = opts.db ?? getDb();
+  return db.transaction(async (tx) => {
+    if (roomTypeId) {
+      const known = await tx.execute(sql`SELECT 1 FROM room_types WHERE id = ${roomTypeId}::uuid`);
+      if (!known.length) return { ok: false, code: "NOT_FOUND" } as const;
+    }
+    await lockRange(tx, roomTypeId, from, to);
+    const touching = await tx.execute<BlackoutRow>(sql`
+      SELECT ${BLACKOUT_COLUMNS} FROM blackout_dates
+      WHERE ${sameScope(roomTypeId)}
+        AND start_date <= ${addDays(to, 1)}::date AND end_date >= ${addDays(from, -1)}::date
+      ORDER BY start_date FOR UPDATE
+    `);
+    const start = [from, ...touching.map((b) => b.startDate)].sort()[0];
+    const end = [to, ...touching.map((b) => b.endDate)].sort().at(-1)!;
+    const reasons = [...new Set([...touching.map((b) => b.reason ?? ""), reason])].filter(Boolean);
+    if (touching.length)
+      await tx.execute(
+        sql`DELETE FROM blackout_dates WHERE id = ANY(${uuidArray(touching.map((b) => b.id))})`,
+      );
+    const [row] = await tx.execute<BlackoutRow>(sql`
+      INSERT INTO blackout_dates (room_type_id, start_date, end_date, reason, created_by)
+      VALUES (${roomTypeId}::uuid, ${start}::date, ${end}::date, ${reasons.join("; ").slice(0, 500)},
+        ${actor.userId}::uuid)
+      RETURNING ${BLACKOUT_COLUMNS}
+    `);
+    return { ok: true, blackout: row, merged: touching.length } as const;
+  });
+}
+
+export type SetOnlineResult =
+  | Ok<{ removed: number; trimmed: number; split: number }>
+  | AdminInvalid
+  | Err<"ALL_ROOMS_OFFLINE", { blackout: BlackoutRow }>
+  | Forbidden;
+
+/**
+ * Brings a room type (or all rooms) back online from `from` to `to` inclusive: blackouts of the
+ * same scope inside the range are deleted, ones over an edge are trimmed, and one covering the
+ * range on both sides is split in two. A room type inside an all-rooms blackout is refused with
+ * ALL_ROOMS_OFFLINE and nothing changes (bring all rooms online for those dates first).
+ */
+export async function setOnline(
+  input: SetOnlineInput,
+  actor: AdminActor,
+  opts: { db?: Db; now?: Date } = {},
+): Promise<SetOnlineResult> {
+  if (!can(actor.role, "availability.toggle")) return { ok: false, code: "FORBIDDEN" };
+  const parsed = setOnlineInputSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, code: "INVALID_INPUT", errors: fieldErrors(parsed.error) };
+  const { roomTypeId, from, to } = parsed.data;
+  const outside = windowError(from, to, opts.now);
+  if (outside) return { ok: false, code: "INVALID_INPUT", errors: { form: outside } };
+  const db = opts.db ?? getDb();
+  return db.transaction(async (tx) => {
+    await lockRange(tx, roomTypeId, from, to);
+    if (roomTypeId) {
+      const all = await tx.execute<BlackoutRow>(sql`
+        SELECT ${BLACKOUT_COLUMNS} FROM blackout_dates
+        WHERE room_type_id IS NULL AND start_date <= ${to}::date AND end_date >= ${from}::date
+        ORDER BY start_date LIMIT 1
+      `);
+      if (all.length) return { ok: false, code: "ALL_ROOMS_OFFLINE", blackout: all[0] } as const;
+    }
+    const overlapping = await tx.execute<BlackoutRow>(sql`
+      SELECT ${BLACKOUT_COLUMNS} FROM blackout_dates
+      WHERE ${sameScope(roomTypeId)} AND start_date <= ${to}::date AND end_date >= ${from}::date
+      ORDER BY start_date FOR UPDATE
+    `);
+    let removed = 0;
+    let trimmed = 0;
+    let split = 0;
+    for (const b of overlapping) {
+      const keepLeft = b.startDate < from;
+      const keepRight = b.endDate > to;
+      if (!keepLeft && !keepRight) {
+        await tx.execute(sql`DELETE FROM blackout_dates WHERE id = ${b.id}::uuid`);
+        removed += 1;
+        continue;
+      }
+      if (keepLeft)
+        await tx.execute(
+          sql`UPDATE blackout_dates SET end_date = ${addDays(from, -1)}::date WHERE id = ${b.id}::uuid`,
+        );
+      if (keepLeft && keepRight) {
+        await tx.execute(sql`
+          INSERT INTO blackout_dates (room_type_id, start_date, end_date, reason, created_by)
+          VALUES (${b.roomTypeId}::uuid, ${addDays(to, 1)}::date, ${b.endDate}::date, ${b.reason},
+            ${actor.userId}::uuid)
+        `);
+        split += 1;
+        continue;
+      }
+      if (keepRight)
+        await tx.execute(
+          sql`UPDATE blackout_dates SET start_date = ${addDays(to, 1)}::date WHERE id = ${b.id}::uuid`,
+        );
+      trimmed += 1;
+    }
+    return { ok: true, removed, trimmed, split } as const;
+  });
 }

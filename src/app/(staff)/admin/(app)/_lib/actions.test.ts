@@ -17,7 +17,12 @@ vi.mock("@/modules/admin", async (orig) => {
 import { auth } from "@/lib/auth/config";
 import type { Role } from "@/lib/auth";
 import { setRatesAction } from "../rates/actions";
-import { setAllotmentAction } from "../allotment/actions";
+import {
+  bookingsInRangeAction,
+  setAllotmentAction,
+  setOfflineAction,
+  setOnlineAction,
+} from "../allotment/actions";
 
 const R = "8b0f2c62-4d3b-4a63-9a8e-0b9c1d2e3f40";
 const session = (role: Role | null) =>
@@ -49,6 +54,19 @@ const ACTIONS: [string, () => Promise<{ ok: boolean; code?: string }>][] = [
         mode: "cells",
         cells: [{ roomTypeId: R, date: "2099-01-01", allotment: 2 }],
       }),
+  ],
+  [
+    "bookingsInRangeAction",
+    () => bookingsInRangeAction({ roomTypeId: R, from: "2099-01-01", to: "2099-01-02" }),
+  ],
+  [
+    "setOfflineAction",
+    () =>
+      setOfflineAction({ roomTypeId: null, from: "2099-01-01", to: "2099-01-02", reason: "Works" }),
+  ],
+  [
+    "setOnlineAction",
+    () => setOnlineAction({ roomTypeId: R, from: "2099-01-01", to: "2099-01-02" }),
   ],
 ];
 
