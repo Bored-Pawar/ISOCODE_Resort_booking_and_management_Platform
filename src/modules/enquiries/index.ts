@@ -15,6 +15,7 @@ import {
 
 export * from "./types";
 export { CONTACT_ERROR, isUsableContact, MIN_PHONE_DIGITS } from "./contact";
+export { GUEST_HINTS, EVENT_NEEDS, type GuestHint, type EventInput } from "./store";
 
 const DEFAULT_LIST_LIMIT = 200;
 

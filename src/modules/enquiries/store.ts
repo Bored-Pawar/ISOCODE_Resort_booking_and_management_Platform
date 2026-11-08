@@ -1,5 +1,5 @@
 import { desc, eq, sql } from "drizzle-orm";
-import { enquiries as enquiriesTable, users } from "@/db/schema";
+import { enquiries as enquiriesTable, eventDetails, users } from "@/db/schema";
 import { getDb } from "@/lib/db";
 import type { Enquiry, EnquiryCategory } from "./types";
 import { ingestInputSchema } from "./types";
@@ -11,6 +11,22 @@ export type IngestMeta = {
   source?: { provider: string; messageId: string };
   /** Recorded when the sender ticked the DPDP consent box. */
   consentVersion?: string;
+  /** Q2: the guest's "What is it about?" choice. A hint for staff, never the routing decision. */
+  guestHint?: GuestHint;
+  /** Q2 (absorbs Q9): structured event fields, saved to `event_details` with the enquiry. */
+  event?: EventInput;
+};
+
+export const GUEST_HINTS = ["stay", "wedding", "offsite", "other"] as const;
+export type GuestHint = (typeof GUEST_HINTS)[number];
+export const EVENT_NEEDS = ["rooms", "catering", "decor", "conference hall"] as const;
+export type EventInput = {
+  eventType: "wedding" | "offsite";
+  dateFrom: string | null;
+  dateTo: string | null;
+  guests: number | null;
+  budgetPaise: number | null;
+  needs: (typeof EVENT_NEEDS)[number][];
 };
 
 const MAX_ID_ATTEMPTS = 6;
@@ -33,12 +49,13 @@ export async function saveEnquiry(
     rawText: tidyText(parsed.rawText),
     aiStatus: "pending",
     extracted:
-      meta.source || meta.consentVersion
+      meta.source || meta.consentVersion || meta.guestHint
         ? {
             ...(meta.source ? { source: meta.source } : {}),
             ...(meta.consentVersion
               ? { consent: { version: meta.consentVersion, at: new Date().toISOString() } }
               : {}),
+            ...(meta.guestHint ? { guest_hint: meta.guestHint } : {}),
           }
         : null,
   };
@@ -65,7 +82,11 @@ export async function saveEnquiry(
         .values({ id: generateEnquiryId(), ...row })
         .onConflictDoNothing({ target: enquiriesTable.id })
         .returning({ id: enquiriesTable.id });
-      if (inserted) return { enquiryId: inserted.id, duplicate: false };
+      if (inserted) {
+        if (meta.event)
+          await tx.insert(eventDetails).values({ enquiryId: inserted.id, ...meta.event });
+        return { enquiryId: inserted.id, duplicate: false };
+      }
     }
     throw new Error("Could not allocate a unique enquiry id");
   });

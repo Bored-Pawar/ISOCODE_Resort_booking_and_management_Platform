@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -9,7 +9,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { submitEnquiryAction } from "../(site)/enquire/actions";
 import type { EnquiryPrefill } from "../_lib/enquiry";
 
-/** Short enquiry form. Plain client state only; validation lives on the server (Zod). */
+const ABOUT = [
+  { value: "stay", label: "Stay" },
+  { value: "wedding", label: "Wedding" },
+  { value: "offsite", label: "Offsite or event" },
+  { value: "other", label: "Something else" },
+] as const;
+const NEEDS = [
+  { value: "rooms", label: "Rooms" },
+  { value: "catering", label: "Catering" },
+  { value: "decor", label: "Decor" },
+  { value: "conference hall", label: "Conference hall" },
+] as const;
+
+/**
+ * One short enquiry form (Q2, absorbs Q9). "What is it about?" is optional; only Wedding and
+ * Offsite or event reveal the extra event fields. Plain client state; validation is on the server.
+ */
 export function EnquiryForm({
   today,
   defaults,
@@ -20,6 +36,8 @@ export function EnquiryForm({
   roomName?: string;
 }) {
   const [state, action, pending] = useActionState(submitEnquiryAction, undefined);
+  const [about, setAbout] = useState<string>(state?.values?.about ?? "");
+  const event = about === "wedding" || about === "offsite";
 
   if (state?.sent) {
     return (
@@ -97,45 +115,128 @@ export function EnquiryForm({
         error={errs?.message}
       />
 
-      <fieldset className="flex flex-col gap-4">
-        <legend className="text-small font-semibold">Dates and guests (optional)</legend>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input
-            name="checkIn"
-            type="date"
-            label="Check-in"
-            min={today}
-            defaultValue={val("checkIn", defaults.checkIn)}
-            error={errs?.checkIn}
-          />
-          <Input
-            name="checkOut"
-            type="date"
-            label="Check-out"
-            min={today}
-            defaultValue={val("checkOut", defaults.checkOut)}
-            error={errs?.checkOut}
-          />
-          <Input
-            name="adults"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            label="Adults"
-            defaultValue={val("adults", defaults.adults)}
-            error={errs?.adults}
-          />
-          <Input
-            name="children"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            label="Children"
-            defaultValue={val("children", defaults.children)}
-            error={errs?.children}
-          />
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-small font-semibold">What is it about? (optional)</legend>
+        <div className="flex flex-wrap gap-2">
+          {ABOUT.map((o) => (
+            <label
+              key={o.value}
+              className="flex h-11 cursor-pointer items-center gap-2 rounded-control border border-border px-3 text-small has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent"
+            >
+              <input
+                type="radio"
+                name="about"
+                value={o.value}
+                checked={about === o.value}
+                onChange={() => setAbout(o.value)}
+                className="size-4 accent-[var(--accent)]"
+              />
+              {o.label}
+            </label>
+          ))}
         </div>
       </fieldset>
+
+      {event ? (
+        <fieldset className="flex flex-col gap-4">
+          <legend className="text-small font-semibold">
+            About the {about === "wedding" ? "wedding" : "event"} (optional)
+          </legend>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              name="eventFrom"
+              type="date"
+              label="First day"
+              min={today}
+              defaultValue={val("eventFrom", undefined)}
+              error={errs?.eventFrom}
+            />
+            <Input
+              name="eventTo"
+              type="date"
+              label="Last day"
+              min={today}
+              defaultValue={val("eventTo", undefined)}
+              error={errs?.eventTo}
+            />
+            <Input
+              name="eventGuests"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              label="Guests"
+              defaultValue={val("eventGuests", undefined)}
+              error={errs?.eventGuests}
+            />
+            <Input
+              name="budget"
+              inputMode="numeric"
+              label="Budget (₹)"
+              help="An estimate is fine."
+              defaultValue={val("budget", undefined)}
+              error={errs?.budget}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="text-small font-semibold">What you need</span>
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+              {NEEDS.map((n) => (
+                <label key={n.value} className="flex min-h-11 items-center gap-2 text-small">
+                  <input
+                    type="checkbox"
+                    name="needs"
+                    value={n.value}
+                    defaultChecked={state?.needs?.includes(n.value)}
+                    className="size-5 accent-[var(--accent)]"
+                  />
+                  {n.label}
+                </label>
+              ))}
+            </div>
+            <FieldNote error={errs?.needs} />
+          </div>
+        </fieldset>
+      ) : (
+        <fieldset className="flex flex-col gap-4">
+          <legend className="text-small font-semibold">Dates and guests (optional)</legend>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              name="checkIn"
+              type="date"
+              label="Check-in"
+              min={today}
+              defaultValue={val("checkIn", defaults.checkIn)}
+              error={errs?.checkIn}
+            />
+            <Input
+              name="checkOut"
+              type="date"
+              label="Check-out"
+              min={today}
+              defaultValue={val("checkOut", defaults.checkOut)}
+              error={errs?.checkOut}
+            />
+            <Input
+              name="adults"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              label="Adults"
+              defaultValue={val("adults", defaults.adults)}
+              error={errs?.adults}
+            />
+            <Input
+              name="children"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              label="Children"
+              defaultValue={val("children", defaults.children)}
+              error={errs?.children}
+            />
+          </div>
+        </fieldset>
+      )}
 
       {/* Honeypot: hidden from people and assistive tech, bots fill it. */}
       <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">

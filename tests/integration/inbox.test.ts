@@ -481,3 +481,54 @@ describe("attention request (2.5, tests 2 and 5)", () => {
     );
   });
 });
+
+describe("unified enquiry form (2.6, test 7)", () => {
+  it("event fields create event_details and one pending enquiry with the guest hint", async () => {
+    const { enquiries } = await import("@/modules/enquiries");
+    const res = await enquiries.ingestFrom(
+      {
+        channel: "event_form",
+        senderName: "Form Guest",
+        senderContact: `form-${f.tag}@test.example`,
+        rawText: `Wedding for my sister ${f.tag}\n\nEvent dates: 2027-02-10 to 2027-02-12\nEvent guests: 250`,
+      },
+      {
+        consentVersion: "test",
+        guestHint: "wedding",
+        event: {
+          eventType: "wedding",
+          dateFrom: "2027-02-10",
+          dateTo: "2027-02-12",
+          guests: 250,
+          budgetPaise: 50_000_000,
+          needs: ["rooms", "catering"],
+        },
+      },
+    );
+    if (!res.ok) throw new Error(res.code);
+    f.ids.push(res.enquiryId);
+    const rows = await db.select().from(t.enquiries).where(eq(t.enquiries.id, res.enquiryId));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ channel: "event_form", aiStatus: "pending", lane: "unsorted" });
+    expect(rows[0].extracted).toMatchObject({
+      guest_hint: "wedding",
+      consent: { version: "test" },
+    });
+    const [ev] = await db
+      .select()
+      .from(t.eventDetails)
+      .where(eq(t.eventDetails.enquiryId, res.enquiryId));
+    expect(ev).toMatchObject({
+      eventType: "wedding",
+      dateFrom: "2027-02-10",
+      dateTo: "2027-02-12",
+      guests: 250,
+      budgetPaise: 50_000_000,
+      needs: ["rooms", "catering"],
+    });
+    // The GM sees the event details and the hint in the detail.
+    const d = await inbox.detail(res.enquiryId, f.actor("gm"));
+    expect(d.ok && d.detail.event?.guests).toBe(250);
+    expect(d.ok && d.detail.extracted.guest_hint).toBe("wedding");
+  });
+});

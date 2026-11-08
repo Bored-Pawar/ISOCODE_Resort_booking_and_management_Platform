@@ -17,16 +17,19 @@ Runbook: `docs/s2-inbox-runbook.md`. Branch `claude/inbox` in `../resort-inbox`,
 | 2.3 Q6 draft and send | done | feat(inbox): Q6 draft editor, approve and send to the mock outbox |
 | 2.4 Q7 GM bell | done | feat(inbox): Q7 GM bell with unread count and mark read |
 | 2.5 Sales attention request | done | feat(inbox): sales attention request and mark seen |
-| 2.6 Q2 unified enquiry form | next | |
-| Gates, integration, review, screenshots | todo | |
+| 2.6 Q2 unified enquiry form | done | feat(enquire): one form with optional event fields (Q2 absorbs Q9) |
+| Gates, integration, review, screenshots | next | |
 
-Last done: 2.5. `staff/attention.ts`: request (`attention.request`, own lanes, never a complaint, not
-while open) and resolve (`attention.resolve`, while open). Reservations can open (read only) a non-complaint
-enquiry once sales asked; working it still needs own lanes. Panel on the detail; notes in the timeline.
-Next: 2.6 unified `/enquire` form (Codex lock lifted to this branch by the runbook).
+Last done: 2.6. `/enquire` "What is it about?" (Stay, Wedding, Offsite or event, Something else); only
+Wedding/Offsite reveal event dates, guests, budget (whole rupees, positive) and needs. Event fields ->
+`event_details` in the ingest transaction and plain lines in `raw_text`; the choice -> `extracted.guest_hint`
+only (never in the text, so it cannot steer the AI). Channel `event_form` when event fields are filled (2.7,
+no migration). Prefill params unchanged.
+Next: gates, full integration, Playwright H1 staff path, Chrome checks and screenshots, docs (06, tdd-notes,
+04), review subagent, compare URL.
 
 ## Gates (last run)
-typecheck, lint, format ok; unit (staff, modules) 336/336. Integration `inbox.test.ts` 13/13 on test-claude
+typecheck, lint, format ok; unit (staff, modules) 336/336. Integration `inbox.test.ts` 14/14 on test-claude
 (no other run active: checked node processes; only the resort-claude `next dev`).
 
 ## Open items / blockers

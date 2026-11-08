@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { enquiryHref, enquiryHrefFromQuery, parseEnquiryParams } from "./enquiry";
-import { buildEnquirySchema, composeRawText } from "./enquiry-schema";
+import { buildEnquirySchema, composeRawText, eventInput } from "./enquiry-schema";
 
 const TODAY = "2026-11-08";
 const valid = {
@@ -140,5 +140,69 @@ describe("composeRawText", () => {
     const r = parse({ message: "Only the message here" });
     if (!r.success) throw new Error("expected valid");
     expect(composeRawText(r.data)).toBe("Only the message here");
+  });
+});
+
+describe("unified form: optional event fields (Q2 + Q9)", () => {
+  const ok = (o: Record<string, unknown>) => {
+    const r = buildEnquirySchema(TODAY).safeParse({ ...valid, ...o });
+    if (!r.success) throw new Error(JSON.stringify(r.error.issues));
+    return r.data;
+  };
+  it("the choice and every event field are optional", () => {
+    expect(ok({}).about).toBeUndefined();
+    expect(ok({ about: "wedding" }).needs).toEqual([]);
+    expect(eventInput(ok({ about: "wedding" }))).toBeNull();
+  });
+  it("budget must be positive whole rupees; commas and the rupee sign are fine", () => {
+    expect(ok({ about: "wedding", budget: "₹5,00,000" }).budget).toBe(500000);
+    expect(firstError({ about: "wedding", budget: "0" })?.message).toBe(
+      "Budget must be more than zero",
+    );
+    expect(firstError({ about: "wedding", budget: "-5" })?.path).toBe("budget");
+    expect(firstError({ about: "wedding", budget: "12.5" })?.path).toBe("budget");
+  });
+  it("event dates: not in the past, last day on or after the first, guests at least 1", () => {
+    expect(firstError({ about: "offsite", eventFrom: "2026-11-01" })?.path).toBe("eventFrom");
+    expect(
+      firstError({ about: "offsite", eventFrom: "2027-01-10", eventTo: "2027-01-09" })?.path,
+    ).toBe("eventTo");
+    expect(firstError({ about: "offsite", eventTo: "2027-01-09" })?.path).toBe("eventFrom");
+    expect(firstError({ about: "offsite", eventGuests: "0" })?.path).toBe("eventGuests");
+    expect(firstError({ about: "party" })?.path).toBe("about");
+    expect(buildEnquirySchema(TODAY).safeParse({ ...valid, needs: ["rooms", "spa"] }).success).toBe(
+      false,
+    );
+  });
+  it("event fields become event_details and plain lines; the choice is never in the text", () => {
+    const form = ok({
+      about: "wedding",
+      eventFrom: "2027-02-10",
+      eventTo: "2027-02-12",
+      eventGuests: "250",
+      budget: "500000",
+      needs: ["rooms", "catering"],
+    });
+    expect(eventInput(form)).toEqual({
+      eventType: "wedding",
+      dateFrom: "2027-02-10",
+      dateTo: "2027-02-12",
+      guests: 250,
+      budgetPaise: 50_000_000,
+      needs: ["rooms", "catering"],
+    });
+    const text = composeRawText(form);
+    expect(text).toBe(
+      "Venue for a wedding in February\n\nEvent dates: 2027-02-10 to 2027-02-12\nEvent guests: 250\nBudget: ₹5,00,000\nNeeds: rooms, catering",
+    );
+    expect(text).not.toMatch(/about|hint/i);
+  });
+  it("a stay or something else never stores event fields", () => {
+    expect(eventInput(ok({ about: "stay", eventGuests: "40", budget: "1000" }))).toBeNull();
+    expect(composeRawText(ok({ about: "other", eventGuests: "40" }))).toBe(valid.message);
+    expect(eventInput(ok({ about: "offsite", eventFrom: "2027-01-10" }))).toMatchObject({
+      dateFrom: "2027-01-10",
+      dateTo: "2027-01-10",
+    });
   });
 });
