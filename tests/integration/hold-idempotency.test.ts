@@ -5,8 +5,23 @@ import * as dbModule from "@/lib/db";
 import * as t from "@/db/schema";
 import { booking } from "@/modules/booking";
 import { pricing, type QuoteInput } from "@/modules/pricing";
+import { requireRole } from "@/lib/auth";
+import { refreshHold } from "@/app/(guest)/(site)/book/pay/actions";
 import { connect, ensureMigrated, testUrl } from "./helpers";
 import { bookingsOfType, coreFixture, reconcileTypes, testSlabs } from "./core-fixture";
+
+// The real refresh action, with the session and redirect stubbed. The 2099 test dates sit outside
+// the guest channel's 3 month window, so that rule is stubbed open here.
+vi.mock("@/lib/auth", () => ({ requireRole: vi.fn() }));
+vi.mock("@/lib/booking-window", () => ({
+  withinBookingWindow: () => true,
+  BOOKING_WINDOW_MESSAGE: "",
+}));
+vi.mock("next/navigation", () => ({
+  redirect: (href: string) => {
+    throw new Error(`REDIRECT ${href}`);
+  },
+}));
 
 const sql = connect();
 const { db, client } = dbModule.createDb(testUrl(), { max: 12 });
@@ -134,6 +149,47 @@ describe("acquireHold is idempotent per guest and exact stay", () => {
       .from(t.bookings)
       .where(eq(t.bookings.id, first.booking.id));
     expect(old.s).toBe("EXPIRED");
+    expect(await held()).toEqual([1, 1]);
+  });
+
+  it("e: two parallel refreshHold on one booking cancel it once and leave one replacement", async () => {
+    const quoteHash = await hashOf(f.stay);
+    const first = await booking.acquireHold({ stay: f.stay, quoteHash, guestId: f.guest.id });
+    if (!first.ok) throw new Error(first.code);
+    // In the last 2 minutes, so Refresh hold is allowed.
+    await db
+      .update(t.bookings)
+      .set({ holdExpiresAt: new Date(Date.now() + 60_000) })
+      .where(eq(t.bookings.id, first.booking.id));
+    vi.mocked(requireRole).mockResolvedValue({
+      id: f.guest.id,
+      role: "guest",
+      email: f.guest.email,
+      name: "Test",
+    });
+    const form = () => {
+      const fd = new FormData();
+      fd.set("ref", first.booking.ref);
+      return fd;
+    };
+    const outcomes = await Promise.allSettled([
+      refreshHold(undefined, form()),
+      refreshHold(undefined, form()),
+    ]);
+    const targets = outcomes.map((o) =>
+      o.status === "rejected" ? String(o.reason) : JSON.stringify(o.value),
+    );
+    expect(targets.every((x) => /REDIRECT \/book\/pay\/CA-/.test(x))).toBe(true);
+    expect(new Set(targets).size).toBe(1);
+
+    const all = await bookingsOfType(db, f.room.id);
+    expect(all.find((b) => b.id === first.booking.id)?.status).toBe("CANCELLED");
+    expect(all.filter((b) => b.status === "HELD")).toHaveLength(1);
+    const cancels = await db
+      .select()
+      .from(t.bookingEvents)
+      .where(eq(t.bookingEvents.bookingId, first.booking.id));
+    expect(cancels.filter((e) => e.toStatus === "CANCELLED")).toHaveLength(1);
     expect(await held()).toEqual([1, 1]);
   });
 });

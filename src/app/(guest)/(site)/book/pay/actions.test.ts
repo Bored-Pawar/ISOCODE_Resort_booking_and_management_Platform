@@ -145,7 +145,7 @@ describe("checkPayment and refreshHold", () => {
   it("refresh cancels first, then holds the same cart again at the price seen", async () => {
     const b = heldFor(60_000);
     vi.spyOn(booking, "get").mockResolvedValue({ ok: true, booking: b });
-    vi.spyOn(booking, "listForGuest").mockResolvedValue({ ok: true, bookings: [b] });
+    vi.spyOn(booking, "listForGuest");
     const order: string[] = [];
     vi.spyOn(booking, "cancelHeld").mockImplementation(async () => {
       order.push("cancel");
@@ -167,12 +167,12 @@ describe("checkPayment and refreshHold", () => {
       quoteHash: b.quoteHash,
       stay: { checkIn: b.checkIn, checkOut: b.checkOut },
     });
+    expect(booking.listForGuest).not.toHaveBeenCalled();
   });
 
   it("refresh that loses the last unit goes back to /rooms with the notice", async () => {
     const b = heldFor(60_000);
     vi.spyOn(booking, "get").mockResolvedValue({ ok: true, booking: b });
-    vi.spyOn(booking, "listForGuest").mockResolvedValue({ ok: true, bookings: [] });
     vi.spyOn(booking, "cancelHeld").mockResolvedValue({
       ok: true,
       booking: { ...b, status: "CANCELLED" },
@@ -193,14 +193,21 @@ describe("checkPayment and refreshHold", () => {
     expect(acquireBookingHold).not.toHaveBeenCalled();
   });
 
-  it("a second refresh (other tab, or an old ref) reuses the fresh hold instead of holding again", async () => {
+  it("a second refresh (other tab, or an old ref) goes through acquireHold, which reuses the replacement", async () => {
     const old = { ...heldFor(0), status: "CANCELLED" as const, holdExpiresAt: null };
-    const fresh = { ...heldFor(600_000), id: randomUUID(), ref: "CA-FRESH" };
     vi.spyOn(booking, "get").mockResolvedValue({ ok: true, booking: old });
-    vi.spyOn(booking, "listForGuest").mockResolvedValue({ ok: true, bookings: [old, fresh] });
+    const cancel = vi.spyOn(booking, "cancelHeld");
+    vi.spyOn(booking, "listForGuest");
+    // acquireHold is idempotent per guest and exact stay: it returns the first refresh's hold.
+    vi.mocked(acquireBookingHold).mockResolvedValue({
+      ok: true,
+      booking: { ...heldFor(600_000), ref: "CA-FRESH" },
+    });
     await expect(refreshHold(undefined, form({ ref: "CA-ABCDE" }))).rejects.toThrow(
       "REDIRECT /book/pay/CA-FRESH",
     );
-    expect(acquireBookingHold).not.toHaveBeenCalled();
+    expect(cancel).not.toHaveBeenCalled();
+    expect(acquireBookingHold).toHaveBeenCalledTimes(1);
+    expect(booking.listForGuest).not.toHaveBeenCalled();
   });
 });

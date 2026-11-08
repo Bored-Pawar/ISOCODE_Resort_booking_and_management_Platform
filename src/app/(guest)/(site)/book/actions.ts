@@ -5,10 +5,9 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth";
 import { updateGuestPhone } from "@/lib/auth/profile";
 import { phoneField } from "@/lib/auth/sign-up-schema";
-import { booking } from "@/modules/booking";
 import { acquireBookingHold } from "@/modules/booking/actions";
 import { parseCartParams } from "../../_lib/cart";
-import { holdStep, reusableHold, type HoldStep } from "../../_lib/hold-flow";
+import { holdStep, type HoldStep } from "../../_lib/hold-flow";
 
 export type HoldFormState = { step?: HoldStep; phoneError?: string } | undefined;
 
@@ -37,9 +36,9 @@ function readQuery(query: string) {
 
 /**
  * B6 step 2 submit: "Hold my rooms". Zod first, then the guest session (the guest id never comes
- * from the browser). A live hold for exactly this priced stay is reused (back button, double
- * submit); otherwise acquireBookingHold rechecks the 3 month window and takes the hold. Held goes
- * to the pay page; stock and price problems go back to /rooms with the cart.
+ * from the browser). acquireBookingHold rechecks the 3 month window; acquireHold reuses a live
+ * hold for this guest and exact stay inside its transaction (back button, double submit, two
+ * tabs). Held goes to the pay page; stock and price problems go back to /rooms with the cart.
  */
 export async function holdStay(_: HoldFormState, formData: FormData): Promise<HoldFormState> {
   const parsed = holdFormSchema.safeParse({
@@ -57,16 +56,6 @@ export async function holdStay(_: HoldFormState, formData: FormData): Promise<Ho
     const phone = phoneField.safeParse(parsed.data.phone);
     if (!phone.success) return { phoneError: phone.error.issues[0]?.message };
     await updateGuestPhone(guest.id, phone.data ?? null);
-  }
-
-  const listed = await booking.listForGuest({ guestId: guest.id, limit: 50 });
-  if (listed.ok) {
-    const again = reusableHold(
-      listed.bookings,
-      { checkIn: cart.checkIn, checkOut: cart.checkOut, quoteHash },
-      Date.now(),
-    );
-    if (again) redirect(`/book/pay/${encodeURIComponent(again.ref)}`);
   }
 
   const result = await acquireBookingHold({

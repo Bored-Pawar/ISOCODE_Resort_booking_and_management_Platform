@@ -2,7 +2,6 @@
  * B6 step 2: what happens after "Hold my rooms". Pure (types only from modules) so the server
  * action, the pages and the tests share one mapping from a hold result to the next screen.
  */
-import type { Booking } from "@/modules/booking";
 import type { AcquireBookingHoldResult } from "@/modules/booking/actions";
 import { stayHref, type CartLine, type CartStay } from "./cart";
 
@@ -120,28 +119,4 @@ export function holdStep(
     case "INVALID_INPUT":
       return { kind: "error" };
   }
-}
-
-// ---- double hold guard -------------------------------------------------------
-
-/**
- * A hold this guest already has for exactly this priced stay (same quoteHash and dates) that has
- * not expired: the back button or a double submit goes to its pay page instead of a second hold.
- */
-export function reusableHold(
-  bookings: Booking[],
-  stay: { checkIn: string; checkOut: string; quoteHash: string },
-  now: number,
-): Booking | null {
-  return (
-    bookings.find(
-      (b) =>
-        b.status === "HELD" &&
-        b.quoteHash === stay.quoteHash &&
-        b.checkIn === stay.checkIn &&
-        b.checkOut === stay.checkOut &&
-        b.holdExpiresAt !== null &&
-        Date.parse(b.holdExpiresAt) > now,
-    ) ?? null
-  );
 }

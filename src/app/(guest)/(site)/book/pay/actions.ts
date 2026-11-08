@@ -7,7 +7,7 @@ import { booking, type Booking } from "@/modules/booking";
 import { acquireBookingHold } from "@/modules/booking/actions";
 import { MockProvider, TEST_OUTCOMES } from "@/modules/payments";
 import { detailsHref } from "../../../_lib/cart";
-import { holdStep, reusableHold } from "../../../_lib/hold-flow";
+import { holdStep } from "../../../_lib/hold-flow";
 import { cartFromBooking, payGate, type PayStep } from "../../../_lib/pay-flow";
 
 export type PayFormState = { step?: PayStep } | undefined;
@@ -104,17 +104,8 @@ export async function refreshHold(_: RefreshState, formData: FormData): Promise<
     if (!cancelled.ok && cancelled.code === "NOT_HELD" && cancelled.status === "CONFIRMED")
       redirect(confirmationHref(b.ref));
   }
-  // Double hold guard (as holdStay): another tab, or a replay of an old ref, may already have
-  // taken the fresh hold for this priced stay. Reuse it instead of holding the stock twice.
-  const listed = await booking.listForGuest({ guestId: guest.id, limit: 50 });
-  if (listed.ok) {
-    const again = reusableHold(
-      listed.bookings.filter((x) => x.id !== b.id),
-      { checkIn: b.checkIn, checkOut: b.checkOut, quoteHash: b.quoteHash },
-      Date.now(),
-    );
-    if (again) redirect(`/book/pay/${encodeURIComponent(again.ref)}`);
-  }
+  // A concurrent second refresh reuses the first one's replacement: acquireHold is
+  // idempotent per guest and exact stay (01 Contract note 7).
   const held = await acquireBookingHold({
     stay: {
       checkIn: stay.checkIn,

@@ -36,7 +36,7 @@ afterEach(() => {
 describe("holdStay", () => {
   it("holds with the session guest and the URL quoteHash, then goes to pay", async () => {
     vi.mocked(requireRole).mockResolvedValue(guest);
-    vi.spyOn(booking, "listForGuest").mockResolvedValue({ ok: true, bookings: [] });
+    vi.spyOn(booking, "listForGuest");
     vi.mocked(acquireBookingHold).mockResolvedValue({ ok: true, booking: bookingFixture });
     await expect(holdStay(undefined, form({ query, guestId: "forged" }))).rejects.toThrow(
       `REDIRECT /book/pay/${bookingFixture.ref}`,
@@ -51,30 +51,28 @@ describe("holdStay", () => {
       },
       quoteHash: "h1",
     });
-    expect(booking.listForGuest).toHaveBeenCalledWith({ guestId: "guest-1", limit: 50 });
+    // No precheck outside the transaction: reuse lives inside acquireHold (01 Contract note 7).
+    expect(booking.listForGuest).not.toHaveBeenCalled();
   });
 
-  it("reuses a live hold for the same priced stay instead of holding again", async () => {
+  it("a double submit goes through acquireHold both times and lands on the same hold", async () => {
     vi.mocked(requireRole).mockResolvedValue(guest);
-    const live = {
-      ...bookingFixture,
-      ref: "CA-AGAIN",
-      status: "HELD" as const,
-      checkIn: "2099-11-14",
-      checkOut: "2099-11-16",
-      quoteHash: "h1",
-      holdExpiresAt: new Date(Date.now() + 60_000).toISOString(),
-    };
-    vi.spyOn(booking, "listForGuest").mockResolvedValue({ ok: true, bookings: [live] });
-    await expect(holdStay(undefined, form({ query }))).rejects.toThrow(
-      "REDIRECT /book/pay/CA-AGAIN",
+    vi.spyOn(booking, "listForGuest");
+    // acquireHold returns the same live booking for the same guest and exact stay.
+    vi.mocked(acquireBookingHold).mockResolvedValue({ ok: true, booking: bookingFixture });
+    const both = await Promise.allSettled([
+      holdStay(undefined, form({ query })),
+      holdStay(undefined, form({ query })),
+    ]);
+    expect(both.map((r) => (r.status === "rejected" ? String(r.reason) : "no redirect"))).toEqual(
+      Array(2).fill(`Error: REDIRECT /book/pay/${bookingFixture.ref}`),
     );
-    expect(acquireBookingHold).not.toHaveBeenCalled();
+    expect(acquireBookingHold).toHaveBeenCalledTimes(2);
+    expect(booking.listForGuest).not.toHaveBeenCalled();
   });
 
   it("sends sold out back to /rooms with the cart and a notice", async () => {
     vi.mocked(requireRole).mockResolvedValue(guest);
-    vi.spyOn(booking, "listForGuest").mockResolvedValue({ ok: true, bookings: [] });
     vi.mocked(acquireBookingHold).mockResolvedValue({
       ok: false,
       code: "SOLD_OUT",
@@ -106,7 +104,6 @@ describe("holdStay", () => {
     expect(bad).toEqual({ phoneError: "Enter a valid phone number" });
     expect(acquireBookingHold).not.toHaveBeenCalled();
 
-    vi.spyOn(booking, "listForGuest").mockResolvedValue({ ok: true, bookings: [] });
     vi.mocked(acquireBookingHold).mockResolvedValue({ ok: false, code: "INVALID_INPUT" });
     await holdStay(undefined, form({ query, phone: "98450 12345", phoneBefore: "98450 12345" }));
     expect(updateGuestPhone).not.toHaveBeenCalled();

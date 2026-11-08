@@ -1,14 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { bookingFixture } from "@/modules/booking/fixtures";
 import { quoteFixture } from "@/modules/pricing";
-import {
-  encodeNotice,
-  holdStep,
-  noticeMessage,
-  parseNotice,
-  reusableHold,
-  type RoomsNotice,
-} from "./hold-flow";
+import { encodeNotice, holdStep, noticeMessage, parseNotice, type RoomsNotice } from "./hold-flow";
 
 const stay = { checkIn: "2026-12-01", checkOut: "2026-12-03", adults: 2, children: 0 };
 const lines = [{ roomTypeId: "rt-a", ratePlanId: "rp-a", adults: 2, children: 0 }];
@@ -77,31 +70,5 @@ describe("holdStep", () => {
     expect(holdStep({ ok: false, code: "INVALID_INPUT" }, stay, lines)).toEqual({
       kind: "error",
     });
-  });
-});
-
-describe("reusableHold", () => {
-  const now = Date.parse("2026-11-08T12:00:00Z");
-  const held = {
-    ...bookingFixture,
-    status: "HELD" as const,
-    checkIn: stay.checkIn,
-    checkOut: stay.checkOut,
-    quoteHash: "h1",
-    holdExpiresAt: "2026-11-08T12:05:00Z",
-  };
-  const want = { checkIn: stay.checkIn, checkOut: stay.checkOut, quoteHash: "h1" };
-  it("finds an unexpired hold for the same priced stay", () => {
-    expect(reusableHold([held], want, now)?.id).toBe(held.id);
-  });
-  it("ignores expired, other hashes, other dates and other states", () => {
-    expect(reusableHold([{ ...held, holdExpiresAt: "2026-11-08T12:00:00Z" }], want, now)).toBe(
-      null,
-    );
-    expect(reusableHold([{ ...held, quoteHash: "h2" }], want, now)).toBeNull();
-    expect(reusableHold([{ ...held, checkOut: "2026-12-04" }], want, now)).toBeNull();
-    expect(reusableHold([{ ...held, status: "CONFIRMED", holdExpiresAt: null }], want, now)).toBe(
-      null,
-    );
   });
 });
