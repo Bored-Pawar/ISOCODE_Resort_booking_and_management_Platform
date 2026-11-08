@@ -1,19 +1,17 @@
 import { isDateStr, todayIST } from "@/lib/dates";
 import { classificationSchema, type Classification } from "./schema";
+import { hasComplaint } from "./complaints";
 /** Conservative local rules: no network, no invented event prices or high confidence. */
 export function rulesClassify(text: string, receivedAt: Date): Classification {
-  const category: Classification["category"] =
-    /complaint|complain|refund|charged twice|disappoint|not clean|rude|terrible|unacceptable|not working|kharab|waapas|machhar/i.test(
-      text,
-    )
-      ? "complaint"
-      : /wedding|shaadi|reception|engagement/i.test(text)
-        ? "wedding"
-        : /offsite|conference|corporate|team (?:outing|retreat)|employees|meeting room/i.test(text)
-          ? "offsite"
-          : /\b(rooms?|villas?|suites?|stays?|book(?:ing)?|breakfast)\b/i.test(text)
-            ? "room"
-            : "other";
+  const category: Classification["category"] = hasComplaint(text)
+    ? "complaint"
+    : /wedding|shaadi|reception|engagement/i.test(text)
+      ? "wedding"
+      : /offsite|conference|corporate|team (?:outing|retreat)|employees|meeting room/i.test(text)
+        ? "offsite"
+        : /\b(rooms?|villas?|suites?|stays?|book(?:ing)?|breakfast)\b/i.test(text)
+          ? "room"
+          : "other";
   const dates: Classification["dates"] = {};
   const iso = text.match(/\b\d{4}-\d{2}-\d{2}\b/g);
   if (iso?.length === 2 && iso.every(isDateStr) && iso[1] > iso[0]) {

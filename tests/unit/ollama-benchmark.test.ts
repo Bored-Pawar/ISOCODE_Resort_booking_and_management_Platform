@@ -169,12 +169,12 @@ describe("isolated production-adapter fault checks (mocked HTTP)", () => {
     expect(c.category).toBe("wedding");
     expect(route(c, "fallback").lane).toBe("unsorted");
   });
-  it("documents Hindi-only complaint falling outside fallback keywords", () => {
+  it("Hindi-only complaints reach the complaint fallback and alert GM", () => {
     const c = rulesClassify(
       "शिकायत है: कमरा गंदा था और पैसे दो बार लिए।",
       new Date("2026-11-08T06:30:00Z"),
     );
-    expect(c.category).toBe("other");
-    expect(route(c, "fallback").notifyGm).toBe(false);
+    expect(c.category).toBe("complaint");
+    expect(route(c, "fallback").notifyGm).toBe(true);
   });
 });

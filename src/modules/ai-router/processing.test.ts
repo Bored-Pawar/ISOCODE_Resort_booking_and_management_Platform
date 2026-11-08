@@ -43,3 +43,27 @@ it("unsupported model extraction preserves classification/routing, persists evid
   });
   expect(vi.mocked(settleEnquiry).mock.calls[0][1].draft.body).toContain("confirm your dates");
 });
+it("a high-confidence room label still persists a GM complaint alert without changing owner", async () => {
+  const classification = classificationFixtures["ENQ-4411"].classification;
+  vi.mocked(claimEnquiry).mockResolvedValue({
+    kind: "claimed",
+    claim: { row: { rawText: "Room ganda tha. Need another room." } },
+  } as never);
+  vi.mocked(classifyMessage).mockResolvedValue({
+    classification,
+    status: "ok",
+    draftText: null,
+    response: { kind: "success", provider: "mock", model: "test", latencyMs: 1 },
+  } as never);
+  vi.mocked(settleEnquiry).mockResolvedValue({ lane: "sorted", ownerId: "reservations" } as never);
+  expect(await processEnquiry({ enquiryId: "ENQ-MIXED" })).toMatchObject({
+    ok: true,
+    ownerRole: "reservations",
+    notifyGm: true,
+  });
+  expect(vi.mocked(settleEnquiry).mock.calls[0][1]).toMatchObject({
+    ownerRole: "reservations",
+    category: "room",
+    notifyGm: true,
+  });
+});

@@ -34,6 +34,7 @@ export async function classifyMessage(input: {
       classification,
       draftText: value.draftText ? redactPii(value.draftText, input) : null,
       status: "ok" as const,
+      complaintSignal: value.isComplaint === true,
       response,
       text,
     };

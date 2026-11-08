@@ -7,7 +7,7 @@
 4. **Route** (deterministic code, not the model):
    1. category maps to owner role (room: reservations; wedding, offsite: sales; complaint: gm)
    2. confidence < 0.70 or `ai_status` in ('fallback','failed'): `lane='unsorted'`
-   3. complaint: always create a GM notification, whatever the confidence
+   3. complaint: model category, supported `isComplaint` flag OR original-text English/Hinglish/Devanagari complaint detector always creates a GM notification, whatever the confidence. Mixed intents retain their category-selected owner; an alert does not change assignment.
 5. **Draft**: the same response includes `draftText` with `{{QUOTE}}`. Currency, unlabelled numbers, discounts, action/availability promises and links fail the independent prose guard; a safe template replaces unsafe/absent prose without downgrading successful classification. Public catalog, inventory and B10 `pricing.quote({ rooms: [...] })` provide the lowest available matching base-plan estimate, including villa preferences and carts up to four lines. No eligible stock/rate or missing details means clarification without a price. Estimates explicitly take no hold.
 6. **Human in the loop**: staff edit and approve. Nothing is sent automatically. Re route is one click and logged in `enquiry_events`.
 

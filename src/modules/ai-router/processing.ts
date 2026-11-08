@@ -39,7 +39,12 @@ export async function processEnquiry(input: ProcessInput): Promise<ProcessResult
       };
     }
     const outcome = await classifyMessage(claimed.claim.row);
-    const routing = route(outcome.classification, outcome.status);
+    const routing = route(
+      outcome.classification,
+      outcome.status,
+      claimed.claim.row.rawText,
+      outcome.complaintSignal,
+    );
     const today = todayIST();
     const evidence = groundExtraction(claimed.claim.row.rawText, outcome.classification, today);
     // Quoting is optional: DB/rate/availability failure must not discard good classification.
