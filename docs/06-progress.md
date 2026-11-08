@@ -175,3 +175,14 @@ Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
 ## Claude Code S1 Q1–Q3 (2026-11-08)
 - Q1: `enquiries.ingest()` and `list()` are real; `ingestFrom()` and `list({ limit })` are additive (idempotency key, consent record, bounded list). Ids are `ENQ-XXXXX` from app code with retry on primary key conflict. No schema change. Needs sign-off: the webhook idempotency key lives in `extracted.source` (no column exists), so R3 must merge into `extracted`, never replace it.
 - Q2/Q3/dev area/password UX verified in `pnpm dev`; see `tdd-notes.md`. `test:integration` not run, as instructed; the DB paths (`store.ts`) have no automated test yet and were checked by hand against the development database (test rows removed afterwards).
+
+## Claude Code S2 B10 multi-room (overnight 2026-11-08, branch `claude/multiroom`)
+- B10 built per `s2-multiroom-change.md` sections 1 to 6 on `claude/multiroom` (from `codex/dev` `c8c8b76` + `claude/dev` `da56069`); details and evidence in `s2-multiroom-handoff.md`. Not merged; see that file for the morning merge order.
+- Development and test Neon branches were reset, migrated (`0001`) and reseeded through the guarded scripts; production untouched.
+- Mandatory test 6 (allotment cut below committed is rejected) is **provisional until A2**: today it proves the database CHECK and the conditional update only; the A2 allotment editor must re-prove it through its own entry point (minor fix 4).
+- Known limit (minor fix 5): the lazy and cron expiry sweep is one statement over every matching expired hold, not batched. Fine at seed scale; batch it before real traffic.
+- B6 steps 2 and 3 (details, hold, pay) are next; `/book/details` is a placeholder and takes no hold.
+
+| ID | Task | Status |
+|---|---|---|
+| B10 | Multi-room bookings, occupancy rule, `/book` room cart (B6 step 1) | done on `claude/multiroom`, awaiting review and merge |
