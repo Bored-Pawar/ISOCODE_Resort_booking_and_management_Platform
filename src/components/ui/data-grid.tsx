@@ -100,7 +100,7 @@ export function DataGrid({
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      <div className="max-h-[70vh] overflow-auto rounded-card border border-border bg-surface">
+      <div className="relative max-h-[70vh] overflow-auto rounded-card border border-border bg-surface">
         <table className="w-full border-separate border-spacing-0 text-small tabular-nums">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <thead>

@@ -115,7 +115,7 @@ function PromoTable({
 
   return (
     <div className="flex min-w-0 flex-col gap-2">
-      <div className="overflow-x-auto rounded-card border border-border bg-surface">
+      <div className="relative overflow-x-auto rounded-card border border-border bg-surface">
         <table className="w-full min-w-[760px] text-small">
           <caption className="sr-only">Promo codes</caption>
           <thead className="bg-surface-2 text-left">

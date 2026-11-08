@@ -79,10 +79,10 @@ Points: 1 trivial, 2 small, 3 medium, 5 large, 8 hard.
 ## A Admin: rates and inventory
 | ID | Story | AC | Pts | P | Depends |
 |---|---|---|---|---|---|
-| A1 | As reservations, I edit daily rates | Grid of room types x 30 days, bulk set by range and weekdays, validation | 5 | P0 | C1, F7 |
+| A1 | As reservations, I edit daily rates | Grid of room types x 30 days, bulk set by range and weekdays (presets All, Weekdays, Weekends = Fri and Sat nights) with a preview count, validation (whole rupees 1 to 5,00,000, today to today + 179) | 5 | P0 | C1, F7 |
 | A2 | As reservations, I set website allotment | Grid with allotment, sold, held; bulk set; cut below committed rejected per date; cap at total units | 5 | P0 | B2 |
-| A3 | As reservations, I manage blackouts | Create and delete ranges; warning list of existing bookings | 2 | P1 | B2 |
-| A4 | As reservations, I manage simple promo codes | List, create, deactivate; pct or flat, validity, min nights, max uses | 2 | P1 | B1 |
+| A3 | As reservations, I manage blackouts | Online/offline by date on the Allotment page: offline needs a reason, ranges merge; online deletes, trims or splits; warning list of existing bookings before saving; hatched offline cells | 2 | P1 | B2 |
+| A4 | As reservations, I manage simple promo codes | List, create, deactivate; pct 1 to 100 or flat whole rupees, validity (stay nights), min nights 1 to 14, max uses 1+ or none; uppercase, no case-only duplicates | 2 | P1 | B1 |
 | A5 | As reservations, I see bookings | List with filters, detail with event timeline, refund pending list | 3 | P1 | B5 |
 | A6 | As GM, I configure GST slabs | Edit table with effective from date (seeded slabs are enough for P0) | 1 | P2 | B1 |
 | A7 | As reservations, I export daily bookings | CSV, manual download and cron, idempotent per day | 2 | P2 | B5 |

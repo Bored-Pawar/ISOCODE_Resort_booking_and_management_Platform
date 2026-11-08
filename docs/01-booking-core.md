@@ -60,9 +60,16 @@ Called: before availability reads, before hold acquire, at confirmation, and by 
 
 ### Admin allotment change
 `UPDATE inventory SET allotment=$new WHERE ... AND sold + held <= $new`. Return rejected dates with the minimum allowed. App code also enforces `allotment <= room_types.total_units`.
+A2 (`inventory/admin.ts` `setAllotment`, 2026-11-08): scoped lazy expiry first (booking-owned, own transaction), then one transaction: insert missing rows inside the 180 day horizon (allotment, sold, held 0), lock every target row in **one** statement ordered by `(room_type_id, date)` (same order as the hold path, so admin edits and holds queue rather than deadlock), one conditional `UPDATE ... FROM targets, room_types WHERE sold + held <= new AND new <= total_units RETURNING`, then report the targets that did not change with `min = sold + held` and `cap = total_units`. Other dates in the request apply. Mandatory test 6 is proven through this entry point.
 
 ### Blackouts
 Block new holds only. Existing bookings stand; admin sees a warning list.
+A3 (`inventory/admin.ts` `setOffline`, `setOnline`): offline writes a blackout with a required reason and `created_by`; same-scope blackouts that overlap or touch are merged into one row. Online deletes, trims or splits same-scope blackouts; a room type inside an all-rooms blackout is refused (`ALL_ROOMS_OFFLINE`). Both lock the inventory rows of the range first, ordered like the hold path, so a hold that already passed its blackout check commits first and every later hold sees the blackout.
+
+### Admin rates and promos
+A1 (`pricing/admin.ts` `setRates`): one transaction, one `INSERT ... ON CONFLICT (room_type_id, rate_plan_id, date) DO UPDATE ... WHERE price_paise IS DISTINCT FROM excluded.price_paise`; only active plans of the named room types; `updated_by` from the session; whole rupees 1 to 5,00,000; dates from today IST to today + 179. Existing bookings keep their frozen nights; open carts get `PRICE_CHANGED` at hold (test 9 also proven through `setRates`).
+A4 (`pricing/admin.ts`): codes stored uppercase; a code equal to an existing one ignoring case is refused (advisory lock per uppercase code, then the UNIQUE constraint); flat values in rupees stored as paise. Deactivate sets `active = false`: quotes return `PROMO_INVALID`, confirmed bookings keep their discount. Validity keeps its meaning: the stay's first and last night inside `valid_from`..`valid_to`.
+Every admin function takes the session actor and checks its capability (`permissions.ts`) itself, besides the server action's `requirePermission`.
 
 ## Pricing and GST
 1. `pricing.quote()` is the only price source (site, booking, AI drafts).
