@@ -83,3 +83,43 @@ export function navFor(role: Role | null | undefined): NavEntry[] {
     ...NAV.filter((n) => n.anyOf.some((cap) => can(role, cap))).map((n) => n.entry),
   ];
 }
+
+// ---- Enquiry inbox visibility (for Codex Q4; no code in the enquiry paths here) -----------------
+
+export type EnquiryCategory = "room" | "wedding" | "offsite" | "complaint" | "other";
+export type EnquiryLane = "sorted" | "unsorted";
+
+export type EnquiryVisibility = {
+  /** Categories of sorted enquiries the role may list. */
+  categories: EnquiryCategory[];
+  /** Lanes the role may list. `unsorted` is the GM lane (low confidence or failed AI). */
+  lanes: EnquiryLane[];
+  /** Complaints (category `complaint` or `is_complaint`) are GM only. */
+  complaints: boolean;
+};
+
+/**
+ * What an inbox may list for a role: reservations room and other, sales wedding and offsite, GM
+ * everything plus complaints and the unsorted lane. Guests see nothing.
+ */
+export function enquiryVisibility(role: Role | null | undefined): EnquiryVisibility {
+  const categories: EnquiryCategory[] = [];
+  if (can(role, "enquiries.room")) categories.push("room", "other");
+  if (can(role, "enquiries.events")) categories.push("wedding", "offsite");
+  const complaints = can(role, "enquiries.complaints");
+  if (complaints) categories.push("complaint");
+  const lanes: EnquiryLane[] = categories.length ? ["sorted"] : [];
+  if (can(role, "enquiries.unsorted")) lanes.push("unsorted");
+  return { categories, lanes, complaints };
+}
+
+/** One enquiry against `enquiryVisibility`: use it in every inbox action before reading or acting. */
+export function canSeeEnquiry(
+  role: Role | null | undefined,
+  e: { category: EnquiryCategory | null; lane: EnquiryLane; isComplaint: boolean },
+): boolean {
+  const v = enquiryVisibility(role);
+  if (e.isComplaint || e.category === "complaint") return v.complaints;
+  if (e.lane === "unsorted" || e.category === null) return v.lanes.includes("unsorted");
+  return v.lanes.includes("sorted") && v.categories.includes(e.category);
+}

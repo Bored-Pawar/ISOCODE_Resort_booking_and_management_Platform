@@ -16,9 +16,10 @@ DB guard: `TEST_DATABASE_URL` host differs from Codex's test host and from both 
 | 2.5 A1 `/admin/rates`: grid, cell edit, bulk panel with presets and preview, `pricing/admin.ts` `setRates` | done | bbe961c |
 | 2.6 A2 `/admin/allotment`: grid (allotment, sold · held), cell and bulk, `inventory/admin.ts` `setAllotment`, rejected cells red with reason; test 6 final | done | 185864d |
 | 2.7 A3 online dates on `/admin/allotment`: offline with reason (merge), online (delete/trim/split), warning list first, hatched cells | done | c2b757b |
-| 2.2 Staff shell: nav from `navFor`, `/admin` per role (`overviewFor`), 403 screen on direct URLs incl. A5 (`PageGate`) | done | (this commit) |
+| 2.2 Staff shell: nav from `navFor`, `/admin` per role (`overviewFor`), 403 screen on direct URLs incl. A5 (`PageGate`) | done | f3decb9 |
+| 2.4 `enquiryVisibility`, `canSeeEnquiry` (tested); Codex inbox lines and attention-request decision in `06` | done | (this commit) |
 
-Last finished: 2.2 (Promos nav link resolves with 2.8). Next: 2.4 `enquiryVisibility` and the Codex lines in `06`.
+Last finished: 2.4. Next: 2.8 A4 promos.
 
 ## Gates (latest)
 After 2.5: typecheck, lint pass; unit 386/386 (47 files); integration `admin-rates` 8/8, `admin-allotment` 9/9, `admin-availability` 6/6 on test-claude (race test repeated 5x, stable).

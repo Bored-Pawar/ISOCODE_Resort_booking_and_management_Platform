@@ -11,6 +11,8 @@ import {
   requirePermission,
   rolesFor,
   type Capability,
+  canSeeEnquiry,
+  enquiryVisibility,
 } from "./permissions";
 import { AccessError, ROLES, type Role } from "./types";
 
@@ -115,5 +117,57 @@ describe("navFor", () => {
   it("guests get no staff nav", () => {
     expect(navFor("guest")).toEqual([]);
     expect(navFor(null)).toEqual([]);
+  });
+});
+
+describe("enquiryVisibility (2.4)", () => {
+  it("reservations: room and other, sorted lane, no complaints", () => {
+    expect(enquiryVisibility("reservations")).toEqual({
+      categories: ["room", "other"],
+      lanes: ["sorted"],
+      complaints: false,
+    });
+  });
+  it("sales: wedding and offsite, sorted lane, no complaints", () => {
+    expect(enquiryVisibility("sales")).toEqual({
+      categories: ["wedding", "offsite"],
+      lanes: ["sorted"],
+      complaints: false,
+    });
+  });
+  it("gm: all categories, complaints and the unsorted lane", () => {
+    expect(enquiryVisibility("gm")).toEqual({
+      categories: ["room", "other", "wedding", "offsite", "complaint"],
+      lanes: ["sorted", "unsorted"],
+      complaints: true,
+    });
+  });
+  it("guests and no role: nothing", () => {
+    const none = { categories: [], lanes: [], complaints: false };
+    expect(enquiryVisibility("guest")).toEqual(none);
+    expect(enquiryVisibility(null)).toEqual(none);
+  });
+
+  const sorted = (category: "room" | "wedding" | "offsite" | "other") =>
+    ({ category, lane: "sorted", isComplaint: false }) as const;
+  const cases = [
+    ["reservations", sorted("room"), true],
+    ["reservations", sorted("other"), true],
+    ["reservations", sorted("wedding"), false],
+    ["sales", sorted("offsite"), true],
+    ["sales", sorted("room"), false],
+    ["gm", sorted("wedding"), true],
+    // A room enquiry flagged as a complaint is GM only (complaints always alert the GM).
+    ["reservations", { category: "room", lane: "sorted", isComplaint: true }, false],
+    ["gm", { category: "room", lane: "sorted", isComplaint: true }, true],
+    ["sales", { category: "complaint", lane: "sorted", isComplaint: false }, false],
+    // Unsorted (low confidence or failed AI) is the GM lane, whatever the guessed category.
+    ["reservations", { category: "room", lane: "unsorted", isComplaint: false }, false],
+    ["sales", { category: null, lane: "unsorted", isComplaint: false }, false],
+    ["gm", { category: null, lane: "unsorted", isComplaint: false }, true],
+    ["guest", sorted("room"), false],
+  ] as const;
+  it.each(cases)("canSeeEnquiry %s %o is %s", (role, e, expected) => {
+    expect(canSeeEnquiry(role, e)).toBe(expected);
   });
 });
