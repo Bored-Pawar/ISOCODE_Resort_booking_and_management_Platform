@@ -350,6 +350,20 @@ describe("draft and send (tests 2, 3)", () => {
     ).toEqual([]);
   });
 
+  it("sending unsaved edits with a new rupee figure logs the price warning before sent", async () => {
+    const { id, draftId } = await withDraft();
+    const res = await inbox.approveAndSend(
+      { enquiryId: id, draftId, body: "From ₹24,800. For you, ₹9,999." },
+      f.actor("reservations"),
+    );
+    expect(res.ok).toBe(true);
+    const events = await db.select().from(t.enquiryEvents).where(eq(t.enquiryEvents.enquiryId, id));
+    expect(events.map((e) => [e.action, e.toValue]).sort()).toEqual([
+      ["edited", "draft:price-warning"],
+      ["sent", "email"],
+    ]);
+  });
+
   it("a typed rupee figure saves with a warning and is logged as edited", async () => {
     const { id } = await withDraft();
     const res = await inbox.saveDraft(

@@ -134,6 +134,15 @@ export async function approveAndSend(
         status: "replied",
       })
       .where(eq(e.id, id));
+    // Edits made in the send dialog without "Save draft" are logged like a save (hard rule 3).
+    if (text !== draft.body)
+      await tx.insert(enquiryEvents).values({
+        enquiryId: id,
+        actor: actor.userId,
+        action: "edited",
+        fromValue: "draft",
+        toValue: addsNewPrice(quoteFigures(draft.quote), text) ? "draft:price-warning" : "draft",
+      });
     await tx.insert(enquiryEvents).values({
       enquiryId: id,
       actor: actor.userId,
