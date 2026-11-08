@@ -159,7 +159,20 @@ export async function RoomsResults({ searchParams }: { searchParams: Params }) {
           {nothingFree ? (
             <EmptyState
               icon={<CalendarSearch strokeWidth={1.5} />}
-              message="Nothing is free for these dates. Try different dates with Change above."
+              message="Nothing is free for these dates. Try different dates with Change above, or send us an enquiry."
+              action={
+                <ButtonLink
+                  href={enquiryHref({
+                    checkIn: values.checkIn,
+                    checkOut: values.checkOut,
+                    adults: values.adults,
+                    children: values.children,
+                  })}
+                  variant="secondary"
+                >
+                  Send an enquiry
+                </ButtonLink>
+              }
               className="py-6"
             />
           ) : null}

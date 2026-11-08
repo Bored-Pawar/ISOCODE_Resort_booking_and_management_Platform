@@ -222,6 +222,9 @@ async function stayPanel(room: RoomType, values: SearchValues, listHref: string)
             ? "Try different dates with Change above, or look at our other rooms."
             : "We have not published prices for these dates yet. Try different dates, or look at our other rooms."}
         </p>
+        <ButtonLink href={group} variant="secondary">
+          Send an enquiry
+        </ButtonLink>
         <ButtonLink href={listHref} variant="secondary">
           See other rooms
         </ButtonLink>
@@ -239,6 +242,7 @@ async function stayPanel(room: RoomType, values: SearchValues, listHref: string)
         children: values.children,
       }}
       roomsNeeded={offer.needed ?? offer.split.length}
+      enquiryHref={group}
       nights={nightsBetween(values.checkIn, values.checkOut)}
       availability={availabilityNote(units)}
     />

@@ -88,9 +88,14 @@ export function RoomCard({
               <Badge tone="danger" icon={<CircleSlash strokeWidth={1.5} />} className="self-start">
                 Not available for these dates
               </Badge>
-              <ButtonLink href={href} variant="secondary" className="self-start">
-                View room
-              </ButtonLink>
+              <div className="flex flex-wrap gap-3">
+                <ButtonLink href={href} variant="secondary">
+                  View room
+                </ButtonLink>
+                <ButtonLink href={enquiryHrefFromQuery(query, room.slug)} variant="secondary">
+                  Send an enquiry
+                </ButtonLink>
+              </div>
             </>
           ) : null}
 
@@ -100,11 +105,16 @@ export function RoomCard({
                 Your group needs {plural(item.rooms, "room")} of this type and only{" "}
                 {item.availableUnits} {item.availableUnits === 1 ? "is" : "are"} free. Reserve{" "}
                 {item.availableUnits === 1 ? "it" : "them"} and add another room type on the next
-                step.
+                step, or send us an enquiry and we will arrange the rooms.
               </p>
-              <ButtonLink href={href} variant="secondary" className="self-start">
-                View room
-              </ButtonLink>
+              <div className="flex flex-wrap gap-3">
+                <ButtonLink href={href} variant="secondary">
+                  View room
+                </ButtonLink>
+                <ButtonLink href={enquiryHrefFromQuery(query, room.slug)} variant="secondary">
+                  Send an enquiry
+                </ButtonLink>
+              </div>
             </>
           ) : null}
 

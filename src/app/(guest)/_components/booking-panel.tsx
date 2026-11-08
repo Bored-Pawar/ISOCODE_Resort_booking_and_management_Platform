@@ -19,6 +19,7 @@ export function BookingPanel({
   plans,
   stay,
   roomsNeeded,
+  enquiryHref,
   nights,
   availability,
 }: {
@@ -27,6 +28,8 @@ export function BookingPanel({
   stay: CartStay;
   /** Rooms of this type the whole party needs; more than the cart has means stock is short. */
   roomsNeeded: number;
+  /** Prefilled /enquire link (dates, party, room) for when this room's stock cannot fit the party. */
+  enquiryHref: string;
   nights: number;
   availability: { tone: "success" | "warning"; text: string };
 }) {
@@ -137,6 +140,11 @@ export function BookingPanel({
           Reserve
         </ButtonLink>
         <p className="text-small text-muted">{roomsNote}</p>
+        {short ? (
+          <ButtonLink href={enquiryHref} variant="secondary" className="w-full">
+            Send an enquiry
+          </ButtonLink>
+        ) : null}
         <p className="text-small text-muted">You will not be charged yet.</p>
       </div>
 
