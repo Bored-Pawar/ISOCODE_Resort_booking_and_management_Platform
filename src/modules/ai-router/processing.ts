@@ -1,4 +1,10 @@
-import { claimEnquiry, settleEnquiry, ownerRoleFor } from "@/modules/enquiries/internal";
+import {
+  claimEnquiry,
+  settleEnquiry,
+  ownerRoleFor,
+  failClaim,
+  type Claim,
+} from "@/modules/enquiries/internal";
 import type { ProcessInput, ProcessResult } from "./index";
 import { processInputSchema } from "./index";
 import { classificationSchema } from "./schema";
@@ -13,6 +19,7 @@ import { todayIST } from "@/lib/dates";
 export async function processEnquiry(input: ProcessInput): Promise<ProcessResult> {
   const parsed = processInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
+  let activeClaim: Claim | undefined;
   try {
     const claimed = await claimEnquiry(parsed.data.enquiryId);
     if (claimed.kind === "missing") return { ok: false, code: "NOT_FOUND" };
@@ -38,6 +45,7 @@ export async function processEnquiry(input: ProcessInput): Promise<ProcessResult
         notifyGm: claimed.row.isComplaint,
       };
     }
+    activeClaim = claimed.claim;
     const outcome = await classifyMessage(claimed.claim.row);
     const routing = route(
       outcome.classification,
@@ -90,6 +98,7 @@ export async function processEnquiry(input: ProcessInput): Promise<ProcessResult
       notifyGm: routing.notifyGm,
     };
   } catch {
+    if (activeClaim) await failClaim(activeClaim).catch(() => {});
     // Never echo an SDK/SQL error: it can contain raw messages and bound contact data.
     // The raw row/processing generation remains recoverable after a failed transaction.
     return { ok: false, code: "FAILED" };

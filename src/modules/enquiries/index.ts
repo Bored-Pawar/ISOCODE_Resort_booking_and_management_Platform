@@ -44,3 +44,5 @@ export const enquiries = {
 
 export * from "./inbound";
 export { handleInbound } from "./inbound-route";
+// Approved audit-remediation additions; existing frozen service signatures are unchanged.
+export { retryEnquiry, listReviewQueue } from "./retry";

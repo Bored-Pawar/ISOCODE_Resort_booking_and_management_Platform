@@ -17,6 +17,21 @@ const input = {
 const villa = classificationFixtures["ENQ-4411"].classification;
 afterEach(() => vi.resetAllMocks());
 describe("classification and routing", () => {
+  it("redaction expansion cannot leave a poison row throwing on every attempt", async () => {
+    vi.mocked(executeStructured).mockResolvedValue({
+      kind: "success",
+      value: { ...villa, summary: `${"x".repeat(490)} Raj` },
+      provider: "mock",
+      model: "test",
+      latencyMs: 1,
+      attempts: 1,
+      rateLimits: 0,
+    });
+    expect(await classifyMessage({ ...input, senderName: "Raj" })).toMatchObject({
+      status: "fallback",
+      response: { error: "INVALID_RESPONSE" },
+    });
+  });
   it("malformed draft fields don't invalidate a successful classification", () => {
     expect(modelResponseSchema.parse({ ...villa, draftText: { unsafe: "payload" } })).toMatchObject(
       { category: "room", draftText: null },

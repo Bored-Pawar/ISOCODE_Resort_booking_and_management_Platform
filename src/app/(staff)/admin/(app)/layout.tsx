@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Inbox } from "lucide-react";
 import { StaffShell } from "@/components/layout/staff-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,10 @@ import { getSessionUser, STAFF_ROLES } from "@/lib/auth";
 import { signOutAction } from "@/lib/auth/actions";
 
 // Extend as admin screens land (rates, allotment, inbox...). Only real routes belong here.
-const nav = [{ href: "/admin", label: "Overview", icon: <LayoutDashboard strokeWidth={1.5} /> }];
+const nav = [
+  { href: "/admin", label: "Overview", icon: <LayoutDashboard strokeWidth={1.5} /> },
+  { href: "/admin/inbox", label: "Unsorted enquiries", icon: <Inbox strokeWidth={1.5} /> },
+];
 
 async function Gate({ children }: { children: React.ReactNode }) {
   // Auth.js uses crypto.getRandomValues() inside auth(); render at request time first.

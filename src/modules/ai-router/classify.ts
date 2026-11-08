@@ -18,7 +18,7 @@ export async function classifyMessage(input: {
   });
   if (response.kind === "success") {
     const value = response.value;
-    const classification = classificationSchema.parse({
+    const parsed = classificationSchema.safeParse({
       ...value,
       summary: redactPii(value.summary, input),
       dates: {
@@ -30,8 +30,16 @@ export async function classifyMessage(input: {
         ...(value.budget.text ? { text: redactPii(value.budget.text, input) } : {}),
       },
     });
+    if (!parsed.success)
+      return {
+        classification: rulesClassify(text, input.receivedAt),
+        draftText: null,
+        status: "fallback" as const,
+        response: { ...response, kind: "error" as const, error: "INVALID_RESPONSE" as const },
+        text,
+      };
     return {
-      classification,
+      classification: parsed.data,
       draftText: value.draftText ? redactPii(value.draftText, input) : null,
       status: "ok" as const,
       complaintSignal: value.isComplaint === true,

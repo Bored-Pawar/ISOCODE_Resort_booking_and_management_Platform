@@ -9,6 +9,8 @@ import {
   settleEnquiry,
   sweepCandidates,
   queueEligibility,
+  failClaim,
+  resetFailedEnquiry,
   type Claim,
   type Settlement,
 } from "@/modules/enquiries/internal";
@@ -87,6 +89,83 @@ afterAll(async () => {
 }, 90_000);
 
 describe("persistent AI queue", { timeout: 90_000 }, () => {
+  it("three actual failed attempts are terminal and a fourth claim is rejected", async () => {
+    const id = await enquiry();
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const current = await claim(id);
+      expect(current.attempt).toBe(attempt);
+      await failClaim(current, db);
+      if (attempt < 3)
+        await db
+          .update(t.enquiries)
+          .set({ aiUpdatedAt: sql`clock_timestamp() - interval '3 minutes'` })
+          .where(eq(t.enquiries.id, id));
+    }
+    expect(await claimEnquiry(id, db)).toMatchObject({ kind: "busy" });
+    const [row] = await db.select().from(t.enquiries).where(eq(t.enquiries.id, id));
+    expect(row).toMatchObject({
+      aiStatus: "failed",
+      aiAttempts: 3,
+      aiLastError: "ATTEMPTS_EXHAUSTED",
+      lane: "unsorted",
+    });
+    expect(await sweepCandidates(db)).not.toContain(id);
+  });
+  it.each([0, 1, 2])(
+    "eligible attempt after %i prior attempts settles normally",
+    async (previous) => {
+      const id = await enquiry({ aiAttempts: previous });
+      const current = await claim(id);
+      expect(current.attempt).toBe(previous + 1);
+      expect(await settleEnquiry(current, result, db)).toMatchObject({ aiStatus: "ok" });
+    },
+  );
+  it("sweep exhausts a stale final claim without retrying it", async () => {
+    const id = await enquiry({
+      aiStatus: "processing",
+      aiAttempts: 3,
+      aiUpdatedAt: new Date("2000-01-01"),
+    });
+    expect(await sweepCandidates(db)).not.toContain(id);
+    expect((await db.select().from(t.enquiries).where(eq(t.enquiries.id, id)))[0]).toMatchObject({
+      aiStatus: "failed",
+      lane: "unsorted",
+    });
+  });
+  it("concurrent manual retries reset once, log the actor, and reject stale settlement/retry", async () => {
+    const id = await enquiry({ aiAttempts: 2 });
+    const old = await claim(id);
+    await failClaim(old, db);
+    const input = {
+      enquiryId: id,
+      expectedUpdatedAt: old.updatedAt.toISOString(),
+      expectedAttempts: 3,
+    };
+    const retries = await Promise.all([
+      resetFailedEnquiry(input, staff[0].id, db),
+      resetFailedEnquiry(input, staff[0].id, db),
+    ]);
+    expect(retries.sort()).toEqual([false, true]);
+    const events = await db.select().from(t.enquiryEvents).where(eq(t.enquiryEvents.enquiryId, id));
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      actor: staff[0].id,
+      action: "edited",
+      toValue: "ai:pending:retry",
+    });
+    const fresh = await claim(id);
+    expect(fresh.attempt).toBe(1);
+    expect(await settleEnquiry(old, result, db)).toBeNull();
+    expect(await settleEnquiry(fresh, result, db)).toMatchObject({ aiStatus: "ok" });
+    expect(await resetFailedEnquiry(input, staff[0].id, db)).toBe(false);
+    expect(await settleEnquiry(fresh, result, db)).toBeNull();
+    expect(
+      await db.select().from(t.notifications).where(eq(t.notifications.enquiryId, id)),
+    ).toHaveLength(1);
+    expect(
+      await db.select().from(t.replyDrafts).where(eq(t.replyDrafts.enquiryId, id)),
+    ).toHaveLength(1);
+  });
   it("the actual queue predicate includes exactly two minutes and excludes one millisecond younger", async () => {
     const id = await enquiry({
       aiStatus: "processing",
