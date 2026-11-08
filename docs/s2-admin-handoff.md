@@ -13,12 +13,13 @@ DB guard: `TEST_DATABASE_URL` host differs from Codex's test host and from both 
 | Setup, locks row in `06` | done | d1f48de |
 | 2.1 `permissions.ts` (table, `can`, `requirePermission`, `navFor`), A5 on `bookings.view` | done | 083b107 |
 | 2.3 R06 DataGrid: pure editor (`data-grid-editor.ts`), pending stable, errors caught, stale completions ignored | done | 791f230 |
-| 2.5 A1 `/admin/rates`: grid, cell edit, bulk panel with presets and preview, `pricing/admin.ts` `setRates` | done | (this commit) |
+| 2.5 A1 `/admin/rates`: grid, cell edit, bulk panel with presets and preview, `pricing/admin.ts` `setRates` | done | bbe961c |
+| 2.6 A2 `/admin/allotment`: grid (allotment, sold · held), cell and bulk, `inventory/admin.ts` `setAllotment`, rejected cells red with reason; test 6 final | done | (this commit) |
 
-Last finished: 2.5. Next: 2.6 A2 allotment.
+Last finished: 2.6. Next: 2.7 A3 online/offline.
 
 ## Gates (latest)
-After 2.5: typecheck, lint pass; unit 386/386 (47 files); integration `admin-rates` 8/8 on test-claude.
+After 2.5: typecheck, lint pass; unit 386/386 (47 files); integration `admin-rates` 8/8, `admin-allotment` 9/9 on test-claude (race test repeated 5x, stable).
 
 ## Deviations
 1. `main` is checked out in another worktree, so the branch was cut from `origin/main` instead of `git switch main`.

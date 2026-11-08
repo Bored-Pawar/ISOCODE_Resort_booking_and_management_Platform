@@ -94,3 +94,14 @@ export function parseRupees(text: string): number {
   if (!/^\d+$/.test(clean)) return Number.NaN;
   return Number(clean);
 }
+
+/** Rejected cell message: "At least 3 (already sold or held)" or "At most 8 (total rooms)". */
+export function rejectionMessage(r: {
+  min: number;
+  cap: number;
+  reason: "BELOW_COMMITTED" | "ABOVE_TOTAL";
+}): string {
+  return r.reason === "BELOW_COMMITTED"
+    ? `At least ${r.min} (already sold or held)`
+    : `At most ${r.cap} (total rooms)`;
+}

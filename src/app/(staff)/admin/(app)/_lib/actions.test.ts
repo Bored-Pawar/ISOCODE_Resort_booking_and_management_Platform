@@ -17,6 +17,7 @@ vi.mock("@/modules/admin", async (orig) => {
 import { auth } from "@/lib/auth/config";
 import type { Role } from "@/lib/auth";
 import { setRatesAction } from "../rates/actions";
+import { setAllotmentAction } from "../allotment/actions";
 
 const R = "8b0f2c62-4d3b-4a63-9a8e-0b9c1d2e3f40";
 const session = (role: Role | null) =>
@@ -39,6 +40,14 @@ const ACTIONS: [string, () => Promise<{ ok: boolean; code?: string }>][] = [
         to: "2099-01-02",
         days: [5],
         rupees: 100,
+      }),
+  ],
+  [
+    "setAllotmentAction",
+    () =>
+      setAllotmentAction({
+        mode: "cells",
+        cells: [{ roomTypeId: R, date: "2099-01-01", allotment: 2 }],
       }),
   ],
 ];

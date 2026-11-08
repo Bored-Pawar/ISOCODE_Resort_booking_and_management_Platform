@@ -11,6 +11,7 @@ import {
   readRates,
   setRates,
 } from "@/modules/pricing/admin";
+import { readAllotment, setAllotment } from "@/modules/inventory/admin";
 
 export * from "./rules";
 export * from "./schemas";
@@ -21,6 +22,12 @@ export type {
   RateGridRow,
   SetRatesResult,
 } from "@/modules/pricing/admin";
+export type {
+  AllotmentGridRow,
+  BlackoutRow,
+  RejectedAllotment,
+  SetAllotmentResult,
+} from "@/modules/inventory/admin";
 
 export const admin = {
   setRates,
@@ -28,4 +35,6 @@ export const admin = {
   listPromos,
   createPromo,
   deactivatePromo,
+  setAllotment,
+  readAllotment,
 };
