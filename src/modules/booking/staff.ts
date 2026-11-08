@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, getTableColumns, gte, inArray, lte, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, gte, inArray, lte, sql, type SQL } from "drizzle-orm";
 import { bookingEvents, bookingNights, bookingRooms, bookings, payments } from "@/db/schema";
 import type { Tx } from "@/lib/db";
 import { getDb } from "@/lib/db";
@@ -8,8 +8,10 @@ import type {
   BookingStatus,
   GetForStaffResult,
   ListForStaffResult,
+  ListOverlappingForStaffResult,
   ListRefundPendingResult,
   ParsedListForStaffInput,
+  ParsedListOverlappingForStaffInput,
   StaffPayment,
 } from "./index";
 
@@ -107,6 +109,44 @@ export async function listForStaff(input: ParsedListForStaffInput): Promise<List
       .orderBy(desc(bookings.createdAt))
       .limit(input.limit);
     return { ok: true, bookings: await readBookings(tx, rows) } as const;
+  });
+}
+
+/**
+ * Live bookings with a night in `from`..`to` (S2 audit M03). Every predicate is in SQL before the
+ * limit; keyset paging on (check_in, id), one extra row tells whether another page exists.
+ */
+export async function listOverlappingForStaff(
+  input: ParsedListOverlappingForStaffInput,
+): Promise<ListOverlappingForStaffResult> {
+  const where: SQL[] = [
+    lte(bookings.checkIn, input.to),
+    sql`${bookings.checkOut} > ${input.from}::date`,
+    sql`(${bookings.status} = 'CONFIRMED'
+      OR (${bookings.status} = 'HELD' AND ${bookings.holdExpiresAt} > now()))`,
+  ];
+  if (input.roomTypeId)
+    where.push(sql`EXISTS (SELECT 1 FROM ${bookingRooms}
+      WHERE ${bookingRooms.bookingId} = ${bookings.id}
+        AND ${bookingRooms.roomTypeId} = ${input.roomTypeId}::uuid)`);
+  if (input.cursor) {
+    const [checkIn, id] = input.cursor.split("|");
+    where.push(sql`(${bookings.checkIn}, ${bookings.id}) > (${checkIn}::date, ${id}::uuid)`);
+  }
+  return getDb().transaction(async (tx) => {
+    const rows = await tx
+      .select()
+      .from(bookings)
+      .where(and(...where))
+      .orderBy(asc(bookings.checkIn), asc(bookings.id))
+      .limit(input.limit + 1);
+    const page = rows.slice(0, input.limit);
+    const last = page.at(-1);
+    return {
+      ok: true,
+      bookings: await readBookings(tx, page),
+      nextCursor: rows.length > input.limit && last ? `${last.checkIn}|${last.id}` : null,
+    } as const;
   });
 }
 

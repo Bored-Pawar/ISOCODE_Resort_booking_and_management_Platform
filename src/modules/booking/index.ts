@@ -14,12 +14,14 @@ import {
   readBookings,
   getForStaff as getForStaffImpl,
   listForStaff as listForStaffImpl,
+  listOverlappingForStaff as listOverlappingForStaffImpl,
   listRefundPending as listRefundPendingImpl,
 } from "./staff";
 import { isDateStr } from "@/lib/dates";
 import { readBooking } from "./read";
 import { bookings, payments } from "@/db/schema";
 import { and, desc, eq } from "drizzle-orm";
+import { can } from "@/lib/auth/permissions";
 
 export type BookingStatus = "HELD" | "CONFIRMED" | "EXPIRED" | "CANCELLED";
 
@@ -171,6 +173,32 @@ export type ParsedListForStaffInput = z.output<typeof listForStaffInputSchema>;
 /** Newest created first. */
 export type ListForStaffResult = Ok<{ bookings: Booking[] }> | Err<"INVALID_INPUT" | "FORBIDDEN">;
 
+/**
+ * Approved additive staff read (S2 audit M03): live bookings with a night inside `from`..`to`
+ * (inclusive dates), for the "take offline" warning. Overlap (`check_in <= to AND check_out > from`)
+ * and the room filter (through booking_rooms) are applied in SQL before the limit; statuses HELD
+ * (hold not yet expired) and CONFIRMED; ordered by check_in, id. Page with `nextCursor` until null.
+ */
+export const listOverlappingForStaffInputSchema = z
+  .object({
+    roomTypeId: z.uuid().optional(),
+    from: isoDate,
+    to: isoDate,
+    limit: z.number().int().min(1).max(200).default(100),
+    /** Opaque; from a previous page's `nextCursor`. */
+    cursor: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}\|[0-9a-fA-F-]{36}$/)
+      .optional(),
+  })
+  .refine((v) => v.from <= v.to, { path: ["to"], message: "to must not be before from" });
+export type ListOverlappingForStaffInput = z.input<typeof listOverlappingForStaffInputSchema>;
+export type ParsedListOverlappingForStaffInput = z.output<
+  typeof listOverlappingForStaffInputSchema
+>;
+export type ListOverlappingForStaffResult =
+  Ok<{ bookings: Booking[]; nextCursor: string | null }> | Err<"INVALID_INPUT" | "FORBIDDEN">;
+
 export type BookingEvent = {
   at: string;
   fromStatus: string | null;
@@ -247,6 +275,24 @@ export const booking = {
     const parsed = listForStaffInputSchema.safeParse(input);
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
     return listForStaffImpl(parsed.data);
+  },
+
+  /**
+   * Approved additive staff read (S2 audit M03): roles with `availability.toggle` or
+   * `bookings.view` (reservations, gm). The actor comes from the verified session.
+   */
+  async listOverlappingForStaff(
+    input: ListOverlappingForStaffInput,
+    actor: BookingActor,
+  ): Promise<ListOverlappingForStaffResult> {
+    if (
+      !actorSchema.safeParse(actor).success ||
+      !(can(actor.role, "availability.toggle") || can(actor.role, "bookings.view"))
+    )
+      return { ok: false, code: "FORBIDDEN" };
+    const parsed = listOverlappingForStaffInputSchema.safeParse(input);
+    if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
+    return listOverlappingForStaffImpl(parsed.data);
   },
 
   /** Additive staff read (A5): one booking with its event timeline and payments. */

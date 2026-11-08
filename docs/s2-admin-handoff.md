@@ -33,6 +33,7 @@ Verdict FIX MAJORS: 0 blockers, 3 majors. Scrum master decisions approved in the
 | 0 Merge `origin/main` 9c62b7a (PR #6, R1 to R4): conflicts in `02` (kept both) and the staff layout (kept `navFor`; added "Unsorted enquiries" `/admin/inbox` for every staff role, matching its page guard). Gates: typecheck, lint, unit 621/621 (63 files), build pass | done | 4b1fa3c |
 | M01 rates grid: saved prices are an optimistic overlay `{ value, version }` (`rates/rate-overlay.ts`, pure, 7 unit tests); refreshed rows drop overlays they match or that are not newer than the last refresh; a bulk save clears overlays in its rooms, plans, dates and weekdays; an older response cannot restore one | done | 2f13d89 |
 | M02 `setOffline` creates missing stock rows (0, 0, 0) in `(room_type_id, date)` order, then the existing ordered lock, then the blackout. Test seam `afterLock`. PostgreSQL test: offline paused after locking, A2 on the missing date stays blocked (15 s), a guest hold fails, then BLACKOUT, no HELD booking. Same test fails with the fix removed (A2 settled in about 3 s) | done | 48d9d78 |
+| M03 approved booking read `booking.listOverlappingForStaff` (`booking/{index,staff}.ts`: overlap, room filter and live statuses in SQL before the limit, keyset cursor on check_in, id); `bookingsInRange` pages it to 1,000, else `truncated`; panel shows "More than 1,000 bookings overlap..." and keeps the action; 60 day look-back removed. PostgreSQL `admin-warning.test.ts` 3/3: the audit's 200-newer-elsewhere case, a stay from 90 days before, live vs lapsed hold, expired, edge stays, room filter, paging, 1,001 gives truncated, sales and guest FORBIDDEN | done | M03SHA |
 
 ## Review (independent subagent, no context: runbook, `01`, `git diff main...HEAD`)
 No blockers. Major 1: a concurrent offline and online edit on the same blackout could lose the online part (one merged the row away while the other's `FOR UPDATE` skipped it). Fixed: `pg_advisory_xact_lock` first in `setOffline` and `setOnline`; holds never take it. Checked and found correct: permission on every entry point, stock invariants, lock order with holds, Zod, paise, window, parameterised SQL.
@@ -51,6 +52,6 @@ Chrome (Playwright, installed Chrome) as sales, gm, reservations at desktop and 
 5. 403 is a rendered screen, not an HTTP 403: the staff layout streams inside `<Suspense>`, so the status is already sent. Actions return `FORBIDDEN`.
 
 ## Open items
-1. A3 warning list reads `booking.listForStaff` (public contract): it looks back 60 days for stays that began before the range and at most 200 per status.
+1. ~~A3 warning list look-back and cap~~: fixed by audit M03 (complete up to 1,000, then says so).
 3. Flaky on Neon latency, not this branch: `booking.test.ts` "honours HOLD_MINUTES" can exceed the 30 s test timeout in a full run.
 2. A room type cannot be brought online inside an all-rooms blackout (`ALL_ROOMS_OFFLINE`, nothing changes); bring all rooms online for those dates first.

@@ -43,12 +43,17 @@ export function AvailabilityPanel({
   const [reason, setReason] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   /** Bookings found for the exact choices below; null until reviewed. */
-  const [review, setReview] = useState<{ key: string; bookings: AffectedBooking[] } | null>(null);
+  const [review, setReview] = useState<{
+    key: string;
+    bookings: AffectedBooking[];
+    truncated: boolean;
+  } | null>(null);
   const [pending, startTransition] = useTransition();
 
   const roomTypeId = room === "all" ? null : room;
   const key = `${room}|${from}|${to}`;
   const reviewed = review?.key === key ? review.bookings : null;
+  const truncated = review?.key === key && review.truncated;
   const roomName = roomTypeId
     ? (rooms.find((r) => r.id === roomTypeId)?.name ?? "Room")
     : "All rooms";
@@ -70,7 +75,7 @@ export function AvailabilityPanel({
         );
         return;
       }
-      setReview({ key, bookings: res.bookings });
+      setReview({ key, bookings: res.bookings, truncated: res.truncated });
     });
 
   const takeOffline = () =>
@@ -177,9 +182,11 @@ export function AvailabilityPanel({
             >
               <p className="flex items-start gap-2 text-small font-semibold">
                 <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
-                {reviewed.length
-                  ? `${reviewed.length} ${reviewed.length === 1 ? "booking stays" : "bookings stay"} on these dates. Only new holds are blocked.`
-                  : "No bookings on these dates."}
+                {truncated
+                  ? "More than 1,000 bookings overlap. Check the bookings list before taking this offline."
+                  : reviewed.length
+                    ? `${reviewed.length} ${reviewed.length === 1 ? "booking stays" : "bookings stay"} on these dates. Only new holds are blocked.`
+                    : "No bookings on these dates."}
               </p>
               {reviewed.length ? (
                 <ul className="max-h-40 overflow-auto text-small tabular-nums">

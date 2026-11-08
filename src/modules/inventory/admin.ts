@@ -229,8 +229,9 @@ async function readBlackouts(db: Db | Tx, from: string, to: string): Promise<Bla
 
 // ---- A3 online / offline -----------------------------------------------------------------------
 
-/** Longest stay assumed when looking back for bookings that started before a range. */
-const LOOKBACK_DAYS = 60;
+/** Most bookings the warning lists; beyond this it says the list is incomplete. */
+export const WARNING_CAP = 1_000;
+const WARNING_PAGE = 200;
 
 export type AffectedBooking = Pick<Booking, "id" | "ref" | "status" | "checkIn" | "checkOut"> & {
   /** Lines of the chosen room type (all lines for all rooms). */
@@ -238,34 +239,34 @@ export type AffectedBooking = Pick<Booking, "id" | "ref" | "status" | "checkIn" 
 };
 
 /**
- * Live bookings (HELD or CONFIRMED) with a night inside `from`..`to` for the room type (or any
- * room type). They stand: going offline blocks only new holds. Read through the public booking
- * staff read; stays checking in more than 60 days before `from` are not looked for (known limit).
+ * Live bookings (HELD, not yet expired, or CONFIRMED) with a night inside `from`..`to` for the
+ * room type (or any room type). They stand: going offline blocks only new holds. Read through the
+ * approved booking read `listOverlappingForStaff` (overlap and room filter in SQL before the
+ * limit), paged until complete. `truncated` is true when more than WARNING_CAP overlap: the list is
+ * then the first WARNING_CAP by check-in, and must not be read as complete (audit M03).
  */
 export async function bookingsInRange(
   input: { roomTypeId: string | null; from: string; to: string },
   actor: AdminActor,
-): Promise<Ok<{ bookings: AffectedBooking[] }> | AdminInvalid | Forbidden> {
+): Promise<Ok<{ bookings: AffectedBooking[]; truncated: boolean }> | AdminInvalid | Forbidden> {
   if (!can(actor.role, "availability.toggle")) return { ok: false, code: "FORBIDDEN" };
   const parsed = setOnlineInputSchema.safeParse(input);
   if (!parsed.success)
     return { ok: false, code: "INVALID_INPUT", errors: fieldErrors(parsed.error) };
   const { roomTypeId, from, to } = parsed.data;
-  const lists = await Promise.all(
-    (["HELD", "CONFIRMED"] as const).map((status) =>
-      booking.listForStaff(
-        { status, checkInFrom: addDays(from, -LOOKBACK_DAYS), checkInTo: to, limit: 200 },
-        { userId: actor.userId, role: actor.role },
-      ),
-    ),
-  );
   const found: AffectedBooking[] = [];
-  for (const list of lists) {
-    if (!list.ok) return { ok: false, code: "FORBIDDEN" };
-    for (const b of list.bookings) {
-      if (!(b.checkIn <= to && b.checkOut > from)) continue;
+  let cursor: string | undefined;
+  for (;;) {
+    const page = await booking.listOverlappingForStaff(
+      { roomTypeId: roomTypeId ?? undefined, from, to, limit: WARNING_PAGE, cursor },
+      { userId: actor.userId, role: actor.role },
+    );
+    if (!page.ok)
+      return page.code === "FORBIDDEN"
+        ? { ok: false, code: "FORBIDDEN" }
+        : { ok: false, code: "INVALID_INPUT", errors: { form: "Check the dates and room." } };
+    for (const b of page.bookings) {
       const lines = b.rooms.filter((r) => roomTypeId === null || r.roomTypeId === roomTypeId);
-      if (!lines.length) continue;
       found.push({
         id: b.id,
         ref: b.ref,
@@ -275,9 +276,16 @@ export async function bookingsInRange(
         rooms: lines.length,
       });
     }
+    if (!page.nextCursor)
+      return {
+        ok: true,
+        bookings: found.slice(0, WARNING_CAP),
+        truncated: found.length > WARNING_CAP,
+      };
+    if (found.length >= WARNING_CAP)
+      return { ok: true, bookings: found.slice(0, WARNING_CAP), truncated: true };
+    cursor = page.nextCursor;
   }
-  found.sort((a, b) => a.checkIn.localeCompare(b.checkIn) || a.ref.localeCompare(b.ref));
-  return { ok: true, bookings: found };
 }
 
 /**
