@@ -47,6 +47,8 @@ Provider is chosen in `modules/ai-provider/factory.ts`. Model id comes from `AI_
 6. Low confidence goes to unsorted.
 
 ## Evaluation
+M6 guard: Hindi/Hinglish/English confirmations and financial/availability promises are rejected; Devanagari digits are normalized and numeric facts require original-text/server evidence. Guest budgets and refund acknowledgments are distinguished from business promises. Checks still precede trusted quote substitution. Saved-output replay across the unchanged 30 seeds is documented in `reviews/r1-r4-draft-guard-evaluation.md`; the under-30% template target remains unmet.
+
 `pnpm eval:ai --smoke` runs the three brief messages plus a complaint and ambiguous case; `pnpm eval:ai` evaluates the existing 30 synthetic labels without database writes. Live calls are spaced 4.5 seconds apart. JSON evidence records confusion counts, schema/draft validity, fallback/unsorted rate, latency and separate HTTP 429/timeouts. Availability errors are excluded from model accuracy; invalid structured responses count against it. Rules reports contain no live-model accuracy/latency claim. No provider is automatically rotated.
 
 ## Persistent processing (R2)

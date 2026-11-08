@@ -1,0 +1,3662 @@
+{
+  "mode": "saved-output replay, no fresh model inference",
+  "referenceDateIST": "2026-11-08",
+  "inputs": [
+    {
+      "path": "docs/reviews/ollama-benchmark/extended-baseline/runs.jsonl",
+      "sha256": "35c6cbbca5cbfe5616a602e78a1e0ae6e747e47a31db6d6202f3107b240462d0"
+    },
+    {
+      "path": "docs/reviews/ollama-benchmark/extended-controlled/runs.jsonl",
+      "sha256": "acb72296c7fd2441d15e662b84c05095fb9f4b10c6a8674a59f18cc5d1531454"
+    }
+  ],
+  "groups": [
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "cases": 30,
+      "samples": 30,
+      "beforeFallback": 22,
+      "afterFallback": 19,
+      "beforeRate": 0.7333333333333333,
+      "afterRate": 0.6333333333333333,
+      "changePercentagePoints": -10
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "cases": 30,
+      "samples": 30,
+      "beforeFallback": 25,
+      "afterFallback": 24,
+      "beforeRate": 0.8333333333333334,
+      "afterRate": 0.8,
+      "changePercentagePoints": -3.3333333333333335
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "cases": 30,
+      "samples": 90,
+      "beforeFallback": 65,
+      "afterFallback": 61,
+      "beforeRate": 0.7222222222222222,
+      "afterRate": 0.6777777777777778,
+      "changePercentagePoints": -4.444444444444445
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "cases": 30,
+      "samples": 90,
+      "beforeFallback": 60,
+      "afterFallback": 56,
+      "beforeRate": 0.6666666666666666,
+      "afterRate": 0.6222222222222222,
+      "changePercentagePoints": -4.444444444444445
+    }
+  ],
+  "rows": [
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T01",
+      "run": 1,
+      "category": "room",
+      "draft": "We have a villa available from 14 to 16 November 2026 for 2 adults and 1 child. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T02",
+      "run": 1,
+      "category": "room",
+      "draft": "We have a request for 2 rooms from 2026-12-20 to 2026-12-23 for 6 guests. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T03",
+      "run": 1,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T04",
+      "run": 1,
+      "category": "room",
+      "draft": "The room price including GST for 2 adults from 2026-11-20 to 2026-11-22 is available via {{QUOTE}}.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T05",
+      "run": 1,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T06",
+      "run": 1,
+      "category": "room",
+      "draft": "We understand you're looking for a villa for 2 adults and 1 child. {{QUOTE}}",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T07",
+      "run": 1,
+      "category": "room",
+      "draft": "We'll provide the room rates for the specified dates. {{QUOTE}}",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T08",
+      "run": 1,
+      "category": "room",
+      "draft": "We have noted your request for a room for 2 adults from December 30 to January 2, 2026-2027. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T09",
+      "run": 1,
+      "category": "room",
+      "draft": "We have a villa available for 2 adults and 1 child from 14 to 16 November. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T10",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for your inquiry. We can assist with a room booking for 2 adults from 2026-10-14 to 2026-10-16. {{QUOTE}}",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T11",
+      "run": 1,
+      "category": "wedding",
+      "draft": "We understand your wedding venue request for approximately 250 guests over two nights in February 2027. Our sales team will follow up with available options and details shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T12",
+      "run": 1,
+      "category": "wedding",
+      "draft": "We understand your wedding venue and accommodation request for 120 guests from 2027-02-10 to 2027-02-12. Our team will review your requirements and contact you with a proposal. Please note that the budget of INR 1500000 is being considered for the overall event.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T13",
+      "run": 1,
+      "category": "wedding",
+      "draft": "We would be happy to assist with hosting your engagement reception. Could you please confirm any specific date preferences or additional details? Our sales team will follow up with a proposal.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T14",
+      "run": 1,
+      "category": "offsite",
+      "draft": "We note your request for a meeting room and projector for 45 employees from 2027-01-10 to 2. Please provide further details such as preferred time slots or specific requirements. Sales will follow up with options.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T15",
+      "run": 1,
+      "category": "offsite",
+      "draft": "We understand your request for a team retreat for 20 adults with all meals from 2027-03-04 to 2027-03-06. Our sales team will follow up with a detailed proposal based on your budget of 200000 rupees. Please note that availability and pricing are subject to confirmation.",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T16",
+      "run": 1,
+      "category": "complaint",
+      "draft": "We acknowledge your concern regarding room cleanliness and staff response. Our team will review this matter and follow up accordingly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T17",
+      "run": 1,
+      "category": "complaint",
+      "draft": "We acknowledge your concern regarding the overcharge and duplicate billing. Our team will review the issue and follow up on a resolution.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T18",
+      "run": 1,
+      "category": "complaint",
+      "draft": "We regret to hear about the experience with cleanliness and service. Our team will review this matter. Regarding your room request for two adults from 2026-12-01 to 2026-12-03, we will verify availability and provide details upon confirmation.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T19",
+      "run": 1,
+      "category": "complaint",
+      "draft": "We have received a complaint regarding room cleanliness and duplicate charges. The team will review the issue and follow up on the request for a refund.",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T20",
+      "run": 1,
+      "category": "other",
+      "draft": "We will be in touch with the relevant details shortly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T21",
+      "run": 1,
+      "category": "other",
+      "draft": null,
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T22",
+      "run": 1,
+      "category": "room",
+      "draft": "We have a villa available for your stay from 14 to 16 November 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T23",
+      "run": 1,
+      "category": "room",
+      "draft": null,
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T24",
+      "run": 1,
+      "category": "room",
+      "draft": "Your room has been reserved for 2 adults from 14 to 16 November 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T25",
+      "run": 1,
+      "category": "room",
+      "draft": "We note your interest in a villa for 2 adults, with dates from 2026-11-14 to 2026-11-16. Please confirm the preferred date range and guest count before {{QUOTE}} is issued. Alternative dates have been mentioned but are not yet confirmed.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "unsupported",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T26",
+      "run": 1,
+      "category": "room",
+      "draft": "We have noted your request for a villa for 2 adults and 1 child from 14 to 16 November 2026, within a total budget of INR 30,000. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T27",
+      "run": 1,
+      "category": "room",
+      "draft": "We've adjusted your room request to reflect valid details. Please note that the original date range has been corrected to 2027-02-28 to 2 as per standard date logic. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "unsupported",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T28",
+      "run": 1,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T29",
+      "run": 1,
+      "category": "room",
+      "draft": "We have checked availability and currently no pool villas are available for the requested dates. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen3:4b-instruct",
+      "id": "T30",
+      "run": 1,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T01",
+      "run": 1,
+      "category": "room",
+      "draft": "Hello, {{QUOTE}} would you please check if a villa is available for 2 adults and 1 child from November 14 to 16, 2026? Thank you.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T02",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear guest, {{QUOTE}} for your stay from December 20, 2026, to December 23, 2026, for 6 guests, including 4 adults and 2 children. We look forward to assisting you with your booking. Thank you.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T03",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear Guest, thank you for your request. Could you please provide us with your preferred budget for the 3 rooms? Our sales team will get back to you shortly with the quotation. Best regards.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T04",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear Guest,\n\nThank you for your inquiry regarding the room price for 2 adults from 2026-11-20 to 2026-11-22. Could you please provide the total budget you have in mind? Once we have this information, we will be able to quote the exact price including GST.\n\nBest regards,\n[Your Name]",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T05",
+      "run": 1,
+      "category": "room",
+      "draft": null,
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T06",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear Guest, {{QUOTE}} includes the villa rate for 2 adults and 1 child for the requested dates. Please provide the dates for us to confirm. Looking forward to your response.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T07",
+      "run": 1,
+      "category": "room",
+      "draft": "Could you please provide room rates for the dates {{QUOTE}}November 14 to 16, 2026{{QUOTE}}? The exact number of guests is yet to be decided.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T08",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for your inquiry. Could you please provide us with more details about your stay, such as your preferred room type and any special requests? Our sales team will follow up shortly with a quote.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T09",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for your enquiry. Could you please provide more details about your budget and any specific requirements? Our team will follow up shortly with more information on available villas for your dates.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T10",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear Guest,\n\nThank you for your inquiry. We would be happy to assist you with a room reservation from 2026-10-14 to 2026-10-16 for 2 adults. Could you please provide us with more details such as your preferred room type and any special requests? Our sales team will follow up shortly.\n\nBest regards,\n[Your Name]",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T11",
+      "run": 1,
+      "category": "wedding",
+      "draft": "Thank you for your inquiry for a wedding venue on 12 February 2027. Could you please provide more details about your event, such as the type of reception you're planning? Our sales team will follow up shortly with more information.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T12",
+      "run": 1,
+      "category": "wedding",
+      "draft": "Thank you for reaching out to us regarding your wedding venue and accommodation needs. We will follow up with a sales representative to discuss your requirements and provide you with a tailored package. Please provide us with more details on your specific needs, and we will ensure to meet your budget of INR 1500000.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T13",
+      "run": 1,
+      "category": "wedding",
+      "draft": null,
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T14",
+      "run": 1,
+      "category": "offsite",
+      "draft": "Thank you for your inquiry. We will follow up with a sales representative who will discuss your requirements for meeting rooms and projectors. Please provide us with more details if possible.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T15",
+      "run": 1,
+      "category": "offsite",
+      "draft": "Thank you for your inquiry. We will be in touch with a customized proposal for your team retreat, including room and meal arrangements. Please provide additional details if needed.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T16",
+      "run": 1,
+      "category": "room",
+      "draft": "We are sorry to hear about your experience. Our team will look into this matter and contact you shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T17",
+      "run": 1,
+      "category": "complaint",
+      "draft": "Dear valued guest, we apologize for the inconvenience caused. Our team will investigate the charges and process your refund promptly. Thank you for bringing this to our attention. Best regards, [Your Resort Name]",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T18",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for your feedback. We are sorry to hear about your recent experience. Could you please provide more details about the issues you faced? We will ensure that they are addressed. Additionally, we would be happy to accommodate you with a new room from December 1st to 3rd. {{QUOTE}} would be appreciated. Our team will follow up with you shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T19",
+      "run": 1,
+      "category": "room",
+      "draft": "We are sorry to hear about the issues you faced with your room. We will look into the matter and get back to you shortly. We will also process your refund request. Thank you for bringing this to our attention.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T20",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear Guest,\nCould you please provide more details about your stay, such as the dates and number of guests? Once we have this information, we will send you a quote. Thank you.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T21",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear guest, we hope this message finds you well. We are writing to enquire about the villa rental cost from 14th to 16th November 2026 for a total of 3 guests. Please let us know the quoted price for {{QUOTE}}. Thank you for your assistance.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T22",
+      "run": 1,
+      "category": "room",
+      "draft": "We have confirmed your booking for a villa for 3 guests from November 14 to 16, 2026. The total cost is INR 1,000. Please let us know if you need any further assistance.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T23",
+      "run": 1,
+      "category": "room",
+      "draft": "{{QUOTE}} 请确认贵价是否包含服务费。我们会预订2026年11月14日至16日的2位成人和1名儿童的房间。谢谢。",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T24",
+      "run": 1,
+      "category": "room",
+      "draft": "To secure your stay, please proceed with the booking. A confirmation will be sent shortly. Thank you.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T25",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear valued guest, thank you for reaching out. To assist you better, could you please confirm the preferred dates and number of guests for your villa stay? We will be happy to provide you with a quote once we have these details. Thank you.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T26",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear guest, thank you for your interest in our villa. Could you please provide more details about your stay, such as your preferred villa type and any special requests? Our sales team will follow up with you shortly. {{QUOTE}}",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T27",
+      "run": 1,
+      "category": "room",
+      "draft": null,
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T28",
+      "run": 1,
+      "category": "room",
+      "draft": "We have received your request for a room reservation for 2 adults from 2026-11-14 to 2026-11-16. {{QUOTE}} will be provided shortly. Please review the details and confirm your stay. Thank you.",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T29",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for reaching out. I'm checking the availability of Pool Villas for your proposed dates. {{QUOTE}} will be provided based on your preferences. If no options are available, I can assist with finding alternative accommodations. Please let me know if you need any further assistance.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-baseline",
+      "model": "qwen2.5:7b",
+      "id": "T30",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear valued guest, thank you for reaching out to us. We have noted your interest in a stay for 2 adults from 14-16 October 2026. Please let us know your preferred budget, and we will provide you with the quoted price. Looking forward to your response.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T01",
+      "run": 1,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T02",
+      "run": 1,
+      "category": "room",
+      "draft": "We have noted your request for 2 rooms from 2026-12-20 to 2026--12-23 for 6 guests. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T03",
+      "run": 1,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T04",
+      "run": 1,
+      "category": "room",
+      "draft": "The room price including GST for 2 adults from 2026-11-20 to 2026-11-22 is available via {{QUOTE}}.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T05",
+      "run": 1,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T06",
+      "run": 1,
+      "category": "room",
+      "draft": "We have a villa available for 2 adults and 1 child. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T07",
+      "run": 1,
+      "category": "room",
+      "draft": "We'll provide the room rates for the specified dates. {{QUOTE}}",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T08",
+      "run": 1,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T09",
+      "run": 1,
+      "category": "room",
+      "draft": "We have a villa available for 2 adults and 1 child from 14 to 16 November 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T10",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for your inquiry. We will verify availability for a room for 2 adults from 2026-10-14 to 2026-10-16. {{QUOTE}}",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T11",
+      "run": 1,
+      "category": "wedding",
+      "draft": "We understand you're planning a wedding for approximately 250 guests on 2027-02-12. Our sales team will follow up with venue options and availability for your event.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T12",
+      "run": 1,
+      "category": "wedding",
+      "draft": "We understand your wedding venue and accommodation request for 120 guests from 2027-02-10 to 2027-02-12. Our team will review your requirements and follow up with sales regarding availability and pricing. Please note that the budget of INR 1500000 is being considered for the proposal.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T13",
+      "run": 1,
+      "category": "wedding",
+      "draft": "We would be happy to assist with your engagement reception for 80 guests on 2027-01-18. Could you please confirm any specific requirements or preferences? Our sales team will follow up with a detailed proposal.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T14",
+      "run": 1,
+      "category": "offsite",
+      "draft": "We understand your need for a meeting room and projector for a corporate offsite event for 45 employees from 2027-01-10 to 2027-01-12. {{QUOTE}} will be provided upon confirmation of details. Sales will follow up with availability and options.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T15",
+      "run": 1,
+      "category": "offsite",
+      "draft": "We understand your request for a team retreat for 20 adults with all meals from 2027-03-04 to 2027-03-06. Our team will review the availability and provide a quote accordingly. Please note that the total budget is 200000 rupees.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T16",
+      "run": 1,
+      "category": "complaint",
+      "draft": "We acknowledge your concern regarding the room cleanliness and staff response. Our team will review this matter and follow up accordingly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T17",
+      "run": 1,
+      "category": "complaint",
+      "draft": "We acknowledge your concern regarding the overcharge and double billing. Our team will review the issue and follow up with you on the next steps.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T18",
+      "run": 1,
+      "category": "complaint",
+      "draft": "We sincerely apologize for the experience with your previous room and service. We have noted your concern and will review it promptly. Regarding your room request for two adults from 2026-12-01 to 2026-12-03, we will provide a quote shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T19",
+      "run": 1,
+      "category": "complaint",
+      "draft": "We have received a complaint regarding room cleanliness and duplicate charges. The team will review the issue and follow up on the refund request.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T20",
+      "run": 1,
+      "category": "other",
+      "draft": "We will provide the necessary details upon further information.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T21",
+      "run": 1,
+      "category": "other",
+      "draft": null,
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T22",
+      "run": 1,
+      "category": "room",
+      "draft": "We have a villa available for your stay from 14 to 16 November 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T23",
+      "run": 1,
+      "category": "room",
+      "draft": "We have noted your inquiry for a villa for 2 adults and 1 child from 14 to 16 November 2026, with a quoted price of INR 999 including GST. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T24",
+      "run": 1,
+      "category": "room",
+      "draft": "Your room has been reserved for 2 adults from 14 to 16 November 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T25",
+      "run": 1,
+      "category": "room",
+      "draft": "We note your interest in a villa for 2 adults, with proposed dates from 2026-11-14 to 2026-11-16. Please confirm the preferred dates and guest count, as well as any specific villa requirements. Once clarified, we will provide a quote. {{QUOTE}}",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "unsupported",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T26",
+      "run": 1,
+      "category": "room",
+      "draft": "We have noted your request for a villa for 2 adults and 1 child from 14 to 16 November 2026, within a budget of INR 30,000. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T27",
+      "run": 1,
+      "category": "room",
+      "draft": "We have corrected the date range to 2027-02-28 to 2027-03-01 for 2 adults and 1 child. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "unsupported",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T28",
+      "run": 1,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T29",
+      "run": 1,
+      "category": "room",
+      "draft": "We have checked the availability for pool villas during the requested period and found no options available. {{QUOTE}} will be provided upon further details.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T30",
+      "run": 1,
+      "category": "room",
+      "draft": "We have a room available for 2 adults from 14 to 16 October 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T01",
+      "run": 2,
+      "category": "room",
+      "draft": "We have a villa available from 14 to 16 November 2026 for 2 adults and 1 child. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T02",
+      "run": 2,
+      "category": "room",
+      "draft": "We have noted your request for 2 rooms for 6 guests from 2026-12-20 to 2026-12-23. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T03",
+      "run": 2,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T04",
+      "run": 2,
+      "category": "room",
+      "draft": "The room price including GST for 2 adults from 2026-11-20 to 2026-11-22 is available via {{QUOTE}}.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T05",
+      "run": 2,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T06",
+      "run": 2,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T07",
+      "run": 2,
+      "category": "room",
+      "draft": "We'll provide the room rates for the specified dates. {{QUOTE}}",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T08",
+      "run": 2,
+      "category": "room",
+      "draft": "We have a room available for 2 adults from December 30 to January 2, 2026–2027. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T09",
+      "run": 2,
+      "category": "room",
+      "draft": "We have a villa available for 2 adults and 1 child from 14 to 16 November 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T10",
+      "run": 2,
+      "category": "room",
+      "draft": "Thank you for your inquiry. We will verify availability for a room for 2 adults from 2026-10-14 to 2026-10-16. {{QUOTE}}",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T11",
+      "run": 2,
+      "category": "wedding",
+      "draft": "We understand your wedding venue request for approximately 250 guests over two nights in February 2027. Our sales team will follow up with available options and details shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T12",
+      "run": 2,
+      "category": "wedding",
+      "draft": "We understand your wedding venue and accommodation requirements for 120 guests from 2027-02-10 to 2027-02-12. Our team will review your request and contact you with a proposal. Please note that the budget of INR 1500000 is for reference only and final pricing will be confirmed based on availability and requirements.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T13",
+      "run": 2,
+      "category": "wedding",
+      "draft": "We would be happy to assist with hosting an engagement reception for 80 guests on 2027-01-18. Could you please confirm if this is for a specific venue or if you'd like us to explore options? Our sales team will follow up with further details.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T14",
+      "run": 2,
+      "category": "offsite",
+      "draft": "We understand your need for a meeting room and projector for a corporate offsite event. Please confirm the required facilities and any additional details, and our sales team will follow up with a proposal.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T15",
+      "run": 2,
+      "category": "offsite",
+      "draft": "We understand your request for a team retreat for 20 adults with all meals from 2027-03-04 to 2027-03-06. Our team will review the availability and provide a quote accordingly. Please note that the total budget is set at 200,000 rupees. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T16",
+      "run": 2,
+      "category": "complaint",
+      "draft": "We acknowledge your concern regarding the room cleanliness and staff response. Our team will review this matter and follow up accordingly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T17",
+      "run": 2,
+      "category": "complaint",
+      "draft": "We have received your concern regarding an overcharge and double billing. Our team will review this matter and follow up with you on the next steps.",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T18",
+      "run": 2,
+      "category": "complaint",
+      "draft": "We acknowledge your concern regarding the cleanliness and service during your previous stay. Our team will review this matter. For your upcoming stay from 2026-12-01 to 2026-12-03, we can assist with a new room for two adults. Please note that a quote will be provided upon further details.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T19",
+      "run": 2,
+      "category": "complaint",
+      "draft": "We have received a complaint regarding room cleanliness and duplicate charges. The team will review the issue and follow up on the refund request.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T20",
+      "run": 2,
+      "category": "other",
+      "draft": "We will provide the necessary details upon further information. Please let us know your preferences so we can assist you accordingly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T21",
+      "run": 2,
+      "category": "other",
+      "draft": null,
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T22",
+      "run": 2,
+      "category": "room",
+      "draft": "We have prepared a quote for your villa stay. Please review the details and confirm if you would like to proceed with the booking. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T23",
+      "run": 2,
+      "category": "room",
+      "draft": "We have noted your inquiry for a villa with a cost of INR 999 including GST for 2 adults and 1 child from 14 to 16 November 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T24",
+      "run": 2,
+      "category": "room",
+      "draft": "Your room has been reserved for 2 adults from 14 to 16 November 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T25",
+      "run": 2,
+      "category": "room",
+      "draft": "We note your interest in a villa for 2 adults, with dates initially proposed as 2026-11-14 to 2026-11-16. A second date range (2026-12-20 to 2026-12-22) has been mentioned but not confirmed. To provide an accurate quote, we kindly ask for clarification on the preferred dates and guest count before proceeding. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "unsupported",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T26",
+      "run": 2,
+      "category": "room",
+      "draft": "We have noted your request for a villa for 2 adults and 1 child from 14 to 16 November 2026, within a budget of INR 30,000. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T27",
+      "run": 2,
+      "category": "room",
+      "draft": "We have corrected the date range to 2027-02-28 to 2027-03-01 for 2 adults and 1 child. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "unsupported",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T28",
+      "run": 2,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T29",
+      "run": 2,
+      "category": "room",
+      "draft": "We have checked availability for pool villas during the requested period and found no options available. {{QUOTE}} will be provided upon further details.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T30",
+      "run": 2,
+      "category": "room",
+      "draft": "We have noted your request for a room for 2 adults from 14 to 16 October 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T01",
+      "run": 3,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T02",
+      "run": 3,
+      "category": "room",
+      "draft": "We understand your request for 2 rooms from 2026-12-20 to 2026--12-23 for 6 guests. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T03",
+      "run": 3,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T04",
+      "run": 3,
+      "category": "room",
+      "draft": "The room price including GST for 2 adults from 2026-11-20 to 2026-11-22 is available via {{QUOTE}}.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T05",
+      "run": 3,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T06",
+      "run": 3,
+      "category": "room",
+      "draft": "We would be happy to provide a quote for a villa for 2 adults and 1 child. Please let us know your preferred dates, and we will share the rates accordingly. {{QUOTE}}",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T07",
+      "run": 3,
+      "category": "room",
+      "draft": "We will provide the room rates for the specified period. Please note that the guest count is not yet determined. {{QUOTE}}",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T08",
+      "run": 3,
+      "category": "room",
+      "draft": "We have a room available for 2 adults from December 30 to January 2, 2026–2027. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T09",
+      "run": 3,
+      "category": "room",
+      "draft": "We have a villa available for 2 adults and 1 child from 14 to 16 November 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T10",
+      "run": 3,
+      "category": "room",
+      "draft": "Thank you for your enquiry. We can confirm availability for a room from 14 to 16 October 2026 for 2 adults. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T11",
+      "run": 3,
+      "category": "wedding",
+      "draft": "We understand your wedding venue request for approximately 250 guests on 2027-02-12, with a two-night stay. Our team will review availability and contact you with next steps. Please note that specific pricing and booking details will be provided upon confirmation.",
+      "beforeAccepted": true,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T12",
+      "run": 3,
+      "category": "wedding",
+      "draft": "We understand your wedding venue and accommodation request for 120 guests from 2027-02-10 to 2027-02-12. Our team will review your requirements and follow up with sales on available options.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T13",
+      "run": 3,
+      "category": "wedding",
+      "draft": "We would be happy to assist with hosting an engagement reception for 80 guests on 2027-01-18. Could you please confirm any specific requirements or preferences? Our sales team will follow up with further details.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T14",
+      "run": 3,
+      "category": "offsite",
+      "draft": "We understand your need for a meeting room and projector for a corporate offsite event. Please confirm the required facilities and any additional details. Sales will follow up with a proposal.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T15",
+      "run": 3,
+      "category": "offsite",
+      "draft": "We understand your request for a team retreat for 20 adults with all meals from 2027-03-04 to 2027-03-06. Our team will review the availability and provide a quote accordingly. Please note that the total budget is 200000 rupees.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T16",
+      "run": 3,
+      "category": "complaint",
+      "draft": "We acknowledge your concern regarding the room cleanliness and staff response. Our team will review this matter and follow up accordingly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T17",
+      "run": 3,
+      "category": "complaint",
+      "draft": "We have received your concern regarding an overcharge and double billing. Our team will review this matter and follow up with a resolution.",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T18",
+      "run": 3,
+      "category": "complaint",
+      "draft": "We acknowledge your concern regarding the cleanliness and service during your previous stay. Our team will review this matter. For your upcoming stay from 2026-12-01 to 2026-12-03 with two adults, we will need further details to proceed with a room request. Please confirm your preferences and any specific requirements.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T19",
+      "run": 3,
+      "category": "complaint",
+      "draft": "We have received a complaint regarding room cleanliness and duplicate charges. The team will review the issue and follow up on the request for a refund.",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T20",
+      "run": 3,
+      "category": "other",
+      "draft": "We will provide the relevant details upon further clarification of your request.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T21",
+      "run": 3,
+      "category": "other",
+      "draft": null,
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T22",
+      "run": 3,
+      "category": "room",
+      "draft": "We have a villa available for your stay from 14 to 16 November 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T23",
+      "run": 3,
+      "category": "room",
+      "draft": "Thank you for your enquiry. We have noted your request for a villa for 2 adults and 1 child from 14 to 16 November 2026, with a quoted price of INR 999 including GST. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T24",
+      "run": 3,
+      "category": "room",
+      "draft": "Your room has been reserved for 2 adults from 14 to 16 November 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T25",
+      "run": 3,
+      "category": "room",
+      "draft": "We note your interest in a villa for 2 adults, with proposed dates from 2026-11-14 to 2026-11-16. Please confirm the preferred dates and guest count before {{QUOTE}} is issued. Alternative dates mentioned but not finalised.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "unsupported",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T26",
+      "run": 3,
+      "category": "room",
+      "draft": "We have noted your request for a villa for 2 adults and 1 child from 14 to 16 November 2026, within a budget of INR 30,000. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T27",
+      "run": 3,
+      "category": "room",
+      "draft": "We've corrected the date range to 2027-02-28 to 2027-03-01 for 2 adults and 1 child. {{QUOTE}}",
+      "beforeAccepted": true,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "unsupported",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T28",
+      "run": 3,
+      "category": "room",
+      "draft": "{{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T29",
+      "run": 3,
+      "category": "room",
+      "draft": "We've checked availability for pool villas during your requested dates and found no options available. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen3:4b-instruct",
+      "id": "T30",
+      "run": 3,
+      "category": "room",
+      "draft": "We have noted your request for a room for 2 adults from 14 to 16 October 2026. {{QUOTE}}",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "ok",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T01",
+      "run": 1,
+      "category": "room",
+      "draft": "Hello! Could you please provide us with the verified price for a villa for the dates {{QUOTE}}2026-11-14 to 2026-11-16{{QUOTE}}? Thank you.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T02",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for your inquiry. We have received your request for 2 rooms for 6 guests from December 20th to 23rd, 2026. {{QUOTE}} Please let us know your budget and any specific preferences, and our sales team will follow up shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T03",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear Guest, {{QUOTE}} for 3 rooms for 6 adults from 2026-12-10 to 2026-12-12. Looking forward to your response. Best regards.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T04",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear Guest, thank you for your inquiry. Could you please provide us with the total budget you have in mind for your stay? We will then be able to quote you the room price including GST. Looking forward to your response. Best regards.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T05",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear Guest, thank you for your inquiry. Could you please provide more details about your stay, such as the number of children and adults, and any specific preferences? We will be in touch with a quote for a Pool Villa from 2026-11-14 to 2026-11-16. Best regards.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T06",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear guest, thank you for your inquiry. Could you please provide the dates for your stay? We will then quote the rates for a villa for 2 adults and 1 child. Looking forward to your response.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T07",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear guest, {{QUOTE}} for the dates from 2026-11-14 to 2026-11-16. Please provide the number of guests. We will send you the rates shortly. Thank you.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T08",
+      "run": 1,
+      "category": "room",
+      "draft": "We have noted your request for a room for 2 adults from 30 December 2026 to 2 January 2027. Could you please provide more details about your stay, such as any preferences or special requests? Our sales team will follow up shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T09",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for your enquiry. Could you please provide more details about your budget and preferred villa type? Our sales team will follow up shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T10",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for your inquiry. I would be happy to check the availability for you from October 14th to 16th, 2026. Could you please provide more details about your stay, such as any preferences or requirements? Our sales team will follow up shortly with more information.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T11",
+      "run": 1,
+      "category": "wedding",
+      "draft": "Thank you for your inquiry for a wedding venue on 2027-02-12 for 250 guests, staying 2 nights. Our sales team will follow up with you shortly to discuss your requirements and provide further details.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T12",
+      "run": 1,
+      "category": "wedding",
+      "draft": "Thank you for your interest in our venue for your wedding. Could you please provide more details about your event, such as the number of adults and children, any specific requirements, and the budget breakdown? Our sales team will follow up shortly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T13",
+      "run": 1,
+      "category": "wedding",
+      "draft": null,
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T14",
+      "run": 1,
+      "category": "offsite",
+      "draft": "Thank you for your inquiry. Could you please provide more details about the budget and any specific requirements? Our sales team will follow up shortly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T15",
+      "run": 1,
+      "category": "offsite",
+      "draft": "Dear valued guest,\nThank you for your interest in our resort for your company team retreat. We will follow up with a sales representative to discuss your requirements and provide a detailed quote. Please provide us with more details such as the specific amenities you require and any special requests.\nBest regards,\n[Resort Name]",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T16",
+      "run": 1,
+      "category": "room",
+      "draft": "We are sorry to hear about your experience. Our team will review your complaint and follow up with you shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T17",
+      "run": 1,
+      "category": "complaint",
+      "draft": "Thank you for bringing this to our attention. We apologize for any inconvenience caused and will investigate the matter immediately. A member of our team will contact you shortly to discuss the refund. Thank you for your understanding.",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T18",
+      "run": 1,
+      "category": "room",
+      "draft": "We are sorry to hear about your recent experience. Our team will review your feedback and ensure the cleanliness and service standards are met. Could you please provide more details about your new room request? We will follow up with a sales representative shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T19",
+      "run": 1,
+      "category": "room",
+      "draft": "We are sorry to hear about the issues with your room. Our team will review the matter and get back to you shortly. Please allow us to assist with a refund if needed.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T20",
+      "run": 1,
+      "category": "other",
+      "draft": "Certainly, I would be happy to send you some details. Could you please provide more information about your stay, such as the dates and number of guests? Sales will follow up shortly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T21",
+      "run": 1,
+      "category": "room",
+      "draft": "We would like to inquire about the villa rates for the period from 14th to 16th November 2026. Could you please provide the rental cost for 2 adults and 1 child?",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T22",
+      "run": 1,
+      "category": "room",
+      "draft": "We have reserved a villa for you from November 14 to 16, 2026. Please let us know if you need any further assistance.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T23",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for your interest in our villa. Could you please confirm if the quoted price of INR 999 per night for 2 adults and 1 child from 2026-11-14 to 2026-11-16 is correct? We look forward to your response.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T24",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for your request. We have reserved a room for 2 adults from 2026-11-14 to 2026-11-16. {{QUOTE}} will be in touch with the exact pricing shortly. Please let us know if you have any further requirements.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T25",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for reaching out. Could you please clarify the dates and number of guests for your villa booking? We will be happy to provide a quote once we have the necessary details.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T26",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for your interest in our villas. Could you please provide more details about your stay? {{QUOTE}} will be sent for verification shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T27",
+      "run": 1,
+      "category": "other",
+      "draft": "Thank you for reaching out. Could you please confirm the correct dates and the number of adults and children? Our team will be happy to assist you further.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T28",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for your enquiry. Could you please provide us with your preferred room type? {{QUOTE}} will be sent for verification shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T29",
+      "run": 1,
+      "category": "room",
+      "draft": "Thank you for reaching out. I will check for alternative options for you and get back with the available choices. {{QUOTE}} will be provided upon confirmation. Please let me know if you need any further assistance.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T30",
+      "run": 1,
+      "category": "room",
+      "draft": "Dear guest, thank you for your inquiry. We have reserved a room for 2 adults from 14-16 October 2026. Please provide your budget for further assistance. Best regards, [Your Name]",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T01",
+      "run": 2,
+      "category": "room",
+      "draft": "Dear guest, {{QUOTE}} for a villa for 2 adults and 1 child from 2026-11-14 to 2026-11-16. We will review your request and get back to you shortly. Thank you.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T02",
+      "run": 2,
+      "category": "room",
+      "draft": "Dear Guest, {{QUOTE}} we have received your request for 2 rooms for 6 guests from 2026-12-20 to 2026-12-23. Could you please provide us with your preferred budget range? We will get back to you shortly with the available rates. Thank you.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T03",
+      "run": 2,
+      "category": "room",
+      "draft": "Dear Guest, {{QUOTE}} for 3 rooms for 6 adults from 2026-12-10 to 2026-12-12. Looking forward to your response. Best regards.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T04",
+      "run": 2,
+      "category": "room",
+      "draft": "Dear guest, thank you for your inquiry. Could you please provide us with the total budget you have in mind for your stay? We will be happy to quote you the price for 2 adults from 2026-11-20 to 2026-11-22, including GST. Looking forward to your response.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T05",
+      "run": 2,
+      "category": "room",
+      "draft": "Dear Guest, thank you for your inquiry. Could you please provide more details on your preferred dates and budget? We will be happy to quote you the price for a Pool Villa for 2 adults and 1 child from 2026-11-14 to 2026-11-16. Looking forward to assisting you further. Best regards.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T06",
+      "run": 2,
+      "category": "room",
+      "draft": "Thank you for your interest in our villas. Could you please provide the dates you are considering? We will send you the rates via {{QUOTE}}.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T07",
+      "run": 2,
+      "category": "room",
+      "draft": "Dear guest, {{QUOTE}} for the dates from 2026-11-14 to 2026-11-16. Please let us know the number of guests so we can provide a quote. Thank you.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T08",
+      "run": 2,
+      "category": "room",
+      "draft": "We have received your request for a room for 2 adults from 30 December 2026 to 2 January 2027. Could you please provide more details about your stay, such as any preferences or requirements? Our sales team will follow up shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T09",
+      "run": 2,
+      "category": "room",
+      "draft": "Thank you for your enquiry. Could you please provide more details about your budget and preferred villa type? Our sales team will follow up shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T10",
+      "run": 2,
+      "category": "room",
+      "draft": "Thank you for your inquiry. I will check the availability for a room for 2 adults from October 14th to 16th, 2026. {{QUOTE}} will be provided once the details are confirmed. Please allow me to assist further with any additional information you may have.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T11",
+      "run": 2,
+      "category": "wedding",
+      "draft": "Thank you for your inquiry for a wedding venue on 2027-02-12 for 250 guests, staying 2 nights. Our sales team will follow up with you shortly to discuss your requirements and provide a quote.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T12",
+      "run": 2,
+      "category": "wedding",
+      "draft": "Thank you for your interest in our venue for your upcoming wedding. Could you please provide more details about your event, such as the number of adults and children, any specific requirements, and the type of accommodation you are considering? Our sales team will follow up with you shortly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T13",
+      "run": 2,
+      "category": "wedding",
+      "draft": null,
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T14",
+      "run": 2,
+      "category": "offsite",
+      "draft": "Thank you for your inquiry. Could you please provide more details about your budget and any specific requirements? Our sales team will follow up shortly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T15",
+      "run": 2,
+      "category": "offsite",
+      "draft": "Thank you for your inquiry. We will follow up with a sales representative to discuss your requirements and provide a detailed quote. Please provide any additional details you may have.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T16",
+      "run": 2,
+      "category": "room",
+      "draft": "Thank you for bringing this to our attention. We apologize for the inconvenience. Our team will review your stay and ensure the issue is addressed. Please provide more details if possible.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T17",
+      "run": 2,
+      "category": "complaint",
+      "draft": "We apologize for any inconvenience. Our team will investigate the issue and process your refund promptly. Thank you for bringing this to our attention.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T18",
+      "run": 2,
+      "category": "room",
+      "draft": "We apologize for the issues you experienced during your last stay. We have taken note of your concerns and will ensure they are addressed. Could you please provide us with more details about your new room request? Our sales team will follow up with you shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T19",
+      "run": 2,
+      "category": "room",
+      "draft": "We are sorry to hear about the issues with your room. Our team will look into the matter and get back to you shortly. Please allow us to assist with a refund.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T20",
+      "run": 2,
+      "category": "other",
+      "draft": "Certainly! Could you please provide more details about your stay, such as the dates and number of guests? Our sales team will follow up with you shortly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T21",
+      "run": 2,
+      "category": "room",
+      "draft": "We would like to inquire about the villa rates for the period from 14th to 16th November 2026. There will be a total of 3 guests, 2 adults and 1 child. Please quote the price for this period.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T22",
+      "run": 2,
+      "category": "room",
+      "draft": "Dear guest,\nThank you for your inquiry. We are pleased to confirm your villa booking for 2026-11-14 to 2026-11-16 for 3 guests. The total cost is INR 1,000. Please let us know if you have any further requirements.\nBest [NAME]",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T23",
+      "run": 2,
+      "category": "room",
+      "draft": "Thank you for your interest in our villa. We have noted your budget of INR 999 per night including GST. Could you please confirm the total number of nights and the number of adults and children in your party? Our team will follow up with a quote shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T24",
+      "run": 2,
+      "category": "room",
+      "draft": "Thank you for your request. Your room reservation for 2 adults from 2026-11-14 to 2026-11-16 has been noted. {{QUOTE}} will be provided shortly. We will confirm your reservation shortly. Thank you.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T25",
+      "run": 2,
+      "category": "room",
+      "draft": "Thank you for reaching out. Could you please clarify the dates and the number of guests for your villa booking? We will follow up with a quote once we have the necessary details.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T26",
+      "run": 2,
+      "category": "room",
+      "draft": "Thank you for your interest in our villas. Could you please provide more details about your stay, such as the preferred villa type and any special requirements? Our sales team will follow up shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T27",
+      "run": 2,
+      "category": "other",
+      "draft": "Thank you for reaching out. Could you please confirm the correct dates and the number of adults and children? Our team will be happy to assist you with the booking.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T28",
+      "run": 2,
+      "category": "room",
+      "draft": "Dear Guest, thank you for your reservation request. Could you please provide us with your preferred room type and any additional preferences? Our sales team will follow up shortly with the available rates. {{QUOTE}} Best regards, [Your Name]",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T29",
+      "run": 2,
+      "category": "room",
+      "draft": "Thank you for reaching out. I will check for alternative options for you and get back with the details. {{QUOTE}} will be provided upon confirmation.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T30",
+      "run": 2,
+      "category": "room",
+      "draft": "Dear guest, thank you for your inquiry. We have reserved a room for 2 adults from 14-16 October 2026. Please provide your budget for further assistance. Best regards, [Your Name]",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T01",
+      "run": 3,
+      "category": "room",
+      "draft": "Hello! Could you please provide the price for a villa for 2 adults and 1 child from 2026-11-14 to 2026-11-16? {{QUOTE}} Thank you!",
+      "beforeAccepted": true,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T02",
+      "run": 3,
+      "category": "room",
+      "draft": "Dear Guest, {{QUOTE}} we have received your request for 2 rooms for 6 guests from 2026-12-20 to 2026-12-23. Could you please provide us with your preferred budget or any specific room preferences? We will follow up with a quote shortly. Thank you.",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T03",
+      "run": 3,
+      "category": "room",
+      "draft": "Dear Guest, {{QUOTE}} for 3 rooms for 6 adults from 2026-12-10 to 2026-12-12. Looking forward to your response. Best regards.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T04",
+      "run": 3,
+      "category": "room",
+      "draft": "Dear Guest,\n\nThank you for your inquiry. Could you please provide us with the total budget you have in mind for your stay? We will then be able to quote you the room price including GST.\n\nLooking forward to your response.\n\nBest regards,\n[Your Name]",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T05",
+      "run": 3,
+      "category": "room",
+      "draft": null,
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T06",
+      "run": 3,
+      "category": "room",
+      "draft": "Dear guest, thank you for your inquiry. Could you please provide us with the dates you are considering? We will then be able to quote you the rates for the villa. {{QUOTE}} Looking forward to your response.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T07",
+      "run": 3,
+      "category": "room",
+      "draft": "Dear guest, thank you for your inquiry. Could you please specify the number of guests? We will then provide you with the rates for your requested dates. {{QUOTE}} Best regards, [Your Name]",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T08",
+      "run": 3,
+      "category": "room",
+      "draft": "We have received your request for a room for 2 adults from 30 December 2026 to 2 January 2027. Could you please provide more details about your stay, such as any preferences or requirements? Our sales team will follow up shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T09",
+      "run": 3,
+      "category": "room",
+      "draft": "Hello, thank you for your inquiry. Could you please provide more details about your stay? We will follow up with you shortly regarding the availability of a villa for 2 adults and 1 child from 14 to 16 November 2026. {{QUOTE}} Thank you.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T10",
+      "run": 3,
+      "category": "room",
+      "draft": "Thank you for your inquiry. I will check the availability for a room for 2 adults from October 14th to 16th, 2026. {{QUOTE}} will be provided once the details are confirmed. Please allow me a moment to verify.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T11",
+      "run": 3,
+      "category": "wedding",
+      "draft": "Thank you for your inquiry for a wedding venue on 2027-02-12 for 250 guests, staying 2 nights. Our sales team will follow up with you shortly to discuss your requirements and provide a quote.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T12",
+      "run": 3,
+      "category": "wedding",
+      "draft": "Thank you for your interest in our venue for your wedding. Could you please provide more details about the event, such as the number of adults and children, any specific requirements, and the exact budget allocation for the venue and accommodation? Our sales team will follow up shortly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T13",
+      "run": 3,
+      "category": "wedding",
+      "draft": null,
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T14",
+      "run": 3,
+      "category": "offsite",
+      "draft": "Thank you for your inquiry. Could you please provide more details about your budget and any specific requirements? Our sales team will follow up shortly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T15",
+      "run": 3,
+      "category": "offsite",
+      "draft": "Thank you for your inquiry. We will follow up with a sales representative to discuss your team retreat requirements. Please provide more details on your preferences.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T16",
+      "run": 3,
+      "category": "room",
+      "draft": "We are sorry to hear about your experience. Our team will review your complaint and ensure the issue is addressed. Please provide more details if possible.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T17",
+      "run": 3,
+      "category": "complaint",
+      "draft": "We apologize for any inconvenience. Our team will investigate the issue and process your refund promptly. Thank you for bringing this to our attention.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T18",
+      "run": 3,
+      "category": "room",
+      "draft": "We are sorry to hear about your recent experience. We take all feedback seriously and will ensure that the issue is reviewed. Could you please provide more details about your new room request? Our sales team will follow up with you shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T19",
+      "run": 3,
+      "category": "room",
+      "draft": "We are sorry to hear about the issues with your room. We will look into the cleanliness concerns and billing. Please let us know more details so we can address them. Our team will get back to you shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T20",
+      "run": 3,
+      "category": "other",
+      "draft": "Certainly! Could you please provide more details about your stay, such as the dates and number of guests? Our sales team will follow up with you shortly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T21",
+      "run": 3,
+      "category": "room",
+      "draft": "We would like to inquire about the villa rates for the period from 14th to 16th November 2026. Could you please provide the quotation? Thank you.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T22",
+      "run": 3,
+      "category": "room",
+      "draft": "Thank you for your inquiry. We have confirmed your villa booking for 2026-11-14 to 2026-11-16 for 3 guests. The total cost is INR 1. Please let us know if you have any further requirements or questions.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T23",
+      "run": 3,
+      "category": "room",
+      "draft": "Thank you for your interest in our villa. We have noted your budget of INR 999 per night including GST for 2 adults and 1 child from 2026-11-14 to 2026-11-16. {{QUOTE}} Please confirm the total cost for your stay. We will follow up with a sales representative to assist you further.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T24",
+      "run": 3,
+      "category": "room",
+      "draft": "Thank you for your interest in our resort. We have reserved a room for your stay from 2026-11-14 to 2026-11-16. {{QUOTE}} will be provided upon confirmation. Please let us know if you have any further requirements or preferences. We look forward to hosting you.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T25",
+      "run": 3,
+      "category": "room",
+      "draft": "Dear Guest, thank you for reaching out. To assist you better, could you please confirm the number of adults and the dates you are interested in? We will be happy to provide a quote once we have this information. Best regards.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T26",
+      "run": 3,
+      "category": "room",
+      "draft": "Thank you for your interest in our villas. Could you please provide more details about your stay, such as the preferred villa type and any special requirements? Our sales team will follow up shortly.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T27",
+      "run": 3,
+      "category": "other",
+      "draft": "Thank you for reaching out. Could you please confirm the correct number of adults and children for your stay? We will review the dates and get back to you shortly.",
+      "beforeAccepted": true,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T28",
+      "run": 3,
+      "category": "room",
+      "draft": "Thank you for your reservation request. Could you please provide us with your preferred room type? {{QUOTE}} will be sent for final pricing.",
+      "beforeAccepted": false,
+      "afterAccepted": true,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T29",
+      "run": 3,
+      "category": "room",
+      "draft": "Hello, thank you for reaching out. I understand you are looking for Pool Villas from 2026-11-14 to 2026-11-16 and found none available. Could you please provide more details about your stay, such as the number of adults and children? Our sales team will follow up with alternative options. {{QUOTE}} will be provided upon confirmation. Thank you.",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      }
+    },
+    {
+      "suite": "extended-controlled",
+      "model": "qwen2.5:7b",
+      "id": "T30",
+      "run": 3,
+      "category": "room",
+      "draft": "Dear Guest,\nThank you for your inquiry. We have reserved a room for 2 adults from 14-16 October 2026. Please let us know your budget so we can provide you with the best options. We look forward to your response.\nBest [NAME]",
+      "beforeAccepted": false,
+      "afterAccepted": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      }
+    }
+  ]
+}

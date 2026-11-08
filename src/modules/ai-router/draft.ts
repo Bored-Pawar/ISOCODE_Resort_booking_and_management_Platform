@@ -9,6 +9,7 @@ export function buildDraft(
   modelDraft: unknown,
   quote: SelectedQuote | null,
   evidence?: Grounding,
+  rawText?: string,
 ) {
   // Even the safe template cannot attach a price without grounded booking evidence.
   if (
@@ -20,7 +21,7 @@ export function buildDraft(
   )
     quote = null;
   const room = classification.category === "room";
-  const safe = safeModelDraft(modelDraft, room);
+  const safe = safeModelDraft(modelDraft, room, { evidence, rawText });
   const template = safe ? normalizeDraft(modelDraft) : safeTemplate(classification.category);
   const price = quote
     ? `Quoted for ${quote.checkIn} to ${quote.checkOut}, ${evidence!.guests!.adults} adults, ${evidence!.childrenSupplied ? `${evidence!.guests!.children} children` : "child count not supplied; estimate assumes no children"}, ${quote.roomNames?.join(" + ") ?? quote.lines.map((line) => line.roomTypeId).join(" + ")}: From ${formatInr(quote.totalPaise)} (room only, including ${formatInr(quote.gstPaise)} GST). This is indicative, subject to availability; no room is held.`

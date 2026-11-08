@@ -66,7 +66,13 @@ export async function processEnquiry(
           () => null,
         )
       : null;
-    const draft = buildDraft(outcome.classification, outcome.draftText, quote, evidence);
+    const draft = buildDraft(
+      outcome.classification,
+      outcome.draftText,
+      quote,
+      evidence,
+      claimed.claim.row.rawText,
+    );
     const saved = await settleEnquiry(claimed.claim, {
       status: outcome.status,
       category: outcome.classification.category,

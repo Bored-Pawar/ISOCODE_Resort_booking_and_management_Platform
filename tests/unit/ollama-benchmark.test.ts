@@ -137,18 +137,18 @@ describe("isolated production-adapter fault checks (mocked HTTP)", () => {
     expect(value.category).toBe("room");
     expect(value.guests.total).toBe(3);
   });
-  it("documents wrong perspective currently passing the guard", () => {
+  it("rejects guest-perspective prose as a resort reply", () => {
     const draft = "I would like to book a villa for my family. {{QUOTE}} Please let me know.";
-    expect(safeModelDraft(draft, true)).toBe(true);
-    expect(buildDraft(classification, draft, null).usedTemplate).toBe(false);
+    expect(safeModelDraft(draft, true)).toBe(false);
+    expect(buildDraft(classification, draft, null).usedTemplate).toBe(true);
   });
-  it("documents benign complaint acknowledgement rejected by refund keyword", () => {
+  it("accepts benign complaint acknowledgement without a refund promise", () => {
     expect(
       safeModelDraft(
         "We are sorry to hear about your refund concern. Our team will review.",
         false,
       ),
-    ).toBe(false);
+    ).toBe(true);
   });
   it("documents explicit past stay passing validation", () => {
     expect(
@@ -158,8 +158,8 @@ describe("isolated production-adapter fault checks (mocked HTTP)", () => {
       }).success,
     ).toBe(true);
   });
-  it("documents non-English booking promise bypassing English prose guard", () => {
-    expect(safeModelDraft("आपका कमरा पक्का हो गया है। {{QUOTE}} धन्यवाद।", true)).toBe(true);
+  it("rejects Hindi booking promises", () => {
+    expect(safeModelDraft("आपका कमरा पक्का हो गया है। {{QUOTE}} धन्यवाद।", true)).toBe(false);
   });
   it("documents keyword fallback reading an injected category as intent", () => {
     const c = rulesClassify(

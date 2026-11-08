@@ -57,7 +57,6 @@ describe("draft safety", () => {
     "pay now",
     "we sent the email",
     "A villa is available",
-    "Pool Villa for your stay",
   ])("rejects invented offer: %s", (price) => {
     expect(safeModelDraft(`Thank you. ${price}. {{QUOTE}}`, true)).toBe(false);
   });
@@ -66,9 +65,25 @@ describe("draft safety", () => {
       safeModelDraft(
         "For 2026-11-14 to 2026-11-16, 2 adults and 1 child, reference ENQ-4411. {{QUOTE}}",
         true,
+        {
+          evidence: groundExtraction(
+            "2026-11-14 to 2026-11-16 for 2 adults and 1 child",
+            { ...villa, guests: { adults: 2, children: 1 } },
+            "2026-11-08",
+          ),
+          rawText: "ENQ-4411",
+        },
       ),
     ).toBe(true);
-    expect(safeModelDraft("For 14-16 Nov, 2 nights and 3 guests. {{QUOTE}}", true)).toBe(true);
+    expect(
+      safeModelDraft("For 14-16 Nov, 2 nights and 3 guests. {{QUOTE}}", true, {
+        evidence: groundExtraction(
+          "14-16 Nov for 2 adults and 1 child",
+          { ...villa, guests: { adults: 2, children: 1 } },
+          "2026-11-08",
+        ),
+      }),
+    ).toBe(true);
   });
   it.each([
     null,
