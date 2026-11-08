@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-08T12:52:49.944Z",
+  "generatedAt": "2026-11-08T13:17:37.613Z",
   "mode": "rules-only",
   "provider": "rules",
   "model": null,
@@ -32,7 +32,7 @@
       "correct": true,
       "safeDraft": false,
       "unsorted": true,
-      "latencyMs": 1,
+      "latencyMs": 0,
       "rateLimits": 0,
       "error": null
     },
