@@ -2,25 +2,31 @@ import Link from "next/link";
 import { site } from "@/lib/site";
 import { Wordmark } from "./wordmark";
 
-const nav = [{ href: "/login", label: "Sign in" }];
-
-/** Guest site frame: quiet header, content, footer with address and contact. */
-export function GuestShell({ children }: { children: React.ReactNode }) {
+/**
+ * Guest site frame: quiet header, content, footer with address and contact. `account` is the
+ * header's right side (sign in link or profile menu); it defaults to a plain sign in link.
+ */
+export function GuestShell({
+  children,
+  account,
+}: {
+  children: React.ReactNode;
+  account?: React.ReactNode;
+}) {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="border-b border-border bg-bg">
         <div className="mx-auto flex h-16 max-w-page items-center justify-between px-4 md:px-8">
           <Wordmark />
           <nav aria-label="Main" className="flex items-center gap-1">
-            {nav.map((n) => (
+            {account ?? (
               <Link
-                key={n.href}
-                href={n.href}
+                href="/login"
                 className="inline-flex h-11 items-center rounded-control px-3 text-small font-semibold text-text hover:bg-surface-2"
               >
-                {n.label}
+                Sign in
               </Link>
-            ))}
+            )}
           </nav>
         </div>
       </header>

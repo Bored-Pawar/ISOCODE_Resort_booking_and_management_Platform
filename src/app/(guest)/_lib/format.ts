@@ -16,3 +16,15 @@ export function guestsLabel(adults: number, children: number): string {
   const a = plural(adults, "adult");
   return children > 0 ? `${a} · ${plural(children, "child", "children")}` : a;
 }
+
+/** Up to two initials for the profile button: "Meera Nair" -> "MN", else the email's first letter. */
+export function initials(name: string, email: string): string {
+  const letters = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("");
+  const out = letters.length > 1 ? letters[0] + letters[letters.length - 1] : letters;
+  return (out || email.trim()[0] || "?").toUpperCase();
+}
