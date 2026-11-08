@@ -8,9 +8,10 @@ Coordination records, not enforcement. The scrum master assigns ownership in cha
 
 | Area | Paths | Owner | Since |
 |---|---|---|---|
-| Database schema, migrations and seed | `src/db/**` | Codex (S1; exclusive coordination lock, only B1–B5-required changes) | 2026-11-08 |
-| Booking and inventory core | `src/modules/{inventory,booking,payments}/**` | Codex (S1; B1–B5, not B7 gateway) | 2026-11-08 |
-| Pricing engine | `src/modules/pricing/**` | Codex (S1; B1 and transaction helper) | 2026-11-08 |
+| S2 booking flow (runbook `s2-booking-runbook.md`) | `src/modules/{booking,payments}/**`, `src/app/(guest)/**`, `src/app/api/payments/**`, `src/app/(staff)/admin/bookings/**`, `src/components/ui/hold-timer.tsx` | Claude Code, branch `claude/booking-flow` only. Read only: `src/db/**`, pricing, inventory. Codex keeps `src/modules/{enquiries,ai-router}/**` (R1 to R4) | 2026-11-08 17:45 IST |
+| Database schema, migrations and seed | `src/db/**` | Read only in S2 booking flow (no schema change). Was Codex S1 | 2026-11-08 |
+| Booking and inventory core | `src/modules/inventory/**` | Read only in S2 booking flow. Booking and payments: see the first row. Was Codex S1 | 2026-11-08 |
+| Pricing engine | `src/modules/pricing/**` | Read only in S2 booking flow. Was Codex S1 | 2026-11-08 |
 | Guest browsing and catalog | `src/app/(guest)/**`, `src/modules/catalog/**` and guest-screen-local components | Claude Code (S1; G1–G3) | 2026-11-08 |
 | Enquiry intake and dev area | `src/modules/enquiries/**`, `src/app/api/inbound/**`, `src/app/dev/**`, `src/app/(guest)/(site)/enquire/**`, `src/lib/auth/{password-field,sign-up-schema}*` | Claude Code (S1; Q1–Q3, dev area, password UX) | 2026-11-08 |
 
