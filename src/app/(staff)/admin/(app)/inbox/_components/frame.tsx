@@ -250,10 +250,10 @@ export function InboxFrame({
   detail?: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-[200px_minmax(300px,360px)_minmax(0,1fr)] lg:gap-6">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[200px_minmax(300px,360px)_minmax(0,1fr)] lg:gap-6 [&>*]:min-w-0">
       <aside className={cn("flex flex-col gap-4", detail && "hidden lg:flex")}>
         <h1 className="text-h1">Inbox</h1>
-        <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+        <Suspense fallback={<Skeleton className="h-11 w-full lg:h-64" />}>
           <Lanes query={query} actor={actor} />
         </Suspense>
       </aside>
