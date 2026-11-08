@@ -35,4 +35,6 @@ Runbook: `s2-booking-runbook.md` (updated mid-run with item 1b, the `/enquire` l
 5. H1's second path (staff approves a draft) waits for Q6.
 
 ## Full integration run
-(filled in below when it finishes)
+- Run 1 (default 10 s hooks): 55 passed, 9 failed, 18 skipped. All but one failure were hook or test timeouts; the one `NO_RATE` followed a timed out setup. At about 490 ms per round trip the fixture hooks alone are near 10 s. No assertion about booking behaviour failed.
+- Run 2 (`--hookTimeout=120000 --testTimeout=180000`, CLI only, no code change): 80 of 82 passed in 10 files. The 2 failures were both in `multiroom.test.ts` (B10 hold races, code this branch did not change), one again a 10 s hook timeout set inside that file.
+- `multiroom.test.ts` rerun alone: 9/9 passed. Every one of the 82 tests has passed; the suite is latency-bound from this machine. Suggest CI (or a run near Neon) as the authoritative gate.
