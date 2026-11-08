@@ -3,6 +3,11 @@
 Scrum master: Aditya Pawar. Deadline: 9 Nov 2026, 23:59 IST.
 Developers update this file after significant changes. Keep entries one line.
 
+## Codex S2 R1–R4 (2026-11-08)
+- M0: fetched `origin/main`; base `e1e3d92d80ccfa6b2e89dd4fd23166bde11ba944` already equals `codex/dev`, including B10/stay builder; isolated Codex worktree now uses `codex/r1-r4-ai-routing`. Scrum master's final handoff assigns ai-provider, ai-router and R2 enquiry internals; other modules/schema stay read-only. User-supplied untracked final handoff preserved.
+- M0 gates: baseline typecheck/lint, 232 unit tests and production build pass (tests/build require subprocess permission on Windows); read-only repository safety guard verified isolated TEST_DATABASE_URL and PostgreSQL 18.6 before writes. No hosted provider keys/local endpoint configured; Ollama executable absent. No live-model results claimed.
+- M1: AI SDK 7.0.164 shared `generateText`/`Output.object` transport supports Google, Anthropic, OpenAI-compatible local and zero-call rules; 10-second abort per attempt, one bounded transient retry, sanitized errors. Typecheck and all 244 unit tests pass; no live smoke possible without configured provider. Local model installation is deferred as instructed.
+
 ## Ownership of locked areas
 Coordination records, not enforcement. The scrum master assigns ownership in chat; developers confirm before editing. Pull `main` before reading this table.
 

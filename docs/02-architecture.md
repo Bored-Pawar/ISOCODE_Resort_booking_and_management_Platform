@@ -34,6 +34,7 @@ src/
     payments/       PaymentProvider + MockProvider     [LOCKED]
     enquiries/      inbox, channels, audit
     ai-router/      classify, route, draft, fallback
+    ai-provider/    provider selection and structured SDK transport only
     admin/          admin services, export
   lib/              auth (requireRole, requireGuestOwner), db client, money, dates
   db/               schema/, migrations/, seed/         [LOCKED]
