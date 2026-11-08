@@ -92,6 +92,6 @@ Staff eligibility (D2): `users` has no active/disabled flag. All existing accoun
 
 ## Machine and public entry points without a session role (B10 minor fix 3)
 CLAUDE.md rule 5 requires `requireRole()` or `requireGuestOwner()` on every server action and route handler. These are the recorded exemptions; each still validates its input with Zod.
-1. **Cron** (`/api/cron/expire-holds`): a machine endpoint with no user session. It requires `Authorization: Bearer <CRON_SECRET>` (fails closed when `CRON_SECRET` is unset or the header is wrong) instead of `requireRole()`, and only calls `booking.releaseExpiredHolds()`.
+1. **Cron** (`/api/cron/expire-holds`): a machine endpoint with no user session. It requires `Authorization: Bearer <CRON_SECRET>` (fails closed when unset or wrong) instead of `requireRole()`. The approved M4 extension calls `booking.releaseExpiredHolds()` plus the additive `ai-router.recoverEnquiries` export for one bounded recovery batch, with a 60-second route duration. Existing public process/list signatures remain unchanged.
 2. **Inbound webhooks** and the **`/enquire` form**: see "Enquiry intake and the dev area" above.
 3. **`/book` room cart (B6 step 1)**: a server-rendered page, not an action. It reads the cart from the URL and calls the public `catalog`, `inventory.availability` and `pricing.quote` reads, which take no hold and write nothing (lazy expiry aside, which is booking-owned). The hold itself is taken later by `acquireBookingHold`, which calls `requireRole('guest')`.

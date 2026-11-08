@@ -8,6 +8,7 @@ import { processEnquiry } from "./processing";
 export { classificationSchema } from "./schema";
 export type { Classification } from "./schema";
 import type { Classification } from "./schema";
+export { recoverEnquiries } from "./recovery";
 
 export const processInputSchema = z.object({ enquiryId: z.string().min(1) });
 export type ProcessInput = z.input<typeof processInputSchema>;

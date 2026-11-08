@@ -153,6 +153,53 @@ export async function sweepCandidates(db: Db = getDb()): Promise<string[]> {
   return rows.map((r) => r.id);
 }
 
+/** Claim a bounded batch inside one short transaction; concurrent sweepers skip held rows. */
+export async function claimSweep(priorityId?: string, db: Db = getDb()): Promise<Claim[]> {
+  return db.transaction(async (tx) => {
+    const exhausted = await tx
+      .select({ id: enquiries.id })
+      .from(enquiries)
+      .where(
+        and(
+          queueStateEligibility(),
+          sql`${enquiries.aiAttempts} >= ${MAX_PROCESSING_ATTEMPTS}`,
+          staffSafe,
+        ),
+      )
+      .orderBy(asc(enquiries.aiUpdatedAt), asc(enquiries.id))
+      .limit(SWEEP_LIMIT)
+      .for("update", { skipLocked: true });
+    for (const row of exhausted) await exhaust(tx, row.id);
+    const selected = await tx
+      .select({ id: enquiries.id })
+      .from(enquiries)
+      .where(and(queueEligibility(), staffSafe))
+      .orderBy(
+        sql`CASE WHEN ${enquiries.id} = ${priorityId ?? null} THEN 0 ELSE 1 END`,
+        asc(enquiries.aiUpdatedAt),
+        asc(enquiries.id),
+      )
+      .limit(SWEEP_LIMIT)
+      .for("update", { skipLocked: true });
+    const claims: Claim[] = [];
+    for (const row of selected) {
+      const [claimed] = await tx
+        .update(enquiries)
+        .set({
+          aiStatus: "processing",
+          aiAttempts: sql`${enquiries.aiAttempts} + 1`,
+          aiUpdatedAt: sql`date_trunc('milliseconds', clock_timestamp())`,
+          aiLastError: null,
+        })
+        .where(and(eq(enquiries.id, row.id), queueEligibility(), staffSafe))
+        .returning();
+      if (claimed)
+        claims.push({ row: claimed, attempt: claimed.aiAttempts, updatedAt: claimed.aiUpdatedAt });
+    }
+    return claims;
+  });
+}
+
 /** A thrown processing attempt consumes its claim; only the third failure becomes terminal. */
 export async function failClaim(claim: Claim, db: Db = getDb()) {
   await db.transaction(async (tx) => {

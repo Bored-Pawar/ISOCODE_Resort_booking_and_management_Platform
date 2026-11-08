@@ -11,6 +11,7 @@ import {
   queueEligibility,
   failClaim,
   resetFailedEnquiry,
+  claimSweep,
   type Claim,
   type Settlement,
 } from "@/modules/enquiries/internal";
@@ -89,6 +90,32 @@ afterAll(async () => {
 }, 90_000);
 
 describe("persistent AI queue", { timeout: 90_000 }, () => {
+  it("concurrent SKIP LOCKED sweeps never double-claim, and skip active/terminal rows", async () => {
+    const pending = await enquiry({ aiUpdatedAt: new Date("1900-01-01") });
+    const stale = await enquiry({
+      aiStatus: "processing",
+      aiAttempts: 1,
+      aiUpdatedAt: new Date("1900-01-02"),
+    });
+    const active = await enquiry({
+      aiStatus: "processing",
+      aiAttempts: 1,
+      aiUpdatedAt: new Date(),
+    });
+    const terminal = await enquiry({
+      aiStatus: "failed",
+      aiAttempts: 3,
+      aiLastError: "ATTEMPTS_EXHAUSTED",
+    });
+    const batches = await Promise.all([claimSweep(undefined, db), claimSweep(undefined, db)]);
+    expect(batches.every((batch) => batch.length <= 5)).toBe(true);
+    const claimedIds = batches.flat().map((c) => c.row.id);
+    expect(new Set(claimedIds).size).toBe(claimedIds.length);
+    expect(claimedIds).toContain(pending);
+    expect(claimedIds).toContain(stale);
+    expect(claimedIds).not.toContain(active);
+    expect(claimedIds).not.toContain(terminal);
+  });
   it("three actual failed attempts are terminal and a fourth claim is rejected", async () => {
     const id = await enquiry();
     for (let attempt = 1; attempt <= 3; attempt++) {

@@ -16,12 +16,17 @@ import { PROMPT_VERSION } from "./prompts";
 import { groundExtraction } from "./grounding";
 import { todayIST } from "@/lib/dates";
 
-export async function processEnquiry(input: ProcessInput): Promise<ProcessResult> {
+export async function processEnquiry(
+  input: ProcessInput,
+  suppliedClaim?: Claim,
+): Promise<ProcessResult> {
   const parsed = processInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
   let activeClaim: Claim | undefined;
   try {
-    const claimed = await claimEnquiry(parsed.data.enquiryId);
+    const claimed = suppliedClaim
+      ? { kind: "claimed" as const, claim: suppliedClaim }
+      : await claimEnquiry(parsed.data.enquiryId);
     if (claimed.kind === "missing") return { ok: false, code: "NOT_FOUND" };
     if (claimed.kind === "busy") return { ok: false, code: "FAILED" };
     if (claimed.kind === "existing") {
