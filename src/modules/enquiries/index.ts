@@ -46,3 +46,5 @@ export * from "./inbound";
 export { handleInbound } from "./inbound-route";
 // Approved audit-remediation additions; existing frozen service signatures are unchanged.
 export { retryEnquiry, listReviewQueue } from "./retry";
+// S2 inbox runbook (Q4 to Q7): staff inbox service, additive.
+export * from "./staff";

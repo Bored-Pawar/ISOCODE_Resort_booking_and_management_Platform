@@ -64,8 +64,8 @@ export type NavEntry = { href: string; label: string; icon: NavIcon };
 /** Built admin screens and the capability each needs. Only real routes belong here. */
 const NAV: { entry: NavEntry; anyOf: Capability[] }[] = [
   {
-    entry: { href: "/admin/inbox", label: "Unsorted enquiries", icon: "inbox" },
-    anyOf: ["enquiries.unsorted"],
+    entry: { href: "/admin/inbox", label: "Inbox", icon: "inbox" },
+    anyOf: ["enquiries.room", "enquiries.events", "enquiries.complaints", "enquiries.unsorted"],
   },
   {
     entry: { href: "/admin/bookings", label: "Bookings", icon: "bookings" },
@@ -88,7 +88,7 @@ export function navFor(role: Role | null | undefined): NavEntry[] {
   ];
 }
 
-// ---- Enquiry inbox visibility (for Codex Q4; no code in the enquiry paths here) -----------------
+// ---- Enquiry inbox visibility (Q4: `src/modules/enquiries/staff`) ------------------------------
 
 export type EnquiryCategory = "room" | "wedding" | "offsite" | "complaint" | "other";
 export type EnquiryLane = "sorted" | "unsorted";

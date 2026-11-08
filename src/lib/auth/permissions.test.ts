@@ -99,19 +99,20 @@ describe("requirePermission", () => {
 
 describe("navFor", () => {
   const hrefs = (role: Role) => navFor(role).map((n) => n.href);
-  it("reservations: overview, bookings, rates, allotment, promos (no unsorted queue)", () => {
+  it("reservations: overview, inbox, bookings, rates, allotment, promos", () => {
     expect(hrefs("reservations")).toEqual([
       "/admin",
+      "/admin/inbox",
       "/admin/bookings",
       "/admin/rates",
       "/admin/allotment",
       "/admin/promos",
     ]);
   });
-  it("sales: overview only (the unsorted queue is GM only)", () => {
-    expect(hrefs("sales")).toEqual(["/admin"]);
+  it("sales: overview and the inbox (its own lanes) only", () => {
+    expect(hrefs("sales")).toEqual(["/admin", "/admin/inbox"]);
   });
-  it("gm: everything built, including the unsorted queue", () => {
+  it("gm: everything built", () => {
     expect(hrefs("gm")).toEqual([
       "/admin",
       "/admin/inbox",
@@ -121,9 +122,15 @@ describe("navFor", () => {
       "/admin/promos",
     ]);
   });
-  it("the unsorted queue appears exactly for roles holding enquiries.unsorted", () => {
+  it("the inbox appears exactly for roles holding an enquiries capability", () => {
+    const caps = [
+      "enquiries.room",
+      "enquiries.events",
+      "enquiries.complaints",
+      "enquiries.unsorted",
+    ] as const;
     for (const role of ROLES)
-      expect(hrefs(role).includes("/admin/inbox")).toBe(can(role, "enquiries.unsorted"));
+      expect(hrefs(role).includes("/admin/inbox")).toBe(caps.some((c) => can(role, c)));
   });
   it("guests get no staff nav", () => {
     expect(navFor("guest")).toEqual([]);
