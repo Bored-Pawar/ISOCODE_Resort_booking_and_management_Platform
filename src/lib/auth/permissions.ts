@@ -64,6 +64,10 @@ export type NavEntry = { href: string; label: string; icon: NavIcon };
 /** Built admin screens and the capability each needs. Only real routes belong here. */
 const NAV: { entry: NavEntry; anyOf: Capability[] }[] = [
   {
+    entry: { href: "/admin/inbox", label: "Unsorted enquiries", icon: "inbox" },
+    anyOf: ["enquiries.unsorted"],
+  },
+  {
     entry: { href: "/admin/bookings", label: "Bookings", icon: "bookings" },
     anyOf: ["bookings.view"],
   },
@@ -75,16 +79,11 @@ const NAV: { entry: NavEntry; anyOf: Capability[] }[] = [
   { entry: { href: "/admin/promos", label: "Promos", icon: "promos" }, anyOf: ["promos.manage"] },
 ];
 
-/**
- * Staff navigation for a role: Overview and the unsorted-enquiry review queue (R1 to R4, guarded by
- * `requireRole("reservations", "sales", "gm")` in its own page) for every staff role, then what the
- * role may use.
- */
+/** Staff navigation for a role: Overview for every staff role, then what the role may use. */
 export function navFor(role: Role | null | undefined): NavEntry[] {
   if (role !== "reservations" && role !== "sales" && role !== "gm") return [];
   return [
     { href: "/admin", label: "Overview", icon: "overview" },
-    { href: "/admin/inbox", label: "Unsorted enquiries", icon: "inbox" },
     ...NAV.filter((n) => n.anyOf.some((cap) => can(role, cap))).map((n) => n.entry),
   ];
 }

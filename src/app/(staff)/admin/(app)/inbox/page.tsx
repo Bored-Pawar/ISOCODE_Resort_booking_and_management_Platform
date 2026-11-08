@@ -1,15 +1,27 @@
 import { Suspense } from "react";
-import { connection } from "next/server";
-import { requireRole } from "@/lib/auth";
 import { listReviewQueue } from "@/modules/enquiries";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Forbidden } from "../_components/forbidden";
+import { staffPage } from "../_lib/access";
 import { RetryForm } from "./retry-form";
 export const metadata = { title: "Unsorted enquiries" };
 async function Queue() {
-  await connection();
-  await requireRole("reservations", "sales", "gm");
+  // GM only: reservations and sales get the 403 screen (the nav does not link them here).
+  const access = await staffPage("enquiries.unsorted");
+  if ("forbidden" in access) return <Forbidden />;
+  return (
+    <>
+      <h1 className="text-h1">Unsorted enquiries</h1>
+      <p className="mt-2 mb-6 text-muted">
+        Review enquiries that need attention. Failed processing can be retried by staff.
+      </p>
+      <QueueBody />
+    </>
+  );
+}
+async function QueueBody() {
   let rows: Awaited<ReturnType<typeof listReviewQueue>>;
   try {
     rows = await listReviewQueue();
@@ -26,6 +38,9 @@ async function Queue() {
         <EmptyState message="No unsorted enquiries need review." />
       </Card>
     );
+  return <Rows rows={rows} />;
+}
+function Rows({ rows }: { rows: Awaited<ReturnType<typeof listReviewQueue>> }) {
   return (
     <div className="grid gap-4">
       {rows.map((row) => (
@@ -56,14 +71,8 @@ async function Queue() {
 }
 export default function InboxRecovery() {
   return (
-    <>
-      <h1 className="text-h1">Unsorted enquiries</h1>
-      <p className="mt-2 mb-6 text-muted">
-        Review enquiries that need attention. Failed processing can be retried by staff.
-      </p>
-      <Suspense fallback={<Skeleton className="h-32 w-full" />}>
-        <Queue />
-      </Suspense>
-    </>
+    <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+      <Queue />
+    </Suspense>
   );
 }

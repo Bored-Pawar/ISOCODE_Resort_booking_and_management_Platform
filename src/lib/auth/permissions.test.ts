@@ -99,8 +99,20 @@ describe("requirePermission", () => {
 
 describe("navFor", () => {
   const hrefs = (role: Role) => navFor(role).map((n) => n.href);
-  it("reservations: overview, inbox, bookings, rates, allotment, promos", () => {
+  it("reservations: overview, bookings, rates, allotment, promos (no unsorted queue)", () => {
     expect(hrefs("reservations")).toEqual([
+      "/admin",
+      "/admin/bookings",
+      "/admin/rates",
+      "/admin/allotment",
+      "/admin/promos",
+    ]);
+  });
+  it("sales: overview only (the unsorted queue is GM only)", () => {
+    expect(hrefs("sales")).toEqual(["/admin"]);
+  });
+  it("gm: everything built, including the unsorted queue", () => {
+    expect(hrefs("gm")).toEqual([
       "/admin",
       "/admin/inbox",
       "/admin/bookings",
@@ -109,11 +121,9 @@ describe("navFor", () => {
       "/admin/promos",
     ]);
   });
-  it("sales: overview and the unsorted-enquiry queue only", () => {
-    expect(hrefs("sales")).toEqual(["/admin", "/admin/inbox"]);
-  });
-  it("gm: everything built", () => {
-    expect(hrefs("gm")).toEqual(hrefs("reservations"));
+  it("the unsorted queue appears exactly for roles holding enquiries.unsorted", () => {
+    for (const role of ROLES)
+      expect(hrefs(role).includes("/admin/inbox")).toBe(can(role, "enquiries.unsorted"));
   });
   it("guests get no staff nav", () => {
     expect(navFor("guest")).toEqual([]);

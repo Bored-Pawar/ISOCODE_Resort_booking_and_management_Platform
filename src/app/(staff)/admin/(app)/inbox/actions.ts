@@ -1,5 +1,5 @@
 "use server";
-import { requireRole } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth/permissions";
 import { retryEnquiry } from "@/modules/enquiries";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -9,7 +9,12 @@ const formSchema = z.object({
   expectedAttempts: z.coerce.number().int().min(3),
 });
 export async function retryFailedEnquiry(_previous: string, form: FormData): Promise<string> {
-  await requireRole("reservations", "sales", "gm");
+  // GM only, checked before reading the form; reservations and sales get no write.
+  try {
+    await requirePermission("enquiries.unsorted");
+  } catch {
+    return "Your role cannot retry enquiries.";
+  }
   const input = formSchema.safeParse({
     enquiryId: form.get("enquiryId"),
     expectedUpdatedAt: form.get("expectedUpdatedAt"),
