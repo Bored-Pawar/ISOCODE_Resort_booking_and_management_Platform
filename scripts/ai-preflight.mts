@@ -30,6 +30,7 @@ try {
       providers: {
         google: Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY),
         anthropic: Boolean(process.env.ANTHROPIC_API_KEY),
+        groqKeys: [1, 2, 3, 4].filter((n) => process.env[`GROQ_API_KEY_${n}`]?.trim()).length,
         localConfigured: Boolean(process.env.LOCAL_AI_BASE_URL),
         selected: process.env.AI_PROVIDER ?? "rules",
         model: process.env.AI_MODEL || null,
