@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import { AccessError, type SessionUser } from "@/lib/auth";
-import { requirePermission, type Capability } from "@/lib/auth/permissions";
+import { AccessError, requireRole, STAFF_ROLES, type SessionUser } from "@/lib/auth";
+import { requirePermission, type Capability, type StaffRole } from "@/lib/auth/permissions";
 import type { AdminActor } from "@/modules/admin";
 
 export type StaffAccess = { user: SessionUser; actor: AdminActor } | { forbidden: true };
@@ -34,6 +34,21 @@ export async function actionActor(cap: Capability): Promise<AdminActor | null> {
     return { userId: user.id, role: user.role };
   } catch (err) {
     if (err instanceof AccessError) return null;
+    throw err;
+  }
+}
+
+/**
+ * The overview: any staff role (it has no capability of its own; each item on it is filtered by
+ * `overviewFor` and every count is read through a service that checks the role again).
+ */
+export async function staffOverview(): Promise<{ user: SessionUser & { role: StaffRole } }> {
+  await connection();
+  try {
+    const user = await requireRole(...STAFF_ROLES);
+    return { user: user as SessionUser & { role: StaffRole } };
+  } catch (err) {
+    if (err instanceof AccessError) redirect("/admin/login");
     throw err;
   }
 }
