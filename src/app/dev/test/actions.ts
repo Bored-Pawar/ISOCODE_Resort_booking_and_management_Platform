@@ -1,18 +1,14 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import {
-  buildPostmarkPayload,
-  buildWhatsAppPayload,
-  INBOUND_SECRET_HEADER,
-} from "@/modules/enquiries";
+import { buildPostmarkPayload, buildWhatsAppPayload } from "@/modules/enquiries";
 import { requireDevStaff } from "../_lib/access";
+import { postInboundInProcess } from "./in-process";
 import { simulateSchema, type SimState } from "./schema";
 
 /**
- * Posts a provider-shaped payload to the REAL webhook (server side, adding the secret), so the
+ * Passes a provider-shaped payload to the REAL webhook handler in-process (adding the secret server side, never via a request-derived URL), so the
  * simulator exercises exactly the code a provider would. Staff only, behind DEV_TOOLS_ENABLED.
  */
 export async function simulateInboundAction(_: SimState, formData: FormData): Promise<SimState> {
@@ -41,19 +37,11 @@ export async function simulateInboundAction(_: SimState, formData: FormData): Pr
         })
       : buildWhatsAppPayload({ phone: contact, name, body: message, messageId });
 
-  const h = await headers();
-  const host = h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   let res: Response;
   try {
-    res = await fetch(`${proto}://${host}/api/inbound/${channel}`, {
-      method: "POST",
-      headers: { "content-type": "application/json", [INBOUND_SECRET_HEADER]: secret },
-      body: JSON.stringify(body),
-      cache: "no-store",
-    });
+    res = await postInboundInProcess(channel, body, secret);
   } catch {
-    return { error: "Could not reach the inbound endpoint." };
+    return { error: "The inbound handler failed." };
   }
   const json = (await res.json().catch(() => null)) as {
     enquiryIds?: string[];
