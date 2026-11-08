@@ -17,6 +17,8 @@ const MESSAGES: Record<string, string> = {
   NOT_FOUND: "This enquiry is no longer available to you.",
   FORBIDDEN: "Your role cannot do this.",
   INVALID_OWNER: "That owner's role cannot see this category. Pick another owner.",
+  ALREADY_SENT: "This reply was already sent. Refresh to see it.",
+  NO_DRAFT: "There is no draft yet. Use Generate draft.",
 };
 const fail = (code: string): ActionResult => ({
   ok: false,
@@ -55,6 +57,65 @@ export async function rerouteAction(input: unknown): Promise<ActionResult> {
     return { ok: true, message: res.changed ? "Re-routed." : "Already routed there." };
   } catch (error) {
     console.error("reroute failed", error);
+    return fail("ERROR");
+  }
+}
+
+export async function saveDraftAction(
+  input: unknown,
+): Promise<ActionResult & { priceWarning?: boolean }> {
+  const actor = await inboxActor();
+  if (!actor) return FORBIDDEN;
+  try {
+    const res = await inbox.saveDraft(input, actor);
+    if (!res.ok) return fail(res.code);
+    refresh();
+    return { ok: true, message: "Draft saved.", priceWarning: res.priceWarning };
+  } catch (error) {
+    console.error("saveDraft failed", error);
+    return fail("ERROR");
+  }
+}
+
+export async function regenerateAction(input: unknown): Promise<ActionResult> {
+  const actor = await inboxActor();
+  if (!actor) return FORBIDDEN;
+  try {
+    const res = await inbox.regenerateDraft(input, actor);
+    if (!res.ok) return fail(res.code);
+    refresh();
+    return { ok: true, message: "New draft ready. Review it before sending." };
+  } catch (error) {
+    console.error("regenerate failed", error);
+    return fail("ERROR");
+  }
+}
+
+/** The only send path: a staff click, after the confirm dialog. Mock outbox only. */
+export async function approveAndSendAction(input: unknown): Promise<ActionResult> {
+  const actor = await inboxActor();
+  if (!actor) return FORBIDDEN;
+  try {
+    const res = await inbox.approveAndSend(input, actor);
+    if (!res.ok) return fail(res.code);
+    refresh();
+    return { ok: true, message: "Sent to the mock outbox. Nothing was emailed or messaged." };
+  } catch (error) {
+    console.error("approveAndSend failed", error);
+    return fail("ERROR");
+  }
+}
+
+export async function closeAction(input: unknown): Promise<ActionResult> {
+  const actor = await inboxActor();
+  if (!actor) return FORBIDDEN;
+  try {
+    const res = await inbox.close(input, actor);
+    if (!res.ok) return fail(res.code);
+    refresh();
+    return { ok: true, message: "Enquiry closed." };
+  } catch (error) {
+    console.error("close failed", error);
     return fail("ERROR");
   }
 }

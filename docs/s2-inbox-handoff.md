@@ -14,20 +14,21 @@ Runbook: `docs/s2-inbox-runbook.md`. Branch `claude/inbox` in `../resort-inbox`,
 | 1 Nav: unsorted is GM only | done | fix(admin): unsorted enquiries nav, page and retry are GM only |
 | 2.1 Q4 inbox list | done | feat(inbox): Q4 inbox lanes, filters and list |
 | 2.2 Q5 detail and routing | done | feat(inbox): Q5 detail, field edits, re-route and Retry AI |
-| 2.3 Q6 draft and send | next | |
-| 2.4 Q7 GM bell | todo | |
+| 2.3 Q6 draft and send | done | feat(inbox): Q6 draft editor, approve and send to the mock outbox |
+| 2.4 Q7 GM bell | next | |
 | 2.5 Sales attention request | todo | |
 | 2.6 Q2 unified enquiry form | todo | |
 | Gates, integration, review, screenshots | todo | |
 
-Last done: 2.2. `/admin/inbox/[id]` (three panes on lg, own page below): raw message, contact, badges,
-fields form with grounding badges (`staffEdited` shows "Edited by staff"), re-route (owners limited by
-`ownerRolesFor`), Retry AI (GM), timeline. Field edits that change dates/guests re-run only quote+draft via the
-additive `aiRouter` export `draftForStaff` (no model call; staff facts grounded like a message).
-Next: 2.3 (draft editor slot `draftPanel` in `_components/detail.tsx`; close slot `closePanel`).
+Last done: 2.3. `staff/send.ts`: saveDraft (new rupee figure vs the quote's total/GST -> warning, logged
+`draft:price-warning`), regenerate (`draftForStaff` with the model; keeps classification), approveAndSend
+(enquiry then draft row locked, conditional `sent_at IS NULL` update, `first_reply_at` COALESCE, one `sent`
+event), close. Confirm dialog shows channel, recipient and final text. `/dev/outbox?tab=replies` derived from
+`reply_drafts`. Static unit test: only `staff/send.ts` writes `sent_at`/`approved_by`.
+Next: 2.4 GM bell (StaffShell needs a bell slot; header on mobile, sidebar top on desktop).
 
 ## Gates (last run)
-typecheck, lint, format ok; unit (staff, modules) 336/336. Integration `inbox.test.ts` 7/7 on test-claude
+typecheck, lint, format ok; unit (staff, modules) 336/336. Integration `inbox.test.ts` 10/10 on test-claude
 (no other run active: checked node processes; only the resort-claude `next dev`).
 
 ## Open items / blockers

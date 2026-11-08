@@ -276,3 +276,95 @@ describe("re-route and field edits (tests 2, 4, 6)", () => {
     ]);
   });
 });
+
+describe("draft and send (tests 2, 3)", () => {
+  async function withDraft(over: Parameters<typeof f.enquiry>[0] = {}) {
+    const id = await f.enquiry({ category: "room", ownerId: f.by.reservations.id, ...over });
+    const [d] = await db
+      .insert(t.replyDrafts)
+      .values({
+        enquiryId: id,
+        body: "From ₹24,800 (room only, including ₹2,657.14 GST).",
+        quote: { totalPaise: 2_480_000, gstPaise: 265_714 },
+        provider: "rules",
+        promptVersion: "v",
+      })
+      .returning();
+    return { id, draftId: d.id };
+  }
+
+  it("approve and send twice concurrently: one sent_at, one sent event, first_reply_at once", async () => {
+    const { id, draftId } = await withDraft();
+    const send = () =>
+      inbox.approveAndSend(
+        { enquiryId: id, draftId, body: "Final reply" },
+        f.actor("reservations"),
+      );
+    const results = await Promise.all([send(), send(), send()]);
+    expect(results.filter((r) => r.ok)).toHaveLength(1);
+    expect(results.filter((r) => !r.ok).map((r) => !r.ok && r.code)).toEqual([
+      "ALREADY_SENT",
+      "ALREADY_SENT",
+    ]);
+    const [row] = await db.select().from(t.enquiries).where(eq(t.enquiries.id, id));
+    const [draft] = await db.select().from(t.replyDrafts).where(eq(t.replyDrafts.id, draftId));
+    expect(row.status).toBe("replied");
+    expect(row.firstReplyAt?.getTime()).toBe(draft.sentAt?.getTime());
+    expect(draft).toMatchObject({
+      approvedBy: f.by.reservations.id,
+      edited: true,
+      body: "Final reply",
+    });
+    const sent = await db
+      .select()
+      .from(t.enquiryEvents)
+      .where(and(eq(t.enquiryEvents.enquiryId, id), eq(t.enquiryEvents.action, "sent")));
+    expect(sent).toHaveLength(1);
+    // A later edit or regenerate cannot change a sent reply.
+    expect(await inbox.saveDraft({ enquiryId: id, body: "x" }, f.actor("reservations"))).toEqual({
+      ok: false,
+      code: "ALREADY_SENT",
+    });
+    // The outbox lists it for the role that can see it, not for sales.
+    expect((await inbox.sentReplies(f.actor("reservations"))).some((r) => r.enquiryId === id)).toBe(
+      true,
+    );
+    expect((await inbox.sentReplies(f.actor("sales"))).some((r) => r.enquiryId === id)).toBe(false);
+  });
+
+  it("sales approving, editing or closing a room enquiry is FORBIDDEN and writes nothing", async () => {
+    const { id, draftId } = await withDraft();
+    const sales = f.actor("sales");
+    expect(await inbox.approveAndSend({ enquiryId: id, draftId, body: "x" }, sales)).toEqual({
+      ok: false,
+      code: "FORBIDDEN",
+    });
+    expect(await inbox.saveDraft({ enquiryId: id, body: "x" }, sales)).toMatchObject({
+      code: "FORBIDDEN",
+    });
+    expect(await inbox.close({ enquiryId: id }, sales)).toMatchObject({ code: "FORBIDDEN" });
+    const [draft] = await db.select().from(t.replyDrafts).where(eq(t.replyDrafts.id, draftId));
+    expect(draft).toMatchObject({ sentAt: null, approvedBy: null, edited: false });
+    expect(
+      await db.select().from(t.enquiryEvents).where(eq(t.enquiryEvents.enquiryId, id)),
+    ).toEqual([]);
+  });
+
+  it("a typed rupee figure saves with a warning and is logged as edited", async () => {
+    const { id } = await withDraft();
+    const res = await inbox.saveDraft(
+      { enquiryId: id, body: "From ₹24,800. For you, ₹20,000." },
+      f.actor("reservations"),
+    );
+    expect(res).toEqual({ ok: true, priceWarning: true });
+    const [ev] = await db.select().from(t.enquiryEvents).where(eq(t.enquiryEvents.enquiryId, id));
+    expect(ev).toMatchObject({
+      action: "edited",
+      fromValue: "draft",
+      toValue: "draft:price-warning",
+    });
+    expect(await inbox.close({ enquiryId: id }, f.actor("reservations"))).toEqual({ ok: true });
+    const [row] = await db.select().from(t.enquiries).where(eq(t.enquiries.id, id));
+    expect(row.status).toBe("closed");
+  });
+});

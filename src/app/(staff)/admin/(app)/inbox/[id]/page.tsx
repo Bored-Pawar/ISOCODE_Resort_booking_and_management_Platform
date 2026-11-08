@@ -3,7 +3,9 @@ import { Card, EmptyState, Skeleton } from "@/components/ui";
 import { inbox, type InboxActor } from "@/modules/enquiries";
 import { RetryError } from "@/app/(guest)/_components/retry-error";
 import { Forbidden } from "../../_components/forbidden";
+import { CHANNEL_LABEL } from "../_components/badges";
 import { Detail } from "../_components/detail";
+import { CloseButton, DraftPanel } from "../_components/draft-panel";
 import { InboxFrame } from "../_components/frame";
 import { inboxPage } from "../_lib/access";
 import { parseQuery, type SearchParams } from "../_lib/params";
@@ -26,7 +28,32 @@ async function Loaded({ id, actor }: { id: string; actor: InboxActor }) {
         <EmptyState message="This enquiry is not in your lanes, or it no longer exists." />
       </Card>
     );
-  return <Detail detail={res.detail} actor={actor} />;
+  const d = res.detail;
+  const q = d.enquiry;
+  return (
+    <Detail
+      detail={d}
+      actor={actor}
+      draftPanel={
+        <DraftPanel
+          key={d.draft ? `${d.draft.id}:${d.draft.body}:${d.draft.sentAt}` : "none"}
+          enquiryId={q.id}
+          draft={d.draft}
+          canWork={d.can.work}
+          channelLabel={CHANNEL_LABEL[q.channel]}
+          recipient={`${q.senderName} (${q.senderContact})`}
+          approverName={d.staff.find((u) => u.id === d.draft?.approvedBy)?.name ?? null}
+        />
+      }
+      closePanel={
+        d.can.work && q.status !== "closed" ? (
+          <div className="flex justify-end">
+            <CloseButton enquiryId={q.id} />
+          </div>
+        ) : null
+      }
+    />
+  );
 }
 
 function DetailSkeleton() {

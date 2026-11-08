@@ -6,15 +6,34 @@ const svc = vi.hoisted(() => ({
   retryEnquiry: vi.fn(async () => ({ ok: true })),
   saveFields: vi.fn(async () => ({ ok: true, changed: ["dates"], requote: true, draft: "ok" })),
   reroute: vi.fn(async () => ({ ok: true, changed: true })),
+  saveDraft: vi.fn(async () => ({ ok: true, priceWarning: false })),
+  regenerateDraft: vi.fn(async () => ({ ok: true })),
+  approveAndSend: vi.fn(async () => ({ ok: true, sentAt: "", channel: "email" })),
+  close: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/modules/enquiries", () => ({
   retryEnquiry: svc.retryEnquiry,
-  inbox: { saveFields: svc.saveFields, reroute: svc.reroute },
+  inbox: {
+    saveFields: svc.saveFields,
+    reroute: svc.reroute,
+    saveDraft: svc.saveDraft,
+    regenerateDraft: svc.regenerateDraft,
+    approveAndSend: svc.approveAndSend,
+    close: svc.close,
+  },
 }));
 
 import { auth } from "@/lib/auth/config";
 import type { Role } from "@/lib/auth";
-import { rerouteAction, retryFailedEnquiry, saveFieldsAction } from "./actions";
+import {
+  approveAndSendAction,
+  closeAction,
+  regenerateAction,
+  rerouteAction,
+  retryFailedEnquiry,
+  saveDraftAction,
+  saveFieldsAction,
+} from "./actions";
 
 const session = (role: Role | null) =>
   vi
@@ -53,6 +72,14 @@ describe("inbox actions check the permission before the service", () => {
   const actions = [
     ["saveFieldsAction", () => saveFieldsAction({ enquiryId: "ENQ-1" }), svc.saveFields],
     ["rerouteAction", () => rerouteAction({ enquiryId: "ENQ-1" }), svc.reroute],
+    ["saveDraftAction", () => saveDraftAction({ enquiryId: "ENQ-1" }), svc.saveDraft],
+    ["regenerateAction", () => regenerateAction({ enquiryId: "ENQ-1" }), svc.regenerateDraft],
+    [
+      "approveAndSendAction",
+      () => approveAndSendAction({ enquiryId: "ENQ-1" }),
+      svc.approveAndSend,
+    ],
+    ["closeAction", () => closeAction({ enquiryId: "ENQ-1" }), svc.close],
   ] as const;
   it.each(actions)("%s: guests and signed out are refused, nothing called", async (_, run, fn) => {
     for (const role of ["guest", null] as const) {
