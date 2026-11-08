@@ -1,15 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { roomTypesFixture } from "@/modules/catalog/fixtures";
 import { quoteFixture, twoRoomQuoteFixture } from "@/modules/pricing/fixtures";
-import {
-  availabilityNote,
-  cartLines,
-  defaultPlanId,
-  formatBp,
-  gstBreakdown,
-  nightsByDate,
-  toPlanView,
-} from "./room-detail";
+import { defaultPlanId, formatBp, gstBreakdown, nightsByDate, toPlanView } from "./room-detail";
 
 const cells = (q: typeof quoteFixture) => q.lines.flatMap((l) => l.nights);
 
@@ -58,27 +50,9 @@ describe("toPlanView", () => {
     expect(byDate.reduce((s, d) => s + d.ratePaise, 0)).toBe(twoRoomQuoteFixture.subtotalPaise);
     expect(byDate.reduce((s, d) => s + d.gstPaise, 0)).toBe(twoRoomQuoteFixture.gstPaise);
   });
-
-  it("builds cart lines from a split", () => {
-    expect(
-      cartLines("r", "p", [
-        { adults: 2, children: 0 },
-        { adults: 1, children: 1 },
-      ]),
-    ).toEqual([
-      { roomTypeId: "r", ratePlanId: "p", adults: 2, children: 0 },
-      { roomTypeId: "r", ratePlanId: "p", adults: 1, children: 1 },
-    ]);
-  });
 });
 
-describe("availabilityNote and defaultPlanId", () => {
-  it("warns only when 3 or fewer units are left", () => {
-    expect(availabilityNote(1)).toEqual({ tone: "warning", text: "Only 1 left for these dates" });
-    expect(availabilityNote(3).tone).toBe("warning");
-    expect(availabilityNote(4)).toEqual({ tone: "success", text: "Available for your dates" });
-  });
-
+describe("defaultPlanId", () => {
   it("selects the cheapest plan by default", () => {
     const plan = roomTypesFixture[0].ratePlans[0];
     const a = { ...toPlanView(plan, quoteFixture), id: "a", totalPaise: 900 };

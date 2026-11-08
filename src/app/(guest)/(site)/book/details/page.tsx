@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Clock } from "lucide-react";
 import { ButtonLink, Card, Skeleton, StepIndicator } from "@/components/ui";
-import { bookHref, parseCartParams } from "../../../_lib/cart";
+import { parseCartParams, stayHref } from "../../../_lib/cart";
 
 export const metadata: Metadata = { title: "Your details" };
 
@@ -14,11 +14,11 @@ async function BackToRooms({
 }) {
   const cart = parseCartParams(await searchParams);
   const href = cart.checkIn
-    ? bookHref({ checkIn: cart.checkIn, checkOut: cart.checkOut, ...cart.party }, cart.lines)
+    ? stayHref({ checkIn: cart.checkIn, checkOut: cart.checkOut, ...cart.party }, cart.lines)
     : "/rooms";
   return (
     <ButtonLink href={href} variant="secondary" className="self-start">
-      Back to your rooms
+      Back to your stay
     </ButtonLink>
   );
 }

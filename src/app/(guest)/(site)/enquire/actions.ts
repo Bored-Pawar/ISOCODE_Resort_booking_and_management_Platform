@@ -26,6 +26,7 @@ const TEXT_FIELDS = [
   "adults",
   "children",
   "room",
+  "rooms",
 ] as const;
 
 // Public entry point (like sign up): Zod validated, no role to require. Spam control beyond the

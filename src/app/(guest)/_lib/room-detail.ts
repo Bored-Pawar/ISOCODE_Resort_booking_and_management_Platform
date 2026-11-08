@@ -4,7 +4,7 @@
  */
 import type { RoomType } from "@/modules/catalog";
 import type { Quote, QuoteNight } from "@/modules/pricing";
-import type { CartLine, Party } from "./cart";
+import type { CartLine } from "./cart";
 
 export type PlanView = {
   id: string;
@@ -57,11 +57,6 @@ export function formatBp(bp: number): string {
   return `${bp / 100}%`;
 }
 
-/** Cart lines of one room type and plan for a party split (see cart.splitParty). */
-export function cartLines(roomTypeId: string, ratePlanId: string, split: Party[]): CartLine[] {
-  return split.map((p) => ({ roomTypeId, ratePlanId, adults: p.adults, children: p.children }));
-}
-
 export function toPlanView(plan: RoomType["ratePlans"][number], quote: Quote): PlanView {
   return {
     id: plan.id,
@@ -83,16 +78,6 @@ export function toPlanView(plan: RoomType["ratePlans"][number], quote: Quote): P
       children: l.children,
     })),
   };
-}
-
-/** Only call out scarcity when it is real and small. */
-export function availabilityNote(units: number): { tone: "success" | "warning"; text: string } {
-  return units <= 3
-    ? {
-        tone: "warning",
-        text: units === 1 ? "Only 1 left for these dates" : `Only ${units} left for these dates`,
-      }
-    : { tone: "success", text: "Available for your dates" };
 }
 
 /** Cheapest plan first selected by default. */

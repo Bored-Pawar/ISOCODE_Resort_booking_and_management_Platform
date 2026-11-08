@@ -47,28 +47,6 @@ export function splitParty(room: RoomCapacity, party: Party, n: number): Party[]
   return lines;
 }
 
-export type Offer = {
-  /** Rooms of this type the whole party needs, or null for more than 4 (group enquiry). */
-  needed: number | null;
-  /** Lines to reserve now: the whole party, or as much of it as the free rooms take. */
-  split: Party[];
-};
-
-/**
- * What a room page offers: never more rooms than are free, never more than 4 (B10, "not above
- * availability"). When stock is short, the free rooms are filled and the rest of the party is left
- * for the /book counter, where the guest adds another room type.
- */
-export function offerFor(room: RoomCapacity, party: Party, freeUnits: number): Offer {
-  const needed = roomsNeeded(room, party);
-  if (needed === null) return { needed, split: [] };
-  const n = Math.min(needed, freeUnits);
-  if (n < 1) return { needed, split: [] };
-  const adults = Math.min(party.adults, n * room.maxAdults);
-  const children = Math.min(party.children, n * room.maxOccupancy - adults);
-  return { needed, split: splitParty(room, { adults, children }, n) };
-}
-
 /** Guests from the original search not yet placed in a cart line. Negative means over-placed. */
 export function guestsLeft(party: Party, lines: Party[]): Party {
   return {

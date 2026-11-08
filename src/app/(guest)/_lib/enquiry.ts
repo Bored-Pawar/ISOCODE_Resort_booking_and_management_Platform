@@ -4,7 +4,12 @@
  */
 import { isDateStr } from "@/lib/dates";
 
-export const ENQUIRY_LIMITS = { maxAdults: 500, maxChildren: 200, maxNights: 90 } as const;
+export const ENQUIRY_LIMITS = {
+  maxAdults: 500,
+  maxChildren: 200,
+  maxNights: 90,
+  maxRooms: 200,
+} as const;
 
 export type EnquiryPrefill = {
   checkIn?: string;
@@ -13,6 +18,8 @@ export type EnquiryPrefill = {
   children?: number;
   /** Room type slug, for context only. */
   room?: string;
+  /** Rooms the group has in mind (the stay builder's cart, or a rule of thumb). */
+  rooms?: number;
 };
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -24,6 +31,7 @@ export function enquiryHref(opts: EnquiryPrefill = {}): string {
   if (Number.isInteger(opts.adults)) params.set("adults", String(opts.adults));
   if (Number.isInteger(opts.children)) params.set("children", String(opts.children));
   if (opts.room && SLUG_RE.test(opts.room)) params.set("room", opts.room);
+  if (Number.isInteger(opts.rooms) && opts.rooms! >= 1) params.set("rooms", String(opts.rooms));
   const qs = params.toString();
   return qs ? `/enquire?${qs}` : "/enquire";
 }
@@ -49,6 +57,8 @@ export function parseEnquiryParams(raw: RawParams): EnquiryPrefill {
   if (adults !== undefined && adults >= 1) out.adults = adults;
   if (children !== undefined) out.children = children;
   if (room.length <= 60 && SLUG_RE.test(room)) out.room = room;
+  const rooms = toCount(first(raw.rooms), ENQUIRY_LIMITS.maxRooms);
+  if (rooms !== undefined && rooms >= 1) out.rooms = rooms;
   return out;
 }
 

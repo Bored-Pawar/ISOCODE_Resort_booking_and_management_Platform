@@ -30,7 +30,12 @@ const V = room("V", 4, 6);
 const all = [P, S, G, V];
 
 function fitsAll(rooms: RoomOption[], lines: CartLine[]) {
-  return lines.every((l) => fitsRoom(rooms.find((r) => r.id === l.roomTypeId)!, l));
+  return lines.every((l) =>
+    fitsRoom(
+      rooms.find((r) => r.id === l.roomTypeId)!,
+      l,
+    ),
+  );
 }
 const sum = (lines: CartLine[]) => ({
   adults: lines.reduce((s, l) => s + l.adults, 0),
@@ -53,7 +58,12 @@ describe("partyForRoom", () => {
 
 describe("stock per type", () => {
   const two = room("T", 2, 3, 2);
-  const line = (id: string): CartLine => ({ roomTypeId: id, ratePlanId: "x", adults: 1, children: 0 });
+  const line = (id: string): CartLine => ({
+    roomTypeId: id,
+    ratePlanId: "x",
+    adults: 1,
+    children: 0,
+  });
   it("counts the cart against free units", () => {
     expect(roomsLeftToAdd(two, [])).toBe(2);
     expect(roomsLeftToAdd(two, [line("T")])).toBe(1);

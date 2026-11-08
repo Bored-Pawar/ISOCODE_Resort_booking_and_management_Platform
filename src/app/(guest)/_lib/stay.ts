@@ -28,7 +28,8 @@ export function addBlockedReason(
   lines: CartLine[],
 ): string | null {
   if (room.freeUnits === 0 || room.plans.length === 0) return "Not available for these dates";
-  if (lines.length >= MAX_CART_ROOMS) return `Your stay has ${MAX_CART_ROOMS} rooms, the most online`;
+  if (lines.length >= MAX_CART_ROOMS)
+    return `Your stay has ${MAX_CART_ROOMS} rooms, the most online`;
   if (roomsLeftToAdd(room, lines) === 0) return "All free rooms of this type are in your stay";
   return null;
 }

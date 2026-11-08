@@ -8,16 +8,17 @@ import { catalog, type RoomType } from "@/modules/catalog";
 import { inventory } from "@/modules/inventory";
 import { pricing } from "@/modules/pricing";
 import { enquiryHref } from "../_lib/enquiry";
-import { guestsLabel, occupancyLabel } from "../_lib/format";
-import { offerFor, roomsNeeded, type Offer } from "../_lib/cart";
-import { availabilityNote, cartLines, toPlanView, type PlanView } from "../_lib/room-detail";
+import { occupancyLabel } from "../_lib/format";
+import { parseCartParams, stayHref, type CartLine } from "../_lib/cart";
+import { toPlanView, type PlanView } from "../_lib/room-detail";
+import { partyForRoom } from "../_lib/stay";
 import {
   parseSearchParams,
   toSearchParams,
   validateSearch,
   type SearchValues,
 } from "../_lib/search";
-import { BookingPanel } from "./booking-panel";
+import { RoomStayPanel } from "./room-stay-panel";
 import { Gallery } from "./gallery";
 import { RetryError } from "./retry-error";
 import { SearchForm } from "./search-form";
@@ -28,7 +29,7 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 /**
  * Server component for /rooms/[slug]. Reads the URL and the clock (so it renders inside
- * <Suspense>), then the catalog, availability and one quote per rate plan. The browser gets
+ * <Suspense>), then the catalog, fresh availability and a one-room quote per rate plan. The browser gets
  * prices as props; nothing is fetched client side.
  */
 export async function RoomDetail({
@@ -39,7 +40,9 @@ export async function RoomDetail({
   searchParams: SearchParams;
 }) {
   const { slug } = await params;
-  const values = parseSearchParams(await searchParams);
+  const raw = await searchParams;
+  const values = parseSearchParams(raw);
+  const cart = { lines: parseCartParams(raw).lines, hasCartParam: raw.room !== undefined };
   await connection();
   const today = todayIST();
 
@@ -59,9 +62,21 @@ export async function RoomDetail({
 
   const issue = validateSearch(values, today);
   const query = issue ? "" : toSearchParams(values).toString();
-  const listHref = query ? `/rooms?${query}` : "/rooms";
+  const listHref = issue
+    ? "/rooms"
+    : cart.hasCartParam
+      ? stayHref(
+          {
+            checkIn: values.checkIn,
+            checkOut: values.checkOut,
+            adults: values.adults,
+            children: values.children,
+          },
+          cart.lines,
+        )
+      : `/rooms?${query}`;
   const action = `/rooms/${room.slug}`;
-  const aside = issue ? null : await stayPanel(room, values, listHref);
+  const aside = issue ? null : await stayPanel(room, values, cart, listHref);
 
   return (
     <div className="flex flex-col gap-8">
@@ -142,9 +157,15 @@ export async function RoomDetail({
   );
 }
 
-/** Availability, quotes and the booking card for a valid stay. Never throws. */
-async function stayPanel(room: RoomType, values: SearchValues, listHref: string) {
+/** Availability, one-room quotes and the view-only booking card for a valid stay. Never throws. */
+async function stayPanel(
+  room: RoomType,
+  values: SearchValues,
+  cart: { lines: CartLine[]; hasCartParam: boolean },
+  roomsHref: string,
+) {
   const party = { adults: values.adults, children: values.children };
+  const roomParty = partyForRoom(room, party);
   const group = enquiryHref({
     room: room.slug,
     checkIn: values.checkIn,
@@ -153,27 +174,8 @@ async function stayPanel(room: RoomType, values: SearchValues, listHref: string)
     children: values.children,
   });
 
-  // B10: the party may take up to 4 rooms of this type; beyond that it is a group enquiry.
-  if (roomsNeeded(room, party) === null) {
-    return (
-      <Card className="flex flex-col gap-3">
-        <p className="text-h2 font-medium">Your group needs more than 4 of these rooms</p>
-        <p className="text-body text-muted">
-          Each room takes {occupancyLabel(room).toLowerCase()}, and your group is{" "}
-          {guestsLabel(values.adults, values.children)}. We book groups of more than 4 rooms by
-          enquiry.
-        </p>
-        <ButtonLink href={group}>Send a group enquiry</ButtonLink>
-        <ButtonLink href={listHref} variant="secondary">
-          See other rooms
-        </ButtonLink>
-      </Card>
-    );
-  }
-
   let plans: PlanView[];
   let units: number;
-  let offer: Offer;
   try {
     const availability = await inventory.availability({
       roomTypeId: room.id,
@@ -182,25 +184,21 @@ async function stayPanel(room: RoomType, values: SearchValues, listHref: string)
     });
     if (!availability.ok) throw new Error(`availability: ${availability.code}`);
     const a = availability.rooms.find((r) => r.roomTypeId === room.id);
-    units = a && !a.soldOut && !a.blackedOut ? a.availableUnits : 0;
-    offer = offerFor(room, party, units);
-
-    plans = [];
-    if (offer.split.length) {
-      const results = await Promise.all(
-        room.ratePlans.map(async (plan) => ({
-          plan,
-          result: await pricing.quote({
-            checkIn: values.checkIn,
-            checkOut: values.checkOut,
-            rooms: cartLines(room.id, plan.id, offer.split),
-          }),
-        })),
-      );
-      plans = results.flatMap(({ plan, result }) =>
-        result.ok ? [toPlanView(plan, result.quote)] : [],
-      );
-    }
+    units = a && !a.soldOut && !a.blackedOut ? Math.max(a.availableUnits, 0) : 0;
+    // One room per plan. The room price does not depend on the party; the party only has to fit.
+    const results = await Promise.all(
+      room.ratePlans.map(async (plan) => ({
+        plan,
+        result: await pricing.quote({
+          checkIn: values.checkIn,
+          checkOut: values.checkOut,
+          rooms: [{ roomTypeId: room.id, ratePlanId: plan.id, ...roomParty }],
+        }),
+      })),
+    );
+    plans = results.flatMap(({ plan, result }) =>
+      result.ok ? [toPlanView(plan, result.quote)] : [],
+    );
   } catch (error) {
     console.error("room detail stay failed", error);
     return (
@@ -219,32 +217,32 @@ async function stayPanel(room: RoomType, values: SearchValues, listHref: string)
         <p className="text-h2 font-medium">Not available for these dates</p>
         <p className="text-body text-muted">
           {units < 1
-            ? "Try different dates with Change above, or look at our other rooms."
+            ? "This room is sold out for these dates. See what else is free, or try other dates with Change above."
             : "We have not published prices for these dates yet. Try different dates, or look at our other rooms."}
         </p>
+        <ButtonLink href={roomsHref}>Check availability</ButtonLink>
         <ButtonLink href={group} variant="secondary">
           Send an enquiry
-        </ButtonLink>
-        <ButtonLink href={listHref} variant="secondary">
-          See other rooms
         </ButtonLink>
       </Card>
     );
   }
 
   return (
-    <BookingPanel
-      plans={plans}
-      stay={{
-        checkIn: values.checkIn,
-        checkOut: values.checkOut,
-        adults: values.adults,
-        children: values.children,
+    <RoomStayPanel
+      room={{
+        id: room.id,
+        name: room.name,
+        maxAdults: room.maxAdults,
+        maxOccupancy: room.maxOccupancy,
+        freeUnits: units,
       }}
-      roomsNeeded={offer.needed ?? offer.split.length}
-      enquiryHref={group}
+      plans={plans}
+      stay={{ checkIn: values.checkIn, checkOut: values.checkOut, ...party }}
+      initialParty={roomParty}
+      urlLines={cart.lines}
+      hasCartParam={cart.hasCartParam}
       nights={nightsBetween(values.checkIn, values.checkOut)}
-      availability={availabilityNote(units)}
     />
   );
 }

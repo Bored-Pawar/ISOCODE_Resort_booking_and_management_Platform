@@ -56,6 +56,17 @@ export function EnquiryForm({
           About: <strong className="font-semibold text-text">{roomName}</strong>
         </p>
       ) : null}
+      {defaults.rooms ? (
+        <>
+          <input type="hidden" name="rooms" value={defaults.rooms} />
+          <p className="text-small text-muted">
+            Rooms in mind:{" "}
+            <strong className="font-semibold text-text">
+              {defaults.rooms} {defaults.rooms === 1 ? "room" : "rooms"}
+            </strong>
+          </p>
+        </>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-2">
         <Input

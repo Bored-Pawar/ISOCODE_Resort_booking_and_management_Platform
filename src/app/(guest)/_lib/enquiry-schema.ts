@@ -36,6 +36,7 @@ export function buildEnquirySchema(today: string) {
       adults: optionalCount(ENQUIRY_LIMITS.maxAdults, "Adults"),
       children: optionalCount(ENQUIRY_LIMITS.maxChildren, "Children"),
       room: z.preprocess(blank, z.string().max(60).optional()),
+      rooms: optionalCount(ENQUIRY_LIMITS.maxRooms, "Rooms"),
       consent: z.literal("on", { error: "Please accept the privacy notice to continue" }),
       /** Honeypot: real people never see or fill it. */
       website: z.string().max(200).optional(),
@@ -86,6 +87,7 @@ export function composeRawText(v: EnquiryForm, roomName?: string): string {
     v.children ? `${v.children} child${v.children === 1 ? "" : "ren"}` : null,
   ].filter(Boolean);
   if (party.length) lines.push(`Guests: ${party.join(", ")}`);
+  if (v.rooms) lines.push(`Rooms: ${v.rooms}`);
   if (roomName) lines.push(`Room of interest: ${roomName}`);
   return lines.length ? `${v.message}\n\n${lines.join("\n")}` : v.message;
 }

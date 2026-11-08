@@ -32,6 +32,16 @@ describe("enquiryHref", () => {
       "/enquire?checkIn=2026-11-14&checkOut=2026-11-16&adults=6&children=0&room=pool-villa",
     );
   });
+  it("carries the rooms the group has in mind, and reads it back", () => {
+    const href = enquiryHref({ adults: 30, children: 0, rooms: 8 });
+    expect(href).toBe("/enquire?adults=30&children=0&rooms=8");
+    const back = parseEnquiryParams(Object.fromEntries(new URL(href, "http://x").searchParams));
+    expect(back.rooms).toBe(8);
+    expect(parseEnquiryParams({ rooms: "0" }).rooms).toBeUndefined();
+    expect(parseEnquiryParams({ rooms: "x" }).rooms).toBeUndefined();
+    const form = parse({ adults: "30", rooms: "8" });
+    expect(form.success && composeRawText(form.data)).toContain("Rooms: 8");
+  });
   it("drops invalid dates and slugs instead of emitting them", () => {
     expect(enquiryHref({ checkIn: "", checkOut: "2026-13-40", room: "Bad Slug!" })).toBe(
       "/enquire",

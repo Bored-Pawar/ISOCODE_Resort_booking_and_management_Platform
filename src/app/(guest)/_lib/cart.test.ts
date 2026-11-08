@@ -10,7 +10,6 @@ import {
   demandByType,
   encodeLine,
   guestsLeft,
-  offerFor,
   parseCartParams,
   roomsNeeded,
   splitParty,
@@ -65,32 +64,6 @@ describe("splitParty", () => {
       { adults: 2, children: 0 },
       { adults: 1, children: 0 },
     ]);
-  });
-});
-
-describe("offerFor", () => {
-  it("offers the whole party when enough rooms are free", () => {
-    expect(offerFor(plantation, { adults: 3, children: 1 }, 5)).toEqual({
-      needed: 2,
-      split: [
-        { adults: 2, children: 0 },
-        { adults: 1, children: 1 },
-      ],
-    });
-  });
-  it("never offers more rooms than are free, filling them and leaving the rest", () => {
-    const offer = offerFor(plantation, { adults: 5, children: 2 }, 2);
-    expect(offer.needed).toBe(3);
-    expect(offer.split).toHaveLength(2);
-    for (const l of offer.split) expect(fitsRoom(plantation, l)).toBe(true);
-    expect(guestsLeft({ adults: 5, children: 2 }, offer.split)).toEqual({ adults: 1, children: 0 });
-  });
-  it("offers nothing when sold out or when the group needs more than 4 rooms", () => {
-    expect(offerFor(plantation, { adults: 2, children: 0 }, 0)).toEqual({ needed: 1, split: [] });
-    expect(offerFor(plantation, { adults: 8, children: 5 }, 9)).toEqual({
-      needed: null,
-      split: [],
-    });
   });
 });
 
