@@ -92,12 +92,15 @@ No outstanding image blocker: the `public/images/*` assets have been supplied. A
 ## Decisions log
 | Date | Decision |
 |---|---|
+| 2026-11-08 | B10 approved: a booking is one order with 1 to 4 room lines (`booking_rooms`), one hold, one payment, one total. Supersedes the 2026-11-07 one-room-per-booking rule. Design: `s2-multiroom-change.md` |
+| 2026-11-08 | Occupancy rule: `1 <= adults <= max_adults` and `adults + children <= max_occupancy`; `max_children` stays in the schema, not enforced |
+| 2026-11-08 | S2 lock holder: Claude Code holds `src/db/**`, pricing, inventory, booking, payments, guest and catalog, on branch `claude/multiroom` only (overnight runbook); Codex idle |
 | 2026-11-08 | B1 GST schedules are complete sets grouped by `effective_from`: use the latest schedule effective on each stay night, after allocated discount, with inclusive bounds and no fallback to older schedules. A missing matching slab returns `NO_RATE`; A6 must validate and save each complete, non-overlapping schedule atomically. This documents the reviewed implementation, without changing tax values or public contracts. |
 | 2026-11-06 | Modular monolith on Next.js + TypeScript, Drizzle, Neon, Vercel |
 | 2026-11-06 | Booking state machine and inventory rules per `01` |
 | 2026-11-06 | AI default provider Gemini free tier; local and rules fallbacks |
 | 2026-11-07 | Late payment after expiry: EXPIRED is final, payment REFUND_PENDING, no re-acquire |
-| 2026-11-07 | One room per booking in MVP (`units` column kept, validation enforces 1); groups go to enquiry |
+| 2026-11-07 | ~~One room per booking in MVP (`units` column kept, validation enforces 1); groups go to enquiry~~ Superseded 2026-11-08 by B10 |
 | 2026-11-07 | Contracts and fixtures frozen first; UI builds against fixtures |
 | 2026-11-07 | `quoteHash` links displayed price to hold; mismatch returns PRICE_CHANGED |
 | 2026-11-07 | AI processing via persisted states, `after()`, sweep and Retry; no floating promises |

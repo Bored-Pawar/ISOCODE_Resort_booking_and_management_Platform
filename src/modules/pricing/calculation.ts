@@ -1,6 +1,6 @@
 import { applyBp } from "@/lib/money";
 import { computeQuoteHash } from "./hash";
-import type { Quote, QuoteNight } from "./types";
+import type { Promo, Quote, QuoteLine, QuoteNight } from "./types";
 
 export type Slab = {
   minPaise: number;
@@ -8,7 +8,7 @@ export type Slab = {
   gstBp: number;
   effectiveFrom: string;
 };
-export type Promo = { kind: "pct" | "flat"; value: number };
+export type PromoRule = Pick<Promo, "kind" | "value">;
 
 export class MissingTaxSlab extends Error {}
 
@@ -30,8 +30,11 @@ export function pickGstBp(valuePaise: number, slabs: readonly Slab[], date: stri
   return matches[0].gstBp;
 }
 
-/** Equal flat shares, capped at each rate; redistribute unused shares in date order (R09). */
-export function nightDiscounts(rates: number[], promo: Promo | null): number[] {
+/**
+ * Discount per cell. Pct applies to each cell. Flat: equal shares, capped at each rate, with unused
+ * shares redistributed in cell order (R09). Callers pass cells flattened in (line_no, date) order.
+ */
+export function nightDiscounts(rates: number[], promo: PromoRule | null): number[] {
   if (!promo) return rates.map(() => 0);
   if (promo.kind === "pct") {
     return rates.map((r) => Math.min(r, applyBp(r, Math.min(promo.value, 100) * 100)));
@@ -55,52 +58,96 @@ export function nightDiscounts(rates: number[], promo: Promo | null): number[] {
   return discounts;
 }
 
+/** One cell = one (line, date). GST slab is chosen on this cell's rate after its discount. */
+export function buildNight(
+  date: string,
+  ratePaise: number,
+  discountPaise: number,
+  slabs: readonly Slab[],
+): QuoteNight {
+  const gstBp = pickGstBp(ratePaise - discountPaise, slabs, date);
+  return { date, ratePaise, discountPaise, gstBp, gstPaise: applyBp(ratePaise - discountPaise, gstBp) };
+}
+
+/** Single-line helper kept for tests and seed tooling. */
 export function buildNights(
   dates: string[],
   rates: number[],
-  promo: Promo | null,
+  promo: PromoRule | null,
   slabs: readonly Slab[],
 ): QuoteNight[] {
   if (dates.length !== rates.length) throw new Error("Missing nightly rate");
   const discounts = nightDiscounts(rates, promo);
-  return dates.map((date, i) => {
-    const gstBp = pickGstBp(rates[i] - discounts[i], slabs, date);
-    return {
-      date,
-      ratePaise: rates[i],
-      discountPaise: discounts[i],
-      gstBp,
-      gstPaise: applyBp(rates[i] - discounts[i], gstBp),
-    };
-  });
+  return dates.map((date, i) => buildNight(date, rates[i], discounts[i], slabs));
 }
 
-/** The same snapshot assembly is used by live quotes and seed bookings. */
+export type LineInput = {
+  roomTypeId: string;
+  ratePlanId: string;
+  adults: number;
+  children: number;
+  /** One rate per stay night, in date order. */
+  rates: number[];
+};
+
+function sum(nights: QuoteNight[], key: "ratePaise" | "discountPaise" | "gstPaise"): number {
+  return nights.reduce((s, n) => s + n[key], 0);
+}
+
+/**
+ * The same snapshot assembly is used by live quotes and seed bookings.
+ * Flat promo is allocated once over every cell flattened in (line_no, date) order; GST is per cell;
+ * line totals sum their cells and order totals sum the lines. Nothing is re-rounded.
+ */
 export function calculateQuote(
-  stay: Pick<Quote, "roomTypeId" | "ratePlanId" | "checkIn" | "checkOut">,
+  stay: Pick<Quote, "checkIn" | "checkOut">,
   dates: string[],
-  rates: number[],
-  promo: Quote["promo"],
+  lines: LineInput[],
+  promo: Promo | null,
   slabs: readonly Slab[],
 ): Quote {
-  const nights = buildNights(dates, rates, promo, slabs);
-  const subtotalPaise = nights.reduce((s, n) => s + n.ratePaise, 0);
-  const discountPaise = nights.reduce((s, n) => s + n.discountPaise, 0);
-  const gstPaise = nights.reduce((s, n) => s + n.gstPaise, 0);
-  const base = {
-    roomTypeId: stay.roomTypeId,
-    ratePlanId: stay.ratePlanId,
+  for (const line of lines)
+    if (line.rates.length !== dates.length) throw new Error("Missing nightly rate");
+  const discounts = nightDiscounts(
+    lines.flatMap((l) => l.rates),
+    promo,
+  );
+  const quoteLines: QuoteLine[] = lines.map((line, li) => {
+    const nights = dates.map((date, di) =>
+      buildNight(date, line.rates[di], discounts[li * dates.length + di], slabs),
+    );
+    const subtotalPaise = sum(nights, "ratePaise");
+    const discountPaise = sum(nights, "discountPaise");
+    const gstPaise = sum(nights, "gstPaise");
+    return {
+      lineNo: li + 1,
+      roomTypeId: line.roomTypeId,
+      ratePlanId: line.ratePlanId,
+      adults: line.adults,
+      children: line.children,
+      nights,
+      subtotalPaise,
+      discountPaise,
+      gstPaise,
+      totalPaise: subtotalPaise - discountPaise + gstPaise,
+    };
+  });
+  const total = (key: "subtotalPaise" | "discountPaise" | "gstPaise" | "totalPaise") =>
+    quoteLines.reduce((s, l) => s + l[key], 0);
+  return {
     checkIn: stay.checkIn,
     checkOut: stay.checkOut,
-    nights,
     promo,
-  };
-  return {
-    ...base,
-    subtotalPaise,
-    discountPaise,
-    gstPaise,
-    totalPaise: subtotalPaise - discountPaise + gstPaise,
-    quoteHash: computeQuoteHash(base),
+    lines: quoteLines,
+    subtotalPaise: total("subtotalPaise"),
+    discountPaise: total("discountPaise"),
+    gstPaise: total("gstPaise"),
+    totalPaise: total("totalPaise"),
+    quoteHash: computeQuoteHash({
+      checkIn: stay.checkIn,
+      checkOut: stay.checkOut,
+      promo,
+      lines: quoteLines,
+    }),
   };
 }

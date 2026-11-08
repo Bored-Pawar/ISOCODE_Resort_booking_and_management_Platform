@@ -4,7 +4,7 @@
  */
 import { z } from "zod";
 import type { Err, Ok } from "@/lib/result";
-import { quoteInputSchema, type Quote, type QuoteNight } from "@/modules/pricing";
+import { quoteInputSchema, type LineError, type Quote, type QuoteNight } from "@/modules/pricing";
 import { confirmPayment as confirmPaymentImpl } from "./confirmation";
 import { getDb } from "@/lib/db";
 import { releaseExpiredHoldsInTx } from "./internal";
@@ -15,30 +15,40 @@ import { eq } from "drizzle-orm";
 
 export type BookingStatus = "HELD" | "CONFIRMED" | "EXPIRED" | "CANCELLED";
 
-export type Booking = {
-  id: string;
-  /** Guest facing reference, e.g. CA-7K3P9. */
-  ref: string;
-  guestId: string;
+/** One room line of a booking: the frozen line snapshot plus its nights. */
+export type BookingRoom = {
+  /** 1 to 4, in the cart order the guest priced. */
+  lineNo: number;
   roomTypeId: string;
   ratePlanId: string;
-  checkIn: string;
-  checkOut: string;
-  /** Always 1 in the MVP. */
-  units: number;
   adults: number;
   children: number;
-  status: BookingStatus;
-  /** ISO timestamp, set while HELD. */
-  holdExpiresAt: string | null;
-  quoteHash: string;
-  promoCode: string | null;
-  /** Price snapshot frozen at hold time. Payment charges totalPaise only. */
   subtotalPaise: number;
   discountPaise: number;
   gstPaise: number;
   totalPaise: number;
   nights: QuoteNight[];
+};
+
+export type Booking = {
+  id: string;
+  /** Guest facing reference, e.g. CA-7K3P9. */
+  ref: string;
+  guestId: string;
+  checkIn: string;
+  checkOut: string;
+  status: BookingStatus;
+  /** ISO timestamp, set while HELD. */
+  holdExpiresAt: string | null;
+  quoteHash: string;
+  promoCode: string | null;
+  /** Order price snapshot frozen at hold time = sum of rooms. Payment charges totalPaise only. */
+  subtotalPaise: number;
+  discountPaise: number;
+  gstPaise: number;
+  totalPaise: number;
+  /** B10: 1 to 4 room lines ordered by lineNo. Every line shares checkIn and checkOut. */
+  rooms: BookingRoom[];
   createdAt: string;
   confirmedAt: string | null;
 };
@@ -57,7 +67,11 @@ export type AcquireHoldInput = z.input<typeof acquireHoldInputSchema>;
 export type AcquireHoldResult =
   | Ok<{ booking: Booking }>
   /** PROMO_INVALID and OVER_OCCUPANCY come from the price recheck (pricing.quote) inside the hold. */
-  | Err<"INVALID_INPUT" | "SOLD_OUT" | "BLACKOUT" | "NO_RATE" | "PROMO_INVALID" | "OVER_OCCUPANCY">
+  | Err<"INVALID_INPUT" | "BLACKOUT" | "PROMO_INVALID">
+  /** B10: the room type that ran out, when known. All or nothing: no line was held. */
+  | Err<"SOLD_OUT", { roomTypeId?: string }>
+  /** B10: lineIndex is the 0-based position in stay.rooms of the line at fault. */
+  | Err<"NO_RATE" | "OVER_OCCUPANCY", LineError>
   /** No hold taken. UI shows "price updated" with the new quote. */
   | Err<"PRICE_CHANGED", { quote: Quote }>;
 

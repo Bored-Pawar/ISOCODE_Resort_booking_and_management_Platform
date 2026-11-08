@@ -12,7 +12,7 @@ LOCKED AREA. One agent at a time. See Locks in `06-progress.md`.
                        +--guest abandons--> CANCELLED
 ```
 
-One room per booking in the MVP: `units` is always 1 (enforced by Zod). Inventory functions still take `units` so the logic stays generic.
+**B10 (2026-11-08, supersedes one room per booking):** a booking is one order with 1 to 4 room lines in `booking_rooms`. Lines share the order's check-in and check-out, may mix room types and may repeat a type. One status, one hold, one payment, one total per booking; the state machine is unchanged. A line fits a room when `adults >= 1`, `adults <= max_adults` and `adults + children <= max_occupancy` (`max_children` is stored, not enforced). Parties needing more than 4 rooms, or more stock than is free, get a group enquiry. Below, `units` for a room type means the number of lines of that type in the booking.
 
 | From | To | Trigger | Inventory |
 |---|---|---|---|
@@ -39,11 +39,11 @@ A successful payment for a booking that is not HELD with a valid hold records `p
 ## Inventory lifecycle
 
 ### Acquire hold (one transaction)
-1. Release expired holds for this room type and date range.
-2. `SELECT * FROM inventory WHERE room_type_id=$1 AND date >= $in AND date < $out ORDER BY date FOR UPDATE` (ordered locks prevent deadlocks).
-3. Reject the whole booking if row count is not equal to nights, any night has `allotment - sold - held < units`, or any night is blacked out.
+1. Release expired holds for the cart's room types and date range.
+2. Demand = count of lines per room type. Lock every required `(room_type_id, date)` row in **one** statement: `SELECT ... FROM inventory WHERE room_type_id = ANY($types) AND date >= $in AND date < $out ORDER BY room_type_id, date FOR UPDATE` (ordered locks prevent deadlocks). Never sort or loop per type in application code.
+3. Reject the whole cart if any type is missing a night, any night of a type has `allotment - sold - held < demand`, or any type is blacked out on any night. All or nothing across types.
 4. Recompute `pricing.quote()` inside the transaction. If its `quoteHash` differs from the hash the guest saw, return `PRICE_CHANGED` with the new quote (no hold taken).
-5. `UPDATE inventory SET held = held + $units` for those rows. Insert `bookings` (with `quote_hash`) and `booking_nights` (price snapshot).
+5. `held += demand` per type and night, in one statement. Insert `bookings` (with `quote_hash`), one `booking_rooms` row per line and its `booking_nights` (price snapshot).
 6. On deadlock or serialization error, retry once, then return "sold out".
 
 ### Release expired holds (idempotent, safe with concurrent callers)
@@ -54,7 +54,7 @@ WHERE id IN (SELECT id FROM bookings
              FOR UPDATE SKIP LOCKED)
 RETURNING id;
 ```
-Then decrement `held` for exactly those bookings' nights, same transaction. A booking leaves HELD once, so inventory is released once.
+Then decrement `held` for exactly those bookings, aggregated per `(room_type_id, date)` from `booking_rooms` x nights, same transaction. A booking leaves HELD once, so inventory is released once. Confirmation adjusts per type the same way (`held -= lines`, `sold += lines`). Known limit: the sweep is one statement over all expired holds; batching it is deferred.
 
 Called: before availability reads, before hold acquire, at confirmation, and by a daily cron as a safety net. Lazy release is the primary mechanism.
 
@@ -66,9 +66,9 @@ Block new holds only. Existing bookings stand; admin sees a warning list.
 
 ## Pricing and GST
 1. `pricing.quote()` is the only price source (site, booking, AI drafts).
-2. Per night: rate minus discount share, then GST slab from `tax_slabs` by that value and the stay date's `effective_from`.
+2. Per cell (one line, one night): rate minus discount share, then GST slab from `tax_slabs` by that value and the stay date's `effective_from`. Never pick a slab on a per-date sum across rooms. Line totals = sum of its cells; order totals = sum of lines; nothing is re-rounded.
 3. Quote is frozen in `booking_nights` at hold. Rate changes never alter existing bookings.
-4. Promos: pct or flat, validity, min nights, max uses. `used_count` increments at confirm. Concurrent overshoot past `max_uses` is honoured and documented as a known limit.
+4. Promos: one per booking; pct or flat, validity, min nights (per stay, not per line), max uses. A flat promo uses the R09-safe allocation over all cells flattened in (line_no, date) order. `used_count` increments by 1 per booking at confirm. Concurrent overshoot past `max_uses` is honoured and documented as a known limit.
 
 ## Required tests
 1. 20 parallel holds on the last unit: exactly 1 succeeds.
@@ -93,9 +93,9 @@ How the locked modules compose inside one database transaction (R01). Public con
 | Module | Helper | Needed by |
 |---|---|---|
 | `pricing/internal.ts` | `quoteInTx(tx, input: QuoteInput): Promise<QuoteResult>` | B1, B3 |
-| `inventory/internal.ts` | `lockNights(tx, { roomTypeId, checkIn, checkOut, units }): Promise<Ok<{ nights: LockedNight[] }> \| Err<'SOLD_OUT' \| 'BLACKOUT'>>` | B2, B3 |
-| `inventory/internal.ts` | `adjustNights(tx, { roomTypeId, dates, heldDelta, soldDelta }): Promise<void>` | B3, B4, B5 |
-| `booking/internal.ts` | `releaseExpiredHoldsInTx(tx, { roomTypeId?, checkIn?, checkOut?, now? }): Promise<{ released: number }>` | B3, B4, B5 |
+| `inventory/internal.ts` | `lockNights(tx, { checkIn, checkOut, demand: [{ roomTypeId, units }] }): Promise<Ok<{ nights: Record<roomTypeId, LockedNight[]> }> \| Err<'SOLD_OUT' \| 'BLACKOUT', { roomTypeId? }>>` (B10) | B2, B3, B10 |
+| `inventory/internal.ts` | `adjustNights(tx, { changes: [{ roomTypeId, dates, heldDelta, soldDelta }] }): Promise<void>` (B10: one ordered lock and one update across types) | B3, B4, B5, B10 |
+| `booking/internal.ts` | `releaseExpiredHoldsInTx(tx, { bookingId?, roomTypeIds?, checkIn?, checkOut?, now? }): Promise<{ released: number }>` (B10: `roomTypeIds` replaces `roomTypeId`) | B3, B4, B5, B10 |
 | `booking/internal.ts` | `releaseExpiredHoldsForAvailability({ roomTypeId?, checkIn, checkOut })` (booking-owned transaction; scoped lazy expiry) | B2 review fix |
 | `booking/index.ts` | `booking.releaseExpiredHolds(): Promise<Ok<{ released: number }>>` (own transaction; site-wide cron/maintenance sweep). Approved additive contract | B4 |
 
@@ -105,7 +105,7 @@ The seed may import the pure `pricing/calculation` implementation directly for s
 
 ### Lock order
 1. Within one transaction: `bookings` rows first (only in expiry, `FOR UPDATE SKIP LOCKED`), then `inventory` rows.
-2. Inventory rows are always locked and updated ordered by `(room_type_id, date)` ascending. The MVP is one room type per booking, so this is date ascending.
+2. Inventory rows are always locked and updated ordered by `(room_type_id, date)` ascending, in one statement per lock step, across every room type of the cart (B10).
 3. Never lock `inventory` rows out of order, and never take a lock on `payments` before `bookings`. A conditional `UPDATE bookings ... WHERE status='HELD'` is the only booking write in `confirmPayment`.
 4. A deadlock or serialization failure (`40P01`, `40001`) retries the whole transaction once, then `acquireHold` returns `SOLD_OUT` (01 step 6).
 
@@ -125,7 +125,8 @@ B1: `quoteInTx` and public `quote` share one implementation. B2: `availability` 
 
 ## Contract notes (C2)
 Clarifications added with the frozen interfaces. They restate decisions above; nothing new is decided.
-1. `Quote.quoteHash` = first 32 hex chars of SHA-256 over room type, plan, check-in, check-out, promo (code, kind, value) and per night (date, rate, discount, GST basis points). Occupancy is excluded. See `src/modules/pricing/hash.ts`.
+1. `Quote.quoteHash` = first 32 hex chars of SHA-256 over check-in, check-out, promo (code, kind, value) and each line in input order: room type, plan and per night (date, rate, discount, GST basis points). Occupancy is excluded. Line order is included, so the UI keeps cart order stable between quote and hold. See `src/modules/pricing/hash.ts`.
+1a. B10 contract: `QuoteInput = { checkIn, checkOut, promoCode?, rooms: [{ roomTypeId, ratePlanId, adults, children }] }` (1 to 4 rooms; 5 is `INVALID_INPUT`). `Quote = { checkIn, checkOut, promo, lines: QuoteLine[], subtotalPaise, discountPaise, gstPaise, totalPaise, quoteHash }`. `NO_RATE` and `OVER_OCCUPANCY` may carry `lineIndex` (0-based index into `rooms`); hold `SOLD_OUT` may carry `roomTypeId`. `Booking` drops `roomTypeId`, `ratePlanId`, `units`, `adults`, `children` and the order level `nights`, and gains `rooms: BookingRoom[]` (line fields + nights). Booking refs come from one generator (`booking/ref.ts`): `CA-` + 5 chars, retried on unique violation; hold and seed both use it.
 2. `booking.acquireHold({ stay, quoteHash, guestId })` recomputes the quote inside the transaction. Mismatch returns `{ ok: false, code: 'PRICE_CHANGED', quote }` and takes no inventory.
 3. `booking.confirmPayment` returns `ok: true` with `outcome` `CONFIRMED`, `ALREADY_CONFIRMED` (duplicate webhook) or `REFUND_PENDING` (late payment). A wrong amount returns `AMOUNT_MISMATCH`. It charges `bookings.total_paise` only.
 4. Business failures are returned as `{ ok: false, code }`, never thrown.

@@ -8,7 +8,7 @@ Conventions: money is integer paise (`*_paise`). Dates are `DATE` in IST. Timest
 **users**: id, email UNIQUE, password_hash, name, phone, role CHECK IN ('guest','reservations','sales','gm'), consent_at, consent_version, created_at
 
 ## Catalog and pricing
-**room_types**: id, slug UNIQUE, name, description, total_units CHECK > 0, max_adults, max_children, amenities jsonb, sort
+**room_types**: id, slug UNIQUE, name, description, total_units CHECK > 0, max_adults, max_children (stored, not enforced), max_occupancy CHECK (max_occupancy >= max_adults), amenities jsonb, sort
 
 **room_photos**: id, room_type_id FK, url, alt, width, height, blur_data, sort
 
@@ -26,10 +26,14 @@ Conventions: money is integer paise (`*_paise`). Dates are `DATE` in IST. Timest
 **blackout_dates**: id, room_type_id (null = all), start_date, end_date, reason, created_by, CHECK (end_date >= start_date)
 
 ## Booking
-**bookings**: id, ref UNIQUE (e.g. CA-7K3P9), guest_id FK, room_type_id FK, rate_plan_id FK, check_in, check_out, units CHECK (units >= 1) (MVP validation enforces 1), adults, children, status CHECK IN ('HELD','CONFIRMED','EXPIRED','CANCELLED'), hold_expires_at, quote_hash, promo_id FK null, subtotal_paise, discount_paise, gst_paise, total_paise, created_at, confirmed_at, CHECK (check_out > check_in)
+**bookings** (the order): id, ref UNIQUE (`CA-` + 5 chars, e.g. CA-7K3P9), guest_id FK, check_in, check_out, status CHECK IN ('HELD','CONFIRMED','EXPIRED','CANCELLED'), hold_expires_at, quote_hash, promo_id FK null, subtotal_paise, discount_paise, gst_paise, total_paise, created_at, confirmed_at, CHECK (check_out > check_in)
 Index: (status, hold_expires_at), (guest_id), (check_in)
+B10 (migration `0001`): `room_type_id`, `rate_plan_id`, `units`, `adults`, `children` and the units CHECK moved off `bookings`; totals = sum of its rooms.
 
-**booking_nights**: PK(booking_id, date), rate_paise, discount_paise, gst_bp, gst_paise
+**booking_rooms** (B10, 1 to 4 lines per booking): id, booking_id FK ON DELETE CASCADE, line_no smallint CHECK (line_no BETWEEN 1 AND 4), room_type_id FK, rate_plan_id FK, adults CHECK >= 1, children CHECK >= 0, subtotal_paise, discount_paise, gst_paise, total_paise, UNIQUE (booking_id, line_no)
+Index: (booking_id), (room_type_id)
+
+**booking_nights**: PK(booking_room_id, date), booking_room_id FK booking_rooms ON DELETE CASCADE, rate_paise, discount_paise, gst_bp, gst_paise
 
 **payments**: id, booking_id FK, provider, provider_payment_id UNIQUE, amount_paise, status CHECK IN ('SUCCESS','FAILED','REFUND_PENDING'), created_at
 
@@ -54,5 +58,5 @@ Index: (lane, status), (owner_id, status), (ai_status, ai_updated_at)
 1. Room types (A9): Plantation Room 40, Estate Suite 24, Garden Villa 8, Pool Villa 4. 3 photos each (file names in `05`). Website allotment seeded below total units (e.g. 40% of rooms) to leave agency stock.
 2. Rates and inventory for 180 days, weekend and season variation.
 3. 3 staff users (reservations, sales, gm) + 2 demo guests.
-4. 30 bookings across states.
+4. 30 bookings across states, about 5 of them multi-room (2 to 3 lines), each built through the shared pricing calculation. Room type max occupancy: 3, 4, 5, 6.
 5. 30 labelled enquiries across channels and categories, including the 3 from the brief and tricky cases (mixed intent, Hinglish, vague dates, complaint).

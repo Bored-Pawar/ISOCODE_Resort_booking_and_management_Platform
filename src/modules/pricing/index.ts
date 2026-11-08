@@ -5,7 +5,7 @@ import { quoteInputSchema, type QuoteInput, type QuoteResult } from "./types";
 
 export * from "./types";
 export { computeQuoteHash } from "./hash";
-export { quoteFixture, changedQuoteFixture, FIXTURE_IDS } from "./fixtures";
+export { quoteFixture, twoRoomQuoteFixture, changedQuoteFixture, FIXTURE_IDS } from "./fixtures";
 
 export const pricing = {
   async quote(input: QuoteInput): Promise<QuoteResult> {

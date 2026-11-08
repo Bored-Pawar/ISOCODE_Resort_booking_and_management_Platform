@@ -1,5 +1,5 @@
-import { computeQuoteHash } from "./hash";
-import type { Quote, QuoteNight } from "./types";
+import { calculateQuote, type Slab } from "./calculation";
+import type { Quote } from "./types";
 
 /** Fixture ids are stable strings; the DB seed (F3) uses its own uuids. */
 export const FIXTURE_IDS = {
@@ -9,47 +9,55 @@ export const FIXTURE_IDS = {
   poolVilla: "rt-pool-villa",
   planEP: "rp-plantation-ep",
   planCP: "rp-plantation-cp",
+  suitePlanEP: "rp-suite-ep",
   guestAsha: "user-guest-asha",
 } as const;
 
-// Sat 14 Nov ₹8,200 (18% slab, above ₹7,500) and Sun 15 Nov ₹6,400 (5% slab).
-const nights: QuoteNight[] = [
-  { date: "2026-11-14", ratePaise: 820000, discountPaise: 0, gstBp: 1800, gstPaise: 147600 },
-  { date: "2026-11-15", ratePaise: 640000, discountPaise: 0, gstBp: 500, gstPaise: 32000 },
+/** Mirrors the seeded slabs: 5% up to Rs 7,500 per night (inclusive), 18% above. */
+const FIXTURE_SLABS: Slab[] = [
+  { minPaise: 0, maxPaise: 750000, gstBp: 500, effectiveFrom: "2025-09-22" },
+  { minPaise: 750001, maxPaise: null, gstBp: 1800, effectiveFrom: "2025-09-22" },
 ];
+const stay = { checkIn: "2026-11-14", checkOut: "2026-11-16" };
+const dates = ["2026-11-14", "2026-11-15"];
 
-const base = {
+// Sat 14 Nov Rs 8,200 (18% slab, above Rs 7,500) and Sun 15 Nov Rs 6,400 (5% slab).
+const plantationLine = {
   roomTypeId: FIXTURE_IDS.plantationRoom,
   ratePlanId: FIXTURE_IDS.planCP,
-  checkIn: "2026-11-14",
-  checkOut: "2026-11-16",
-  nights,
-  promo: null,
+  adults: 2,
+  children: 0,
+  rates: [820000, 640000],
+};
+// Rs 9,500 both nights (18%).
+const suiteLine = {
+  roomTypeId: FIXTURE_IDS.estateSuite,
+  ratePlanId: FIXTURE_IDS.suitePlanEP,
+  adults: 2,
+  children: 1,
+  rates: [950000, 950000],
 };
 
-export const quoteFixture: Quote = {
-  ...base,
-  subtotalPaise: 1460000,
-  discountPaise: 0,
-  gstPaise: 179600,
-  totalPaise: 1639600,
-  quoteHash: computeQuoteHash(base),
-};
+/** 1-line cart: 2 adults in a Plantation Room, bed and breakfast, 2 nights. */
+export const quoteFixture: Quote = calculateQuote(stay, dates, [plantationLine], null, FIXTURE_SLABS);
 
-/** Same stay after a rate edit: used to exercise PRICE_CHANGED. */
-const changedNights: QuoteNight[] = [
-  { ...nights[0], ratePaise: 850000, gstPaise: 153000 },
-  nights[1],
-];
-const changedBase = { ...base, nights: changedNights };
-export const changedQuoteFixture: Quote = {
-  ...changedBase,
-  subtotalPaise: 1490000,
-  discountPaise: 0,
-  gstPaise: 185000,
-  totalPaise: 1675000,
-  quoteHash: computeQuoteHash(changedBase),
-};
+/** 2-line cart: the Plantation Room above plus an Estate Suite for 2 adults and 1 child. */
+export const twoRoomQuoteFixture: Quote = calculateQuote(
+  stay,
+  dates,
+  [plantationLine, suiteLine],
+  null,
+  FIXTURE_SLABS,
+);
+
+/** Same 1-line stay after a rate edit: used to exercise PRICE_CHANGED. */
+export const changedQuoteFixture: Quote = calculateQuote(
+  stay,
+  dates,
+  [{ ...plantationLine, rates: [850000, 640000] }],
+  null,
+  FIXTURE_SLABS,
+);
 
 /**
  * Stub pricing (until B1): one fixed nightly rate per room type, whatever the plan or date.

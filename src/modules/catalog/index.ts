@@ -19,7 +19,10 @@ export type RoomType = {
   description: string;
   totalUnits: number;
   maxAdults: number;
+  /** Stored, not enforced (B10 rule 1). */
   maxChildren: number;
+  /** B10: a line fits when 1 <= adults <= maxAdults and adults + children <= maxOccupancy. */
+  maxOccupancy: number;
   amenities: string[];
   photos: RoomPhoto[];
   ratePlans: {
@@ -52,6 +55,7 @@ async function loadRoomTypes(): Promise<RoomType[]> {
     totalUnits: t.totalUnits,
     maxAdults: t.maxAdults,
     maxChildren: t.maxChildren,
+    maxOccupancy: t.maxOccupancy,
     amenities: t.amenities,
     photos: photos
       .filter((p) => p.roomTypeId === t.id)
