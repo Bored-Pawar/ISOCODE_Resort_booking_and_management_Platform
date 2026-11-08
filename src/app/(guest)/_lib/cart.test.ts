@@ -4,7 +4,8 @@ import { MAX_ROOMS_PER_BOOKING } from "@/modules/pricing/types";
 import { fitsRoom } from "@/lib/occupancy";
 import {
   MAX_CART_ROOMS,
-  bookHref,
+  detailsHref,
+  stayHref,
   decodeLine,
   demandByType,
   encodeLine,
@@ -95,9 +96,9 @@ describe("offerFor", () => {
 
 describe("cart URL", () => {
   it("round-trips lines in order and keeps the original search for the counter", () => {
-    const href = bookHref(stay, [lineB, lineA]);
+    const href = stayHref(stay, [lineB, lineA]);
     const url = new URL(href, "http://x");
-    expect(url.pathname).toBe("/book");
+    expect(url.pathname).toBe("/rooms");
     expect(url.searchParams.getAll("room")).toEqual([encodeLine(lineB), encodeLine(lineA)]);
     const parsed = parseCartParams({
       checkIn: url.searchParams.get("checkIn")!,
@@ -114,9 +115,15 @@ describe("cart URL", () => {
       dropped: false,
     });
   });
+  it("details link carries the cart in order plus the quoteHash shown", () => {
+    const url = new URL(detailsHref(stay, [lineB, lineA], "h-123"), "http://x");
+    expect(url.pathname).toBe("/book/details");
+    expect(url.searchParams.getAll("room")).toEqual([encodeLine(lineB), encodeLine(lineA)]);
+    expect(url.searchParams.get("quoteHash")).toBe("h-123");
+  });
   it("never writes or keeps more than 4 lines", () => {
     const five = Array(5).fill(lineA);
-    expect(new URL(bookHref(stay, five), "http://x").searchParams.getAll("room")).toHaveLength(4);
+    expect(new URL(stayHref(stay, five), "http://x").searchParams.getAll("room")).toHaveLength(4);
     const parsed = parseCartParams({ room: five.map(encodeLine) });
     expect(parsed.lines).toHaveLength(4);
     expect(parsed.dropped).toBe(true);

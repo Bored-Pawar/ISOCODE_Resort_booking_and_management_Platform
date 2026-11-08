@@ -112,8 +112,8 @@ export function decodeLine(raw: string): CartLine | null {
   return { roomTypeId, ratePlanId, adults, children };
 }
 
-/** /book link: the original search (dates and party, for the guests-left counter) plus the cart. */
-export function bookHref(stay: CartStay, lines: CartLine[]): string {
+/** Query string for a stay: dates and group (for the still-to-place counter) plus the cart lines. */
+export function stayQuery(stay: CartStay, lines: CartLine[]): URLSearchParams {
   const params = new URLSearchParams({
     checkIn: stay.checkIn,
     checkOut: stay.checkOut,
@@ -121,7 +121,19 @@ export function bookHref(stay: CartStay, lines: CartLine[]): string {
     children: String(stay.children),
   });
   for (const l of lines.slice(0, MAX_CART_ROOMS)) params.append("room", encodeLine(l));
-  return `/book?${params.toString()}`;
+  return params;
+}
+
+/** The stay builder (/rooms) with this cart. `/book` redirects here with its params. */
+export function stayHref(stay: CartStay, lines: CartLine[], path = "/rooms"): string {
+  return `${path}?${stayQuery(stay, lines).toString()}`;
+}
+
+/** Step 2 link: the cart plus the quoteHash of the price the guest was shown. */
+export function detailsHref(stay: CartStay, lines: CartLine[], quoteHash: string): string {
+  const params = stayQuery(stay, lines);
+  params.set("quoteHash", quoteHash);
+  return `/book/details?${params.toString()}`;
 }
 
 type RawParams = Record<string, string | string[] | undefined>;

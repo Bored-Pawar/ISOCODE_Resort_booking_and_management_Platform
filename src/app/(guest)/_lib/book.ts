@@ -17,6 +17,16 @@ export type RoomOption = {
   /** Free website units on every night of the stay (0 when sold out or blacked out). */
   freeUnits: number;
   plans: { id: string; name: string; inclusions: string; refundable: boolean }[];
+  /** Plan a new line starts on: the cheapest priced plan for one room (decided on the server). */
+  defaultPlanId?: string;
+};
+
+/** A room type card in "Rooms and packages": the editor's view plus what the card shows. */
+export type RoomCardView = RoomOption & {
+  description: string;
+  photo: { url: string; alt: string; width: number; height: number } | null;
+  /** Cheapest plan for one room for the whole stay, from pricing. Null when nothing is priced. */
+  from: { planName: string; totalPaise: number; gstPaise: number; perNightPaise: number } | null;
 };
 
 /** The quote the server computed for the cart in the URL, minus anything the browser need not see. */
