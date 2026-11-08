@@ -18,21 +18,25 @@ Runbook: `docs/s2-inbox-runbook.md`. Branch `claude/inbox` in `../resort-inbox`,
 | 2.4 Q7 GM bell | done | feat(inbox): Q7 GM bell with unread count and mark read |
 | 2.5 Sales attention request | done | feat(inbox): sales attention request and mark seen |
 | 2.6 Q2 unified enquiry form | done | feat(enquire): one form with optional event fields (Q2 absorbs Q9) |
-| Gates, integration, review, screenshots | next | |
+| Gates, review, screenshots, docs | done | test(inbox): H1 ..., docs(inbox): ..., fix(inbox): ... |
+| Full PostgreSQL run | running | |
 
-Last done: 2.6. `/enquire` "What is it about?" (Stay, Wedding, Offsite or event, Something else); only
-Wedding/Offsite reveal event dates, guests, budget (whole rupees, positive) and needs. Event fields ->
-`event_details` in the ingest transaction and plain lines in `raw_text`; the choice -> `extracted.guest_hint`
-only (never in the text, so it cannot steer the AI). Channel `event_form` when event fields are filled (2.7,
-no migration). Prefill params unchanged.
-Next: gates, full integration, Playwright H1 staff path, Chrome checks and screenshots, docs (06, tdd-notes,
-04), review subagent, compare URL.
+Last done: wrap-up. Gates green; Playwright H1 staff path passes; Chrome walk-through 31/31 checks (desktop and
+375px, reservations, sales, GM); screenshots `docs/screenshots/q2-*`, `q4-*`..`q7-*`; docs 06, tdd-notes, 04.
+Review subagent (no context: runbook, 04, diff): 0 blockers, 1 major (unsaved edits sent without logging a
+price warning) fixed in `fix(inbox): log the price warning when unsaved edits are sent`.
+Next: full PostgreSQL run result, then the review-fix test (`inbox.test.ts` "sending unsaved edits") on
+test-claude, then the compare URL. Do not merge.
 
 ## Gates (last run)
-typecheck, lint, format ok; unit (staff, modules) 336/336. Integration `inbox.test.ts` 14/14 on test-claude
-(no other run active: checked node processes; only the resort-claude `next dev`).
+typecheck, lint, format:check, build ok; unit 686/686 (69 files). `inbox.test.ts` 14/14 on test-claude before the
+review fix. Full integration run started 03:48 at 39c3f0c (later commits change UI, docs and one send event).
+E2E `e2e/inbox.spec.ts` 1/1 on `pnpm dev -p 3100` (dev DB). Dev DB now has extra simulated rows (ENQ-4411 replied,
+ENQ-4410 attention, simulator rows); reseed (`pnpm db:seed`) before re-running the E2E.
 
 ## Open items / blockers
+- One React hydration-attribute warning seen once during the Chrome run; not reproduced on any inbox, enquire,
+  outbox, login or simulator page at either width (likely the dev server hot-reloading mid-run).
 - `/admin` overview still shows enquiry counts as "Coming with the inbox" (`_lib/overview.ts`, an admin page,
   read only per the runbook locks). `inbox.counts` can feed it; needs scrum master OK.
 - `enquiry_events` has no note column and no schema change is allowed: attention request stores the note in
