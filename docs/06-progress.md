@@ -187,3 +187,13 @@ Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
 | ID | Task | Status |
 |---|---|---|
 | B10 | Multi-room bookings, occupancy rule, `/book` room cart (B6 step 1) | done on `claude/multiroom`, awaiting review and merge |
+
+## Claude Code stay builder (2026-11-08, branch `claude/stay-builder`, stacked on `claude/multiroom`)
+- Guest flow redesign per the scrum master's stay-builder brief: `/rooms` is the stay builder (room type cards with fresh "N left", Your stay lines, sticky summary with still-to-place counter and live quote, suggest button, enquiry links with `rooms`); `/book` redirects to `/rooms` with its params; room detail is view only (party capped to the room, one-room price, Add to my stay, Check availability). Details in `tdd-notes.md`.
+- Header: Sign in returns to the current page (`next`); signed-in profile menu with My stay badge, My bookings, Sign out. `/account` lists bookings through the new additive read-only `booking.listForGuest` (approved in the brief; recorded in `01`), with a PostgreSQL test. No other booking, pricing, inventory, schema or contract change.
+- Gates: typecheck, lint, 227 unit tests, build pass; `booking-list` integration test passes on `TEST_DATABASE_URL` (other integration files not run). Raw `format:check` still flags the same 12 pre-existing CRLF checkout files; `--end-of-line auto` passes.
+- Open: the saved cart is cleared with `clearStoredStay()` once B6 steps 2 to 3 take a hold (not built). `/book/details` stays a placeholder.
+
+| ID | Task | Status |
+|---|---|---|
+| SB | Stay builder, view-only room detail, header account menu, My bookings | done on `claude/stay-builder`, awaiting review |
