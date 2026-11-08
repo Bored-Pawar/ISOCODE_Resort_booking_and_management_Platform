@@ -126,4 +126,10 @@ The full `origin/main..HEAD` whitespace check reports ten trailing-space headers
 
 The normal integration merge is committed locally, and this report plus the Codex progress entry form a documentation-only follow-up. Suggested PR title: **Integrate reviewed R1–R4 AI routing and audit remediation**. Target: `main`; source: `codex/r1-r4-ai-routing`.
 
-**PR readiness: ready for submission from the prepared local branch**, with the existing limitations above disclosed. No push, PR submission, merge into `main` or deployment was performed.
+**PR readiness at the 8 November preparation checkpoint: ready for submission**, with the existing limitations above disclosed. No push, PR submission, merge into `main` or deployment had been performed at that checkpoint.
+
+## Authorized publication (9 November 2026)
+
+The project owner subsequently authorized pushing and merging if safe. A fresh check confirmed clean source HEAD `f002d106e7db3caaefeea2ffe1376888c0bf05de`, unchanged main `444840d70468143629410c7407eb0fa03790d247`, no changes to reviewed remediation/protected source and a clean secret/artifact audit. The branch was pushed normally and [PR #6](https://github.com/Bored-Pawar/ISOCODE_Resort_booking_and_management_Platform/pull/6) opened into `main` with the full validation summary and known limitations.
+
+This publication follow-up changes only this report and Codex's progress entry. The tested application source and 608 passing tests above remain applicable. GitHub CI additionally runs the static/unit/build checks and the integration suite against its disposable PostgreSQL 16 service; it does not use a shared Neon endpoint. The merge uses GitHub's normal merge method with the exact PR HEAD pinned, checks green and main unchanged from the validated base. GitHub's PR merge record is the source of truth for the final main merge SHA. No force-push or deployment is included.
