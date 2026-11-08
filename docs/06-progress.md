@@ -3,6 +3,10 @@
 Scrum master: Aditya Pawar. Deadline: 9 Nov 2026, 23:59 IST.
 Developers update this file after significant changes. Keep entries one line.
 
+## Codex R1–R4 audit remediation (2026-11-08)
+- Phase 0: switched benchmark worktree to assigned `codex/r1-r4-ai-routing` at identical reviewed `39d168f`; all original dirty/untracked benchmark files preserved separately in `0f2ce67`. No merge/rebase/push; `origin/main` merge base remains `e1e3d92`. Audit copied byte-for-byte from detached audit worktree (SHA256 `3f46f2a33423366b77c1ab16d3f3472ff9fa740b4cc9c4cc331312cd93d64bfc`); actual scheduling/backlog path is `docs/07-backlog.md`.
+- B1: pure original-text grounding gates quote selection and final draft substitution, retains classification/routing, persists evidence and labels trusted quote basis/omitted children; 347 unit tests pass, including unsupported-input pricing spies and template-bypass regressions. No database calls or protected source edits.
+
 ## Codex R1–R4 Ollama benchmark (2026-11-08)
 - Isolated branch `codex/r1-r4-ollama-benchmark` at implementation base `39d168f`; fetched main remains `e1e3d92`. Original 30-case/model ten-second baseline and interrupted controlled evidence preserved; Ollama 0.40.15 and both Q4_K_M model digests verified on RTX 4050/6141 MiB. No database calls, paid providers, model downloads or sends.
 - Complete: 439 live chat attempts (387 completed operations, retries and one user interruption), 30 cases with three controlled passes/model plus two 12-case architecture experiments; raw/schema/application/quality/GPU evidence audited. Recommendation C: improve single call with Qwen3 4B locally; no architecture change implemented. Typecheck, scoped lint and 321 unit tests pass. Only authorized production change is local timeout 30 minutes versus hosted 10 seconds; no DB access. Report: `docs/reviews/r1-r4-ollama-model-benchmark.md`.

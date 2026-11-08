@@ -1,8 +1,11 @@
 import { catalog, type RoomType } from "@/modules/catalog";
 import { inventory } from "@/modules/inventory";
 import { pricing, type Quote, type QuoteRoomInput } from "@/modules/pricing";
-import { nightsBetween } from "@/lib/dates";
+import { nightsBetween, todayIST } from "@/lib/dates";
 import type { Classification } from "./schema";
+import { groundExtraction } from "./grounding";
+
+export type SelectedQuote = Quote & { roomNames?: string[] };
 
 /** Respect specific type names first, then generic category words, never broaden a named request. */
 export function matchingRooms(rooms: RoomType[], text: string): RoomType[] {
@@ -62,12 +65,12 @@ function allocate(types: RoomType[], adults: number, children: number): QuoteRoo
 export async function selectQuote(
   classification: Classification,
   text: string,
-): Promise<Quote | null> {
-  const { from, to } = classification.dates;
-  const { adults, total } = classification.guests;
-  const children =
-    classification.guests.children ??
-    (total !== undefined && adults !== undefined ? total - adults : 0);
+  today = todayIST(),
+): Promise<SelectedQuote | null> {
+  const evidence = groundExtraction(text, classification, today);
+  if (!evidence.eligible) return null;
+  const { from, to } = evidence.dates!;
+  const { adults, children } = evidence.guests!;
   if (
     classification.category !== "room" ||
     !from ||
@@ -136,7 +139,11 @@ export async function selectQuote(
     .sort((a, b) => a.total - b.total || a.key.localeCompare(b.key));
   for (const cart of ranked) {
     const result = await pricing.quote({ checkIn: from, checkOut: to, rooms: cart.rooms });
-    if (result.ok) return result.quote;
+    if (result.ok)
+      return {
+        ...result.quote,
+        roomNames: cart.rooms.map((line) => types.find((r) => r.id === line.roomTypeId)!.name),
+      };
   }
   return null;
 }

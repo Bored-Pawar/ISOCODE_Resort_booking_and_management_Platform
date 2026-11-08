@@ -1,17 +1,47 @@
 import { describe, expect, it } from "vitest";
 import { safeModelDraft } from "./price-guard";
-import { buildDraft } from "./draft";
+import { buildDraft as draftWithEvidence } from "./draft";
+import { groundExtraction } from "./grounding";
 import { classificationFixtures } from "./fixtures";
 import { quoteFixture } from "@/modules/pricing";
-const villa = classificationFixtures["ENQ-4411"].classification;
+const villa = {
+  ...classificationFixtures["ENQ-4411"].classification,
+  guests: { adults: 2, children: 0, total: 2 },
+};
+const evidence = groundExtraction(
+  "14-16 Nov 2026 for 2 adults and no children",
+  villa,
+  "2026-11-08",
+);
+const buildDraft = (...args: Parameters<typeof draftWithEvidence>) =>
+  draftWithEvidence(args[0], args[1], args[2], evidence);
 describe("draft safety", () => {
+  it("a safe template cannot attach a quote without grounding", () => {
+    const result = draftWithEvidence(villa, null, quoteFixture);
+    expect(result.quote).toBeNull();
+    expect(result.body).not.toContain("₹");
+  });
+  it("discloses omitted children in the trusted quote basis", () => {
+    const value = { ...villa, guests: { adults: 2 } };
+    const result = draftWithEvidence(
+      value,
+      null,
+      { ...quoteFixture, roomNames: ["Plantation Room"] },
+      groundExtraction("14-16 Nov for 2 adults", value, "2026-11-08"),
+    );
+    expect(result.body).toContain(
+      "Quoted for 2026-11-14 to 2026-11-16, 2 adults, child count not supplied",
+    );
+    expect(result.body).toContain("Plantation Room");
+    expect(result.body).not.toContain("0 children");
+  });
   it("fills canonicalized placeholders and still rejects disguised model prices", () => {
     const draft = buildDraft(villa, "Thank you. ｛｛QUO\u200bTE｝｝", quoteFixture);
     expect(draft.usedTemplate).toBe(false);
     expect(draft.body).toContain("From ₹");
     expect(draft.body).not.toMatch(/QUOTE|｛|\u200b/);
     expect(
-      buildDraft(villa, "Thank you. R\u200bs １２３ {{QUOTE}}", quoteFixture).usedTemplate,
+      buildDraft(villa, "Thank you. R\u200bs ï¼‘ï¼’ï¼“ {{QUOTE}}", quoteFixture).usedTemplate,
     ).toBe(true);
   });
   it.each([

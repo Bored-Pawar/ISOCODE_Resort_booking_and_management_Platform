@@ -12,6 +12,8 @@
 6. **Human in the loop**: staff edit and approve. Nothing is sent automatically. Re route is one click and logged in `enquiry_events`.
 
 ## Output schema
+Before any stock/rate reads, `groundExtraction(raw_text, classification, todayIST())` verifies dates and explicit adult/child counts against the original message on the server. Supported dates: ISO, Indian day/month[/year], English day-month or month-day, shared day ranges, and December–January rollover. An omitted year resolves to the next non-past occurrence; explicit years are respected. Conflicting/invalid/unsupported details fail closed without downgrading classification. Totals never imply adults. Omitted children are disclosed as an estimate assuming no children; unnumbered children require clarification. `extracted.grounding` persists dates/guests/room evidence (`ok|missing|unsupported`) for inbox consumers. The final price line uses server quote dates, party and catalog room names; templates cannot bypass grounding.
+
 ```ts
 {
   category: 'room' | 'wedding' | 'offsite' | 'complaint' | 'other',

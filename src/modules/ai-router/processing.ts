@@ -7,6 +7,8 @@ import { route } from "./routing";
 import { selectQuote } from "./quote-selection";
 import { buildDraft } from "./draft";
 import { PROMPT_VERSION } from "./prompts";
+import { groundExtraction } from "./grounding";
+import { todayIST } from "@/lib/dates";
 
 export async function processEnquiry(input: ProcessInput): Promise<ProcessResult> {
   const parsed = processInputSchema.safeParse(input);
@@ -38,15 +40,22 @@ export async function processEnquiry(input: ProcessInput): Promise<ProcessResult
     }
     const outcome = await classifyMessage(claimed.claim.row);
     const routing = route(outcome.classification, outcome.status);
+    const today = todayIST();
+    const evidence = groundExtraction(claimed.claim.row.rawText, outcome.classification, today);
     // Quoting is optional: DB/rate/availability failure must not discard good classification.
-    const quote = await selectQuote(outcome.classification, outcome.text).catch(() => null);
-    const draft = buildDraft(outcome.classification, outcome.draftText, quote);
+    const quote = evidence.eligible
+      ? await selectQuote(outcome.classification, claimed.claim.row.rawText, today).catch(
+          () => null,
+        )
+      : null;
+    const draft = buildDraft(outcome.classification, outcome.draftText, quote, evidence);
     const saved = await settleEnquiry(claimed.claim, {
       status: outcome.status,
       category: outcome.classification.category,
       confidence: outcome.classification.confidence,
       extracted: {
         ...outcome.classification,
+        grounding: evidence.grounding,
         ai: {
           provider: outcome.response.provider,
           model: outcome.response.model,
