@@ -49,6 +49,7 @@ export async function coreFixture(db: Db, rates = [750000, 750001]) {
     .insert(t.inventory)
     .values(dates.map((date) => ({ roomTypeId: room.id, date, allotment: 1 })));
   const promoIds: string[] = [];
+  const extraGuests: string[] = [];
   /** One room line of this fixture's type: 2 adults, no children. */
   const line = (over: Partial<QuoteRoomInput> = {}) => ({
     roomTypeId: room.id,
@@ -67,6 +68,23 @@ export async function coreFixture(db: Db, rates = [750000, 750001]) {
     /** The 1-line cart with its only line changed. */
     stayWith(over: Partial<QuoteRoomInput>) {
       return cart([line(over)]);
+    },
+    /**
+     * Another guest, removed by clean(). acquireHold is idempotent per guest and exact stay
+     * (01 Contract note 7), so races between holders need different guests.
+     */
+    async otherGuest() {
+      const [g] = await db
+        .insert(t.users)
+        .values({
+          email: `${randomUUID()}@test.example`,
+          name: "Other",
+          passwordHash: "unused",
+          role: "guest",
+        })
+        .returning();
+      extraGuests.push(g.id);
+      return g;
     },
     async promo(overrides: Partial<typeof t.promoCodes.$inferInsert> = {}) {
       const [p] = await db
@@ -96,6 +114,7 @@ export async function coreFixture(db: Db, rates = [750000, 750001]) {
       }
       await db.delete(t.roomTypes).where(eq(t.roomTypes.id, room.id));
       await db.delete(t.users).where(eq(t.users.id, guest.id));
+      if (extraGuests.length) await db.delete(t.users).where(inArray(t.users.id, extraGuests));
       if (promoIds.length) await db.delete(t.promoCodes).where(inArray(t.promoCodes.id, promoIds));
     },
   };

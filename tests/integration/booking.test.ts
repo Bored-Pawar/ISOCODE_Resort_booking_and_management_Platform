@@ -77,9 +77,15 @@ async function extend() {
 describe("B3 atomic holds", () => {
   it("mandatory 1: twenty simultaneous last-unit holds produce exactly one winner", async () => {
     const q = await quote();
+    // Twenty different guests: one guest's identical holds are idempotent (01 Contract note 7),
+    // so the last-unit race is between holders.
+    const guests = [
+      f.guest.id,
+      ...(await Promise.all(Array.from({ length: 19 }, () => f.otherGuest()))).map((g) => g.id),
+    ];
     const results = await Promise.all(
-      Array.from({ length: 20 }, () =>
-        booking.acquireHold({ stay: f.stay, quoteHash: q.quoteHash, guestId: f.guest.id }),
+      guests.map((guestId) =>
+        booking.acquireHold({ stay: f.stay, quoteHash: q.quoteHash, guestId }),
       ),
     );
     expect(results.filter((r) => r.ok)).toHaveLength(1);
@@ -566,7 +572,16 @@ describe("B5 payment lifecycle", () => {
   it("concurrent reuse of one provider ID for different bookings rolls the loser back", async () => {
     await db.update(t.inventory).set({ allotment: 2 }).where(eq(t.inventory.roomTypeId, f.room.id));
     const a = await hold();
-    const b = await hold();
+    // A second guest: the same guest and exact stay would return booking a again.
+    const other = await f.otherGuest();
+    const qb = await quote();
+    const held = await booking.acquireHold({
+      stay: f.stay,
+      quoteHash: qb.quoteHash,
+      guestId: other.id,
+    });
+    if (!held.ok) throw new Error(held.code);
+    const b = held.booking;
     const id = randomUUID();
     const results = await Promise.all([pay(a, id), pay(b, id)]);
     expect(results.filter((r) => r.ok && r.outcome === "CONFIRMED")).toHaveLength(1);

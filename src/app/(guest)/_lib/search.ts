@@ -3,6 +3,7 @@
  * client form (G1) and the server pages (G2, G3) share one definition. Dates are IST DATE strings.
  */
 import { isDateStr, nightsBetween, type DateStr } from "@/lib/dates";
+import { BOOKING_WINDOW_MESSAGE, withinBookingWindow } from "@/lib/booking-window";
 
 /**
  * Online booking takes a party of up to `maxGuests` that fits in at most 4 rooms (B10). Counts are
@@ -23,6 +24,7 @@ export type SearchIssue = {
     | "past"
     | "order"
     | "too-long"
+    | "too-far"
     | "no-adults"
     | "bad-guests"
     | "too-many-guests";
@@ -30,6 +32,11 @@ export type SearchIssue = {
 };
 
 export const DEFAULT_GUESTS = { adults: 2, children: 0 } as const;
+
+/** Issues an enquiry can solve: the page offers a prefilled /enquire link with them. */
+export function needsEnquiry(issue: SearchIssue | null): boolean {
+  return !!issue && ["too-long", "too-far", "too-many-guests"].includes(issue.code);
+}
 
 /** First problem with the search, or null when it is valid. `today` is today's IST date. */
 export function validateSearch(v: SearchValues, today: DateStr): SearchIssue | null {
@@ -41,6 +48,9 @@ export function validateSearch(v: SearchValues, today: DateStr): SearchIssue | n
   }
   if (v.checkOut <= v.checkIn) {
     return { code: "order", message: "Check-out must be after check-in" };
+  }
+  if (!withinBookingWindow(v.checkIn, today)) {
+    return { code: "too-far", message: BOOKING_WINDOW_MESSAGE };
   }
   if (nightsBetween(v.checkIn, v.checkOut) > SEARCH_LIMITS.maxNights) {
     return {

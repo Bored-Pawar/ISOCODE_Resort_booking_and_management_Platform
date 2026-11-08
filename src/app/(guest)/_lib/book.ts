@@ -105,7 +105,12 @@ export function counter(party: Party, lines: Party[]): Counter {
   return { kind: "over", text: `${partyText(extra)} more than your search` };
 }
 
-export type ContinueState = { ok: true } | { ok: false; reason: string };
+export type ContinueState = { ok: true } | { ok: false; reason: string; zeroTotal?: true };
+
+/** Inline under the promo field when pricing says PROMO_INVALID. */
+export const PROMO_INVALID_MESSAGE = "This code isn't valid for these dates";
+/** The payment schema takes positive amounts only, so a free stay cannot be paid online. */
+export const ZERO_TOTAL_MESSAGE = "This code can't be used online, send us an enquiry";
 
 /** Continue only with 1 to 4 valid lines, every guest placed, and a valid quote for this cart. */
 export function continueState(input: {
@@ -129,5 +134,7 @@ export function continueState(input: {
   if (pending || !quote) return { ok: false, reason: "Updating the price…" };
   if (!quote.ok)
     return { ok: false, reason: "We could not price these rooms. Change them or try again." };
+  if (quote.quote.totalPaise <= 0)
+    return { ok: false, reason: ZERO_TOTAL_MESSAGE, zeroTotal: true };
   return { ok: true };
 }

@@ -22,6 +22,7 @@ describe("stored stay", () => {
       checkIn: stay.checkIn,
       checkOut: stay.checkOut,
       party: { adults: 4, children: 1 },
+      promo: "",
       lines: [b, a],
       dropped: false,
     });

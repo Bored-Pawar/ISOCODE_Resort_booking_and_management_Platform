@@ -11,7 +11,17 @@ export const MAX_CART_ROOMS = 4;
 
 export type Party = { adults: number; children: number };
 export type CartLine = { roomTypeId: string; ratePlanId: string } & Party;
-export type CartStay = { checkIn: string; checkOut: string } & Party;
+/** `promo` is the promo code the guest typed, carried in the URL and passed to pricing.quote. */
+export type CartStay = { checkIn: string; checkOut: string; promo?: string } & Party;
+
+/** A promo code as the URL may carry it: letters, digits and dashes, at most 32 (pricing's cap). */
+const PROMO_RE = /^[A-Za-z0-9-]{1,32}$/;
+
+/** Trimmed and upper-cased, or "" when it cannot be a promo code. Pricing still decides validity. */
+export function normalisePromo(raw: string): string {
+  const v = raw.trim().toUpperCase();
+  return PROMO_RE.test(v) ? v : "";
+}
 
 /**
  * Fewest rooms of one type that take the whole party (B10 rule 1 per room), or null when it would
@@ -99,6 +109,8 @@ export function stayQuery(stay: CartStay, lines: CartLine[]): URLSearchParams {
     children: String(stay.children),
   });
   for (const l of lines.slice(0, MAX_CART_ROOMS)) params.append("room", encodeLine(l));
+  const promo = normalisePromo(stay.promo ?? "");
+  if (promo) params.set("promo", promo);
   return params;
 }
 
@@ -120,6 +132,8 @@ export type ParsedCart = {
   checkIn: string;
   checkOut: string;
   party: Party;
+  /** Normalised promo code, or "" (none or unreadable). */
+  promo: string;
   /** In URL order. Malformed entries are dropped; at most MAX_CART_ROOMS are kept. */
   lines: CartLine[];
   /** True when the URL carried malformed or extra lines that were dropped. */
@@ -144,6 +158,7 @@ export function parseCartParams(raw: RawParams): ParsedCart {
     checkIn: isDateStr(checkIn) ? checkIn : "",
     checkOut: isDateStr(checkOut) ? checkOut : "",
     party: { adults: count(first(raw.adults), 0), children: count(first(raw.children), 0) },
+    promo: normalisePromo(first(raw.promo)),
     lines: valid.slice(0, MAX_CART_ROOMS),
     dropped: valid.length !== entries.length || valid.length > MAX_CART_ROOMS,
   };
