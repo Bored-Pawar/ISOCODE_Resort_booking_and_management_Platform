@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { roomTypesFixture } from "@/modules/catalog/fixtures";
 import { quoteFixture, twoRoomQuoteFixture } from "@/modules/pricing/fixtures";
-import { defaultPlanId, formatBp, gstBreakdown, nightsByDate, toPlanView } from "./room-detail";
+import {
+  availabilityView,
+  defaultPlanId,
+  EXPLORE_ROOMS,
+  formatBp,
+  gstBreakdown,
+  nightsByDate,
+  stayNav,
+  toPlanView,
+} from "./room-detail";
 
 const cells = (q: typeof quoteFixture) => q.lines.flatMap((l) => l.nights);
 
@@ -59,5 +68,61 @@ describe("defaultPlanId", () => {
     const b = { ...a, id: "b", totalPaise: 500 };
     expect(defaultPlanId([a, b])).toBe("b");
     expect(defaultPlanId([])).toBeUndefined();
+  });
+});
+
+describe("availabilityView", () => {
+  it("is free above the low-stock line, warns at 3 or fewer, and none at 0", () => {
+    expect(availabilityView(4)).toEqual({
+      state: "free",
+      label: "Available for your dates",
+      tone: "success",
+    });
+    expect(availabilityView(3)).toEqual({ state: "low", label: "Only 3 left", tone: "warning" });
+    expect(availabilityView(1).label).toBe("Only 1 left");
+    expect(availabilityView(0)).toEqual({ state: "none", label: "Not available for these dates" });
+    expect(availabilityView(-2).state).toBe("none");
+  });
+});
+
+describe("stayNav", () => {
+  const stay = { checkIn: "2026-11-20", checkOut: "2026-11-22", adults: 4, children: 0 };
+  const line = { roomTypeId: "rt-a", ratePlanId: "rp-a", adults: 2, children: 0 };
+  const saved = {
+    checkIn: "2026-12-01",
+    checkOut: "2026-12-03",
+    party: { adults: 2, children: 1 },
+    lines: [line],
+    dropped: false,
+  };
+
+  it("goes back to the URL cart unchanged", () => {
+    const nav = stayNav({ hasCartParam: true, stay, lines: [line, line] }, saved);
+    expect(nav.kind).toBe("back");
+    expect(nav.label).toBe("Back to my stay");
+    expect(nav.href).toBe(
+      "/rooms?checkIn=2026-11-20&checkOut=2026-11-22&adults=4&children=0&room=rt-a.rp-a.2.0&room=rt-a.rp-a.2.0",
+    );
+  });
+
+  it("an empty cart in the link wins over the saved one", () => {
+    expect(stayNav({ hasCartParam: true, stay, lines: [] }, saved)).toEqual(EXPLORE_ROOMS);
+  });
+
+  it("without a cart in the link, returns to the saved stay with its own dates and group", () => {
+    expect(stayNav({ hasCartParam: false, stay, lines: [] }, saved).href).toBe(
+      "/rooms?checkIn=2026-12-01&checkOut=2026-12-03&adults=2&children=1&room=rt-a.rp-a.2.0",
+    );
+  });
+
+  it("explores from home when there is no cart anywhere", () => {
+    expect(stayNav({ hasCartParam: false, stay, lines: [] }, null)).toEqual({
+      kind: "explore",
+      href: "/#rooms",
+      label: "Explore more rooms",
+    });
+    expect(stayNav({ hasCartParam: false, stay, lines: [] }, { ...saved, lines: [] }).kind).toBe(
+      "explore",
+    );
   });
 });

@@ -4,7 +4,7 @@
  */
 import type { RoomType } from "@/modules/catalog";
 import type { Quote, QuoteNight } from "@/modules/pricing";
-import type { CartLine } from "./cart";
+import { stayHref, type CartLine, type CartStay, type ParsedCart } from "./cart";
 
 export type PlanView = {
   id: string;
@@ -78,6 +78,53 @@ export function toPlanView(plan: RoomType["ratePlans"][number], quote: Quote): P
       children: l.children,
     })),
   };
+}
+
+/** At or below this many free rooms the page warns "Only N left". */
+export const LOW_STOCK = 3;
+
+export type AvailabilityView =
+  | { state: "free"; label: string; tone: "success" }
+  | { state: "low"; label: string; tone: "warning" }
+  | { state: "none"; label: string };
+
+/** What the room page says about the chosen dates, from the free website units. */
+export function availabilityView(freeUnits: number): AvailabilityView {
+  if (freeUnits < 1) return { state: "none", label: "Not available for these dates" };
+  if (freeUnits <= LOW_STOCK)
+    return { state: "low", label: `Only ${freeUnits} left`, tone: "warning" };
+  return { state: "free", label: "Available for your dates", tone: "success" };
+}
+
+/** Where the quiet link under "Add to my stay" goes. */
+export type StayNav =
+  | { kind: "back"; href: string; label: "Back to my stay" }
+  | { kind: "explore"; href: "/#rooms"; label: "Explore more rooms" };
+
+export const EXPLORE_ROOMS: StayNav = {
+  kind: "explore",
+  href: "/#rooms",
+  label: "Explore more rooms",
+};
+
+/**
+ * A cart in the link wins (even an empty one); without one, the stay saved in this browser.
+ * "Back" returns to /rooms with that cart unchanged; with no cart the guest explores from home.
+ */
+export function stayNav(
+  url: { hasCartParam: boolean; stay: CartStay; lines: CartLine[] },
+  saved: ParsedCart | null,
+): StayNav {
+  if (url.hasCartParam)
+    return url.lines.length > 0
+      ? { kind: "back", href: stayHref(url.stay, url.lines), label: "Back to my stay" }
+      : EXPLORE_ROOMS;
+  if (!saved || saved.lines.length === 0) return EXPLORE_ROOMS;
+  const stay: CartStay =
+    saved.checkIn && saved.checkOut && saved.party.adults > 0
+      ? { checkIn: saved.checkIn, checkOut: saved.checkOut, ...saved.party }
+      : url.stay;
+  return { kind: "back", href: stayHref(stay, saved.lines), label: "Back to my stay" };
 }
 
 /** Cheapest plan first selected by default. */

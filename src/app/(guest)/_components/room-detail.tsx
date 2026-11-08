@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { ArrowLeft, Check, Users } from "lucide-react";
-import { ButtonLink, Card, Skeleton } from "@/components/ui";
+import { ArrowLeft, CalendarX, Check, Users } from "lucide-react";
+import { Badge, ButtonLink, Card, Skeleton } from "@/components/ui";
 import { nightsBetween, todayIST } from "@/lib/dates";
 import { catalog, type RoomType } from "@/modules/catalog";
 import { inventory } from "@/modules/inventory";
@@ -10,7 +10,7 @@ import { pricing } from "@/modules/pricing";
 import { enquiryHref } from "../_lib/enquiry";
 import { occupancyLabel } from "../_lib/format";
 import { parseCartParams, stayHref, type CartLine } from "../_lib/cart";
-import { toPlanView, type PlanView } from "../_lib/room-detail";
+import { availabilityView, EXPLORE_ROOMS, toPlanView, type PlanView } from "../_lib/room-detail";
 import { partyForRoom } from "../_lib/stay";
 import {
   parseSearchParams,
@@ -19,6 +19,7 @@ import {
   type SearchValues,
 } from "../_lib/search";
 import { RoomStayPanel } from "./room-stay-panel";
+import { StayNavLink, StayNavText } from "./stay-nav-link";
 import { Gallery } from "./gallery";
 import { RetryError } from "./retry-error";
 import { SearchForm } from "./search-form";
@@ -76,7 +77,7 @@ export async function RoomDetail({
         )
       : `/rooms?${query}`;
   const action = `/rooms/${room.slug}`;
-  const aside = issue ? null : await stayPanel(room, values, cart, listHref);
+  const aside = issue ? null : await stayPanel(room, values, cart);
 
   return (
     <div className="flex flex-col gap-8">
@@ -111,6 +112,10 @@ export async function RoomDetail({
               : issue.message}
           </p>
           <SearchForm today={today} defaults={values} action={action} submitLabel="Show prices" />
+          <p className="mt-4 text-small text-muted">
+            Plans and Add to my stay appear once your dates are set. Not sure about this room yet?
+          </p>
+          <StayNavText nav={EXPLORE_ROOMS} />
         </Card>
       ) : (
         <SearchSummary values={values} today={today} action={action} />
@@ -162,7 +167,6 @@ async function stayPanel(
   room: RoomType,
   values: SearchValues,
   cart: { lines: CartLine[]; hasCartParam: boolean },
-  roomsHref: string,
 ) {
   const party = { adults: values.adults, children: values.children };
   const roomParty = partyForRoom(room, party);
@@ -214,16 +218,25 @@ async function stayPanel(
   if (units < 1 || plans.length === 0) {
     return (
       <Card className="flex flex-col gap-3">
-        <p className="text-h2 font-medium">Not available for these dates</p>
+        <Badge tone="warning" icon={<CalendarX strokeWidth={1.5} />} className="self-start">
+          {availabilityView(0).label}
+        </Badge>
         <p className="text-body text-muted">
           {units < 1
-            ? "This room is sold out for these dates. See what else is free, or try other dates with Change above."
-            : "We have not published prices for these dates yet. Try different dates, or look at our other rooms."}
+            ? "This room is sold out for these dates. Try other dates with Change above, or send us an enquiry with your dates and group and we will see what we can do."
+            : "We have not published prices for these dates yet. Send us an enquiry with your dates and group, or try different dates."}
         </p>
-        <ButtonLink href={roomsHref}>Check availability</ButtonLink>
         <ButtonLink href={group} variant="secondary">
           Send an enquiry
         </ButtonLink>
+        <StayNavLink
+          url={{
+            hasCartParam: cart.hasCartParam,
+            stay: { checkIn: values.checkIn, checkOut: values.checkOut, ...party },
+            lines: cart.lines,
+          }}
+          className="-my-1 self-center"
+        />
       </Card>
     );
   }

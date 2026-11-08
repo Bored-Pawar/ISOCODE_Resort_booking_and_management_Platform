@@ -3,15 +3,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, TriangleAlert } from "lucide-react";
-import { Badge, Button, ButtonLink, PriceBlock, Stepper } from "@/components/ui";
+import { Badge, Button, PriceBlock, Stepper } from "@/components/ui";
 import { formatInr } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { stayHref, type CartLine, type CartStay, type Party } from "../_lib/cart";
 import { guestsLabel, plural } from "../_lib/format";
-import { defaultPlanId, formatBp, type PlanView } from "../_lib/room-detail";
-import { toSearchParams } from "../_lib/search";
+import {
+  availabilityView,
+  defaultPlanId,
+  formatBp,
+  stayNav,
+  type PlanView,
+} from "../_lib/room-detail";
 import { addBlockedReason } from "../_lib/stay";
 import { writeStoredStay } from "../_lib/stay-storage";
+import { StayNavText } from "./stay-nav-link";
 import { useStoredStay } from "./use-stored-stay";
 
 export type PanelRoom = {
@@ -25,8 +31,8 @@ export type PanelRoom = {
 
 /**
  * Room page booking card (view only): the party for THIS room, one-room prices per plan with the
- * GST breakdown, and two ways on: "Add to my stay" appends this room to the cart and opens the
- * stay builder; "Check availability" opens the stay builder with the cart unchanged. Prices arrive
+ * GST breakdown, and "Add to my stay", which appends this room to the cart and opens the stay
+ * builder. A quiet link goes back to the stay unchanged, or (no cart) to explore more rooms. Prices arrive
  * as props from the server; the room price does not depend on the party.
  */
 export function RoomStayPanel({
@@ -62,8 +68,9 @@ export function RoomStayPanel({
   const blocked = addBlockedReason({ id: room.id, freeUnits: room.freeUnits, plans }, cart);
   const multiRate = plan.gst.length > 1;
   const group = stay.adults + stay.children;
-  const checkHref = hasCartParam ? stayHref(stay, cart) : `/rooms?${toSearchParams(stay)}`;
-  const tone = room.freeUnits <= 3 ? "warning" : "success";
+  const nav = stayNav({ hasCartParam, stay, lines: urlLines }, saved);
+  const status = availabilityView(room.freeUnits);
+  const tone = status.state === "low" ? "warning" : "success";
 
   function add() {
     if (blocked) return;
@@ -89,7 +96,7 @@ export function RoomStayPanel({
           }
           className="self-start"
         >
-          {room.freeUnits} left for these dates
+          {status.label}
         </Badge>
 
         <fieldset className="flex flex-col gap-3">
@@ -198,25 +205,26 @@ export function RoomStayPanel({
 
         {addButton("w-full")}
         {blocked ? <p className="text-small text-muted">{blocked}.</p> : null}
-        <ButtonLink href={checkHref} variant="secondary" className="w-full">
-          Check availability
-        </ButtonLink>
         <p className="text-small text-muted">
-          You build your stay on the next page. You will not be charged yet.
+          {nav.kind === "back"
+            ? "Adding puts this room in your stay and takes you back to it. You will not be charged yet."
+            : "Adding starts your stay. You can add more rooms on the next page. You will not be charged yet."}
         </p>
+        <StayNavText nav={nav} className="-my-2 self-center" />
       </div>
 
-      {/* Small screens: the price and Add to my stay stay in reach. */}
-      <div className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-between gap-4 border-t border-border bg-surface px-4 py-3 lg:hidden">
+      {/* Small screens: the price, Add to my stay and the quiet link stay in reach. */}
+      <div className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-between gap-4 border-t border-border bg-surface px-4 py-2 lg:hidden">
         <div className="min-w-0">
-          <p className="font-display text-h2 font-medium tabular-nums">
-            {formatInr(plan.totalPaise)}
+          <p className="truncate">
+            <span className="font-display text-h2 font-medium tabular-nums">
+              {formatInr(plan.totalPaise)}
+            </span>{" "}
+            <span className="text-small text-muted">1 room, {plural(nights, "night")}</span>
           </p>
-          <p className="truncate text-small text-muted">
-            1 room, {plural(nights, "night")}, {plan.name}
-          </p>
+          <StayNavText nav={nav} className="min-h-9" />
         </div>
-        {addButton()}
+        {addButton("shrink-0")}
       </div>
     </>
   );
