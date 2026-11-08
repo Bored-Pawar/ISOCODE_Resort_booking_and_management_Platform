@@ -19,13 +19,15 @@ Runbook: `docs/s2-inbox-runbook.md`. Branch `claude/inbox` in `../resort-inbox`,
 | 2.5 Sales attention request | done | feat(inbox): sales attention request and mark seen |
 | 2.6 Q2 unified enquiry form | done | feat(enquire): one form with optional event fields (Q2 absorbs Q9) |
 | Gates, review, screenshots, docs | done | test(inbox): H1 ..., docs(inbox): ..., fix(inbox): ... |
-| Full PostgreSQL run | running | |
+| Full PostgreSQL run | blocked | stopped by Claude Code for low system memory, no results |
 
 Last done: wrap-up. Gates green; Playwright H1 staff path passes; Chrome walk-through 31/31 checks (desktop and
 375px, reservations, sales, GM); screenshots `docs/screenshots/q2-*`, `q4-*`..`q7-*`; docs 06, tdd-notes, 04.
 Review subagent (no context: runbook, 04, diff): 0 blockers, 1 major (unsaved edits sent without logging a
 price warning) fixed in `fix(inbox): log the price warning when unsaved edits are sent`.
-Next: full PostgreSQL run result, then the review-fix test (`inbox.test.ts` "sending unsaved edits") on
+Next: rerun the full PostgreSQL suite when memory allows (stopped at ~04:30 for low system memory,
+no results printed; a killed test may have left fixture rows: users `inbox-*@test.example`, enquiries
+`ENQ-T*`, admin fixtures), then the review-fix test (`inbox.test.ts` "sending unsaved edits") on
 test-claude, then the compare URL. Do not merge.
 
 ## Gates (last run)
