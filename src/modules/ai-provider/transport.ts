@@ -35,7 +35,32 @@ export function transportError(error: unknown): {
     return { code: "INVALID_RESPONSE", retry: false, delayMs: 0 };
   return { code: "UNAVAILABLE", retry: true, delayMs: 250 };
 }
-/** One SDK path, no tools/business logic, at most one transient retry. */
+/** Default key cool-down when a key is rate limited or rejected without Retry-After. */
+export const KEY_COOLDOWN_MS = 60_000;
+/** Per-instance, in-memory cool-downs by opaque slot id. Never persisted or logged. */
+const coolingUntil = new Map<string, number>();
+/** Test helper: forget all key cool-downs. */
+export function resetKeyCooldowns() {
+  coolingUntil.clear();
+}
+function cooldownMs(error: unknown) {
+  const header = (error as { responseHeaders?: Record<string, string> } | null)?.responseHeaders?.[
+    "retry-after"
+  ];
+  if (!header) return KEY_COOLDOWN_MS;
+  const seconds = Number(header);
+  const ms = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(header) - Date.now();
+  return Number.isFinite(ms) && ms > 0 ? ms : KEY_COOLDOWN_MS;
+}
+function availableModels(selection: Extract<ProviderSelection, { kind: "model" }>) {
+  if (!selection.keys) return [{ slot: null, model: selection.model }];
+  const now = Date.now();
+  return selection.keys.filter((key) => (coolingUntil.get(key.slot) ?? 0) <= now);
+}
+/**
+ * One SDK path, no tools/business logic, at most one transient retry. With a key pool, a 429 or
+ * 401/403 cools that key and the next key is tried at once inside the same attempt deadline.
+ */
 export async function executeWithDeadline<T>(
   request: StructuredRequest<T>,
   selection: ProviderSelection,
@@ -44,6 +69,7 @@ export async function executeWithDeadline<T>(
   const started = Date.now();
   let attempts = 0;
   let rateLimits = 0;
+  let rotations = 0;
   const meta = () => ({
     provider: selection.provider,
     model: selection.kind === "rules-only" ? null : selection.modelId,
@@ -53,42 +79,69 @@ export async function executeWithDeadline<T>(
   });
   if (selection.kind === "rules-only") return { kind: "rules-only", ...meta() };
   if (selection.kind === "error") return { kind: "error", error: "NOT_CONFIGURED", ...meta() };
-  for (let i = 0; i < 2; i++) {
-    attempts++;
-    const controller = new AbortController();
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    try {
-      const expired = new Promise<never>((_, reject) => {
-        timer = setTimeout(() => {
-          controller.abort();
-          reject(new DOMException("Timed out", "TimeoutError"));
-        }, attemptTimeoutMs);
-      });
-      const result = await Promise.race([
-        generateText({
-          model: selection.model,
-          system: request.system,
-          prompt: request.prompt,
-          output: Output.object({ schema: request.schema }),
-          maxRetries: 0,
-          maxOutputTokens: 1800,
-          abortSignal: controller.signal,
-          telemetry: { isEnabled: false },
-        }),
-        expired,
-      ]);
-      const checked = request.schema.safeParse(result.output);
-      if (!checked.success) return { kind: "error", error: "INVALID_RESPONSE", ...meta() };
-      return { kind: "success", value: checked.data, ...meta() };
-    } catch (error) {
-      const safe = transportError(controller.signal.aborted ? { name: "TimeoutError" } : error);
-      if (safe.code === "RATE_LIMIT") rateLimits++;
-      if (i === 1 || !safe.retry) return { kind: "error", error: safe.code, ...meta() };
-      if (timer) clearTimeout(timer);
-      if (safe.delayMs) await new Promise((resolve) => setTimeout(resolve, safe.delayMs));
-    } finally {
-      if (timer) clearTimeout(timer);
+  let keyError: ProviderError = "RATE_LIMIT";
+  try {
+    for (let i = 0; i < 2; i++) {
+      const candidates = availableModels(selection);
+      // Every key is cooling: no network call, rules fallback.
+      if (!candidates.length) return { kind: "error", error: keyError, ...meta() };
+      attempts++;
+      const controller = new AbortController();
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        const expired = new Promise<never>((_, reject) => {
+          timer = setTimeout(() => {
+            controller.abort();
+            reject(new DOMException("Timed out", "TimeoutError"));
+          }, attemptTimeoutMs);
+        });
+        let output: unknown;
+        // Bounded by the pool size (at most four keys) and by this attempt's single deadline.
+        for (let k = 0; k < candidates.length; k++) {
+          const candidate = candidates[k];
+          try {
+            const result = await Promise.race([
+              generateText({
+                model: candidate.model,
+                system: request.system,
+                prompt: request.prompt,
+                output: Output.object({ schema: request.schema }),
+                maxRetries: 0,
+                maxOutputTokens: 1800,
+                abortSignal: controller.signal,
+                telemetry: { isEnabled: false },
+              }),
+              expired,
+            ]);
+            output = result.output;
+            break;
+          } catch (error) {
+            if (!candidate.slot || controller.signal.aborted) throw error;
+            const safe = transportError(error);
+            if (safe.code !== "RATE_LIMIT" && safe.code !== "NOT_CONFIGURED") throw error;
+            if (safe.code === "RATE_LIMIT") rateLimits++;
+            coolingUntil.set(candidate.slot, Date.now() + cooldownMs(error));
+            keyError = safe.code;
+            if (k === candidates.length - 1) return { kind: "error", error: safe.code, ...meta() };
+            rotations++;
+          }
+        }
+        const checked = request.schema.safeParse(output);
+        if (!checked.success) return { kind: "error", error: "INVALID_RESPONSE", ...meta() };
+        return { kind: "success", value: checked.data, ...meta() };
+      } catch (error) {
+        const safe = transportError(controller.signal.aborted ? { name: "TimeoutError" } : error);
+        if (safe.code === "RATE_LIMIT") rateLimits++;
+        if (i === 1 || !safe.retry) return { kind: "error", error: safe.code, ...meta() };
+        if (timer) clearTimeout(timer);
+        if (safe.delayMs) await new Promise((resolve) => setTimeout(resolve, safe.delayMs));
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
     }
+    return { kind: "error", error: "UNAVAILABLE", ...meta() };
+  } finally {
+    // Count only: no key value, slot or index is ever logged.
+    if (rotations) console.warn("groq key rotated", { count: rotations });
   }
-  return { kind: "error", error: "UNAVAILABLE", ...meta() };
 }
