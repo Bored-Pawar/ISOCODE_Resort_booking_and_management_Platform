@@ -1,6 +1,6 @@
 # S2 provider setup
 
-R1–R4 uses AI SDK 7.0.164, Google 4.0.113, Anthropic 4.0.98 and OpenAI-compatible 3.0.86. One `generateText`/`Output.object` call returns classification, extraction and draft prose. Transport retries once for transient errors. Hosted providers abort at ten seconds per attempt; local Ollama has thirty minutes per attempt, explicitly approved by the scrum master on 2026-11-08 for laptop benchmarking. Retry-After remains bounded. No key, prompt, output or SDK error message is logged.
+R1–R4 uses AI SDK 7.0.164, Google 4.0.113, Anthropic 4.0.98 and OpenAI-compatible 3.0.86. One `generateText`/`Output.object` call returns classification, extraction and draft prose. Every application provider, including local Ollama, aborts at ten seconds per attempt, retries at most once for transient errors, and caps Retry-After at one second. The resulting provider budget is at most 21 seconds against an unchanged 120-second processing lease. The standalone benchmark CLI alone imports its explicit thirty-minute deadline from `tests/benchmarks/ollama/provider.ts`; no runtime env variable overrides the application limit. No key, prompt, output or SDK error message is logged.
 
 Historical implementation-handoff snapshot (before this benchmark, 2026-11-08): hosted keys absent, local endpoint/model unset, `ollama` executable not on PATH; no live-model result was available then. The subsequent local benchmark verified the installed Ollama executable and two models; see `reviews/r1-r4-ollama-model-benchmark.md`. Tests use synthetic messages and mocked SDK calls; the earlier PostgreSQL quote tests use the real public pricing service.
 
@@ -20,7 +20,7 @@ AI_MODEL=qwen3:4b
 LOCAL_AI_BASE_URL=http://localhost:11434/v1
 ```
 
-Then run `pnpm eval:ai --smoke` before `pnpm eval:ai`. The extended local deadline accommodates cold loading and CPU offloading, but remains finite; errors and timeouts still fall back. The original ten-second benchmark and the rerun are preserved separately in `reviews/ollama-benchmark/`. RTX 4050/6 GB was detected during the benchmark. Hosted Vercel cannot reach a developer's localhost; hosted deployment needs an accessible provider configured through env. A suitable hosted API is expected to reduce local hardware limitations, but Haiku latency/reliability remains unmeasured until a paid smoke test is separately approved.
+Then run `pnpm eval:ai --smoke` before `pnpm eval:ai`. These application-path evaluations use ten-second attempts. The standalone benchmark's extended deadline accommodates cold loading and CPU offloading; errors and timeouts still fall back. Original benchmark evidence is preserved separately in `reviews/ollama-benchmark/`. RTX 4050/6 GB was detected during the benchmark. Hosted Vercel cannot reach a developer's localhost; hosted deployment needs an accessible provider configured through env. Haiku latency/reliability remains unmeasured until a paid smoke test is separately approved.
 
 For Google set `AI_PROVIDER=google`, `GOOGLE_GENERATIVE_AI_API_KEY`, and an `AI_MODEL` actually listed/available in the project's Google AI Studio account. Use synthetic data only on the free tier. No assumed Flash model is set by default; run the five-case smoke before the thirty-case evaluation.
 

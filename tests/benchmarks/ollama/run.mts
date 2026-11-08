@@ -5,9 +5,8 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { z } from "zod";
-import { executeStructured, selectProvider } from "../../../src/modules/ai-provider";
-import { LOCAL_ATTEMPT_TIMEOUT_MS } from "../../../src/modules/ai-provider/execute";
-import { classifyMessage } from "../../../src/modules/ai-router/classify";
+import { selectProvider } from "../../../src/modules/ai-provider";
+import { executeStructured, BENCHMARK_ATTEMPT_TIMEOUT_MS } from "./provider";
 import { classificationSchema, modelResponseSchema } from "../../../src/modules/ai-router/schema";
 import { safeModelDraft } from "../../../src/modules/ai-router/price-guard";
 import { buildDraft } from "../../../src/modules/ai-router/draft";
@@ -102,7 +101,7 @@ await writeFile(
         .digest("hex"),
       generation: {
         maxOutputTokens: 1800,
-        attemptTimeoutMs: LOCAL_ATTEMPT_TIMEOUT_MS,
+        attemptTimeoutMs: BENCHMARK_ATTEMPT_TIMEOUT_MS,
         maxAttempts: 2,
         temperature: suite !== "baseline" ? 0.2 : "omitted: server/model default",
         topP: suite !== "baseline" ? 0.8 : "omitted: server/model default",
@@ -217,7 +216,7 @@ async function improvedSingle(input: {
   const response = await executeStructured(
     {
       schema: modelResponseSchema,
-      system: improvedSystem,
+      system: suite === "improved-single" ? improvedSystem : SYSTEM_PROMPT,
       prompt: enquiryPrompt(text, input.receivedAt),
     },
     selectProvider(),
@@ -356,7 +355,7 @@ for (const model of models) {
           ? await twoCall(input)
           : suite === "improved-single"
             ? await improvedSingle(input)
-            : await classifyMessage(input);
+            : await improvedSingle(input);
       const totalLatencyMs = performance.now() - start;
       const captures = [...active];
       const responses = captures.map((c) => {

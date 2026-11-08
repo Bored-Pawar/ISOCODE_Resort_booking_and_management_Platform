@@ -2,7 +2,40 @@ import { afterEach, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { executeStructured } from "./execute";
 import { selectProvider } from "./factory";
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+it("ten-second abort reaches the actual SDK HTTP request and cancels each attempt", async () => {
+  vi.useFakeTimers();
+  const signals: AbortSignal[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockImplementation(
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          signals.push(init.signal);
+          init.signal.addEventListener(
+            "abort",
+            () => reject(new DOMException("aborted", "AbortError")),
+            { once: true },
+          );
+        }),
+    ),
+  );
+  const pending = executeStructured(
+    { schema: z.object({ answer: z.string() }), system: "Synthetic", prompt: "Synthetic" },
+    selectProvider({
+      AI_PROVIDER: "local",
+      AI_MODEL: "synthetic",
+      LOCAL_AI_BASE_URL: "http://localhost:11434/v1",
+    }),
+  );
+  await vi.advanceTimersByTimeAsync(20_000);
+  expect(await pending).toMatchObject({ error: "TIMEOUT", attempts: 2, latencyMs: 20_000 });
+  expect(signals).toHaveLength(2);
+  expect(signals.every((signal) => signal.aborted)).toBe(true);
+});
 it("runs the real structured SDK path against a mocked Ollama-compatible HTTP response", async () => {
   const fetch = vi.fn().mockResolvedValue(
     new Response(

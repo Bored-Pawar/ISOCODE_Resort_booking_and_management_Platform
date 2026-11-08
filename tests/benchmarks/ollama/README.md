@@ -8,7 +8,7 @@ Read [PROTOCOL.md](PROTOCOL.md) and the frozen expectations in [cases.ts](cases.
 # Optional resource monitor, in another terminal (maximum 20 minutes).
 powershell -NoProfile -File tests/benchmarks/ollama/monitor.ps1 -Seconds 1200
 
-# Production prompt/schema/default samplers, with the authorized 30-minute local timeout.
+# Application prompt/schema/default samplers, with an explicit benchmark-only 30-minute timeout.
 pnpm exec tsx --tsconfig tsconfig.json tests/benchmarks/ollama/run.mts --suite=baseline --repeats=1 --cold --out=docs/reviews/ollama-benchmark/rerun-baseline
 
 # Same R1/R3 path, shared temperature/top-p, both models preloaded at 4096 context.

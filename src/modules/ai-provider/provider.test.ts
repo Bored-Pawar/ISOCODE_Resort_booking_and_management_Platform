@@ -3,7 +3,12 @@ import { z } from "zod";
 import { readFileSync, readdirSync } from "node:fs";
 import { generateText } from "ai";
 import { selectProvider } from "./factory";
-import { executeStructured, ATTEMPT_TIMEOUT_MS, LOCAL_ATTEMPT_TIMEOUT_MS } from "./execute";
+import { executeStructured, ATTEMPT_TIMEOUT_MS } from "./execute";
+import { STALE_MS } from "../enquiries/internal";
+import {
+  executeStructured as benchmarkExecute,
+  BENCHMARK_ATTEMPT_TIMEOUT_MS,
+} from "../../../tests/benchmarks/ollama/provider";
 vi.mock("ai", async (original) => ({
   ...(await original<typeof import("ai")>()),
   generateText: vi.fn(),
@@ -20,6 +25,11 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("provider transport", () => {
+  it("the maximum application retry budget stays below the unchanged recovery lease", () => {
+    expect(ATTEMPT_TIMEOUT_MS * 2 + 1000).toBe(21_000);
+    expect(ATTEMPT_TIMEOUT_MS * 2 + 1000).toBeLessThan(STALE_MS);
+    expect(STALE_MS).toBe(120_000);
+  });
   it.each(["google", "anthropic", "local"])("selects %s", (name) => {
     expect(
       selectProvider({
@@ -91,21 +101,21 @@ describe("provider transport", () => {
     expect(result).toMatchObject({ error: "RATE_LIMIT", attempts: 1 });
     expect(JSON.stringify(result)).not.toMatch(/secret|contact|api-key/);
   });
-  it("gives local inference thirty minutes per attempt and aborts twice", async () => {
+  it("local application inference aborts at ten seconds per attempt", async () => {
     vi.useFakeTimers();
     vi.mocked(generateText).mockImplementation(() => new Promise(() => {}));
     const pending = executeStructured(request, local());
-    await vi.advanceTimersByTimeAsync(LOCAL_ATTEMPT_TIMEOUT_MS * 2);
+    await vi.advanceTimersByTimeAsync(ATTEMPT_TIMEOUT_MS * 2);
     expect(await pending).toMatchObject({
       error: "TIMEOUT",
       attempts: 2,
-      latencyMs: LOCAL_ATTEMPT_TIMEOUT_MS * 2,
+      latencyMs: ATTEMPT_TIMEOUT_MS * 2,
     });
     expect(vi.mocked(generateText).mock.calls.every(([args]) => args.abortSignal?.aborted)).toBe(
       true,
     );
   });
-  it("does not abort local work after the hosted ten-second limit", async () => {
+  it("standalone benchmark explicitly supports a longer deadline", async () => {
     vi.useFakeTimers();
     vi.mocked(generateText).mockImplementation(
       () =>
@@ -113,7 +123,8 @@ describe("provider transport", () => {
           setTimeout(() => resolve({ output: { answer: "slow local success" } } as never), 60_000),
         ),
     );
-    const pending = executeStructured(request, local());
+    expect(BENCHMARK_ATTEMPT_TIMEOUT_MS).toBe(1_800_000);
+    const pending = benchmarkExecute(request, local());
     await vi.advanceTimersByTimeAsync(ATTEMPT_TIMEOUT_MS);
     expect(vi.mocked(generateText).mock.calls[0][0].abortSignal?.aborted).toBe(false);
     await vi.advanceTimersByTimeAsync(50_000);

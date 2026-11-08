@@ -39,7 +39,7 @@ Room preference and room-count matching use original server text, independently 
 Provider is chosen in `modules/ai-provider/factory.ts`. Model id comes from `AI_MODEL`; no hosted model ID is guessed when unset. Missing credentials/model yields sanitized `NOT_CONFIGURED` and rules fallback. Google remains the documented demo choice, subject to a real account/model smoke test; local Ollama is the intended development setup. See `s2-ai-provider-setup.md`.
 
 ## Safeguards checklist
-1. Hosted timeout 10 s per attempt; local Ollama timeout 30 minutes per attempt (scrum master's benchmark extension, 2026-11-08). One retry, then fallback. Platform execution limits and the two-minute queue recovery threshold remain separate constraints; long local benchmarking runs through the CLI without queue claims.
+1. Application timeout **10 seconds per attempt for every provider**, at most one transient retry and at most one second Retry-After: maximum provider budget 21 seconds, below the unchanged 120-second stale lease. Abort signals reach the SDK HTTP request. Only the standalone benchmark CLI imports its explicit 30-minute deadline wrapper; application exports and environment configuration cannot select it.
 2. `prompt_version` and `model` stored on every draft.
 3. Never auto send.
 4. No AI generated prices.

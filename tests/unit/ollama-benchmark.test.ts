@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { executeStructured, selectProvider } from "@/modules/ai-provider";
-import { LOCAL_ATTEMPT_TIMEOUT_MS } from "@/modules/ai-provider/execute";
+import { ATTEMPT_TIMEOUT_MS } from "@/modules/ai-provider/execute";
 import { classifyMessage } from "@/modules/ai-router/classify";
 import { modelResponseSchema } from "@/modules/ai-router/schema";
 import { buildDraft } from "@/modules/ai-router/draft";
@@ -112,7 +112,7 @@ describe("isolated production-adapter fault checks (mocked HTTP)", () => {
     });
     expect(fetch).toHaveBeenCalledTimes(2);
   });
-  it("actual extended local timers bound two stalled HTTP attempts", async () => {
+  it("application timers bound two stalled HTTP attempts", async () => {
     vi.useFakeTimers();
     vi.stubGlobal(
       "fetch",
@@ -122,7 +122,7 @@ describe("isolated production-adapter fault checks (mocked HTTP)", () => {
       { schema: z.object({ answer: z.string() }), system: "Synthetic", prompt: "Synthetic" },
       selection(),
     );
-    await vi.advanceTimersByTimeAsync(LOCAL_ATTEMPT_TIMEOUT_MS * 2);
+    await vi.advanceTimersByTimeAsync(ATTEMPT_TIMEOUT_MS * 2);
     expect(await pending).toMatchObject({ kind: "error", error: "TIMEOUT", attempts: 2 });
   });
   it.each([
