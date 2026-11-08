@@ -81,8 +81,8 @@ function SummaryBody({
       </ul>
       {discountPaise > 0 ? (
         <p className="flex justify-between text-small text-muted tabular-nums">
-          <span>Promo {promoCode ?? ""}</span>
-          <span>−{formatInr(discountPaise)}</span>
+          <span>Includes promo {promoCode ?? ""}</span>
+          <span>you save {formatInr(discountPaise)}</span>
         </p>
       ) : null}
       <div className="border-t border-border pt-4">

@@ -130,7 +130,9 @@ export function confirmationEmail(
       (l) =>
         `${l.title}, ${l.plan}, ${l.party}: ${formatInr(l.totalPaise)} incl. ${formatInr(l.gstPaise)} GST`,
     ),
-    ...(b.discountPaise > 0 ? [`Promo ${b.promoCode ?? ""}: −${formatInr(b.discountPaise)}`] : []),
+    ...(b.discountPaise > 0
+      ? [`Includes promo ${b.promoCode ?? ""}: you save ${formatInr(b.discountPaise)}`]
+      : []),
     `Total paid: ${formatInr(b.totalPaise)} incl. ${formatInr(b.gstPaise)} GST`,
     "",
     CHECK_IN_NOTE,
