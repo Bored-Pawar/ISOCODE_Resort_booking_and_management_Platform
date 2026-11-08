@@ -47,7 +47,8 @@ Coordination records, not enforcement. The scrum master assigns ownership in cha
 
 | Area | Paths | Owner | Since |
 |---|---|---|---|
-| S2 admin and RBAC (runbook `s2-admin-rbac-runbook.md`) | `src/lib/auth/permissions.ts`, `src/app/(staff)/admin/(app)/{layout.tsx,page.tsx,rates/**,allotment/**,promos/**}`, `src/modules/admin/**`, `src/modules/{pricing,inventory}/admin.ts`, `src/components/ui/data-grid.tsx` | Claude Code, branch `claude/admin` only. Read only: `src/db/**` (no schema change), booking, payments. Codex keeps `src/modules/{enquiries,ai-router}/**`, the inbox pages and `/enquire` | 2026-11-08 21:55 IST |
+| S2 inbox (runbook `s2-inbox-runbook.md`, reassigned from Codex to Claude Code by the scrum master 2026-11-09) | `src/modules/{enquiries,ai-router}/**` (additive: `enquiries/staff/**`, `ai-router/staff-draft.ts`), `src/app/(staff)/admin/(app)/inbox/**`, the GM bell (`StaffShell` `bell` slot), `src/app/(guest)/(site)/enquire/**` and its form/schema, `/dev/outbox` Replies tab, one `navFor` entry | Claude Code, branch `claude/inbox` only. Read only: `src/db/**` (no schema change), booking, pricing, inventory, payments, other admin pages | 2026-11-09 IST |
+| S2 admin and RBAC (runbook `s2-admin-rbac-runbook.md`) | `src/lib/auth/permissions.ts`, `src/app/(staff)/admin/(app)/{layout.tsx,page.tsx,rates/**,allotment/**,promos/**}`, `src/modules/admin/**`, `src/modules/{pricing,inventory}/admin.ts`, `src/components/ui/data-grid.tsx` | Released: merged into `main` as `7d8bfaf` (2026-11-09, no PR, scrum master authorised). Was Claude Code, branch `claude/admin` | 2026-11-08 21:55 IST |
 | S2 booking flow (runbook `s2-booking-runbook.md`) | `src/modules/{booking,payments}/**`, `src/app/(guest)/**`, `src/app/api/payments/**`, `src/app/(staff)/admin/bookings/**`, `src/components/ui/hold-timer.tsx` | Released: merged into `main` as PR #5 (`444840d`). Was Claude Code, branch `claude/booking-flow` | 2026-11-08 17:45 IST |
 | Database schema, migrations and seed | `src/db/**` | Read only in S2 booking flow (no schema change). Was Codex S1 | 2026-11-08 |
 | Booking and inventory core | `src/modules/inventory/**` | Read only in S2 booking flow. Booking and payments: see the first row. Was Codex S1 | 2026-11-08 |
@@ -137,6 +138,7 @@ No outstanding image blocker: the `public/images/*` assets have been supplied. A
 | 2026-11-08 | Sales attention request (for Codex Q4 to Q7): one button on an enquiry, "Ask reservations and GM to look", with a short note (`attention.request`: sales, gm). Stored as an `enquiry_events` row, action `rerouted`, with the note (no schema change). Reservations and GM see a "Needs attention" list with a count badge and mark it seen with a reply note (`attention.resolve`: reservations, gm; also an `enquiry_events` row) |
 | 2026-11-08 | S2 review M1 and M2 (scrum master): the double-hold guard moves into the `acquireHold` transaction. First statement is a per-guest `pg_advisory_xact_lock(hashtextextended('hold:' || guestId, 0))`; lock order is guest advisory lock, bookings rows, inventory `(room_type_id, date)`. Then one query for a live hold of the same guest and exact stay (dates, `quote_hash`, identical lines in `line_no` order): match returns it with no stock and no event (`01` Contract note 7). The `listForGuest` prechecks in `holdStay` and `refreshHold` are deleted; `listForGuest` is batched (at most 4 data queries) |
 | 2026-11-08 | B8 mock email: no outbox table, so the outbox is derived. `/booking/[ref]/email` renders the confirmation email for its owner; `/dev/outbox` (staff, `DEV_TOOLS_ENABLED`) lists the last 20 confirmed bookings with their rendered emails. Nothing is sent |
+| 2026-11-09 | S2 inbox (Claude Code, `claude/inbox`): the unsorted queue is GM only (`enquiries.unsorted`); the staff nav shows "Inbox" to any `enquiries.*` holder and Unsorted is a GM lane. Attention notes without a schema change: request = `rerouted`, `from_value` = note, `to_value` = `attention`; resolve = `rerouted`, `from_value` = `attention`, `to_value` = `seen: <reply note>`. Reservations may open (read only) a non-complaint enquiry sales asked about; working it still needs its own lanes. Q9 is folded into Q2 (one `/enquire` form); the guest's choice is `extracted.guest_hint` only and is never written into `raw_text` |
 | 2026-11-09 | S2 admin audit (`docs/reviews/s2-admin-rbac-implementation-audit.md`, FIX MAJORS, 0 blockers, 3 majors), scrum master approved: additive staff read `booking.listOverlappingForStaff({ roomTypeId?, from, to, limit, cursor }, actor)` (overlap and room filter in SQL before the limit, HELD live and CONFIRMED, ordered by check_in, id, `nextCursor`), recorded in `01` Contracts; Claude Code may add it in `src/modules/booking/{index,staff}.ts` on `claude/admin` (no other booking edit). The A3 warning pages it up to 1,000 and says when it is incomplete. Offline creates missing stock rows before locking (M02). Rates grid saved prices are an optimistic overlay only (M01) |
 | 2026-11-08 | Contract additions (S2 runbook): `booking.cancelHeld` (owner only) and `payments.MockProvider` plus the signed `/api/payments/mock` webhook (`PAYMENT_WEBHOOK_SECRET`, no new table). Additive staff read `booking.listForStaff` (reservations, gm). Failed and timed out payment attempts are not stored (no contract for it) |
 | 2026-11-08 | Three month online booking window (A10): check-in at most today IST + 3 calendar months, one constant in `src/lib/booking-window.ts`. Enforced in the guest search, `/rooms`, room detail, `/book/details` and rechecked in `acquireBookingHold` (`OUTSIDE_WINDOW`, guest action type only; `booking` service contract unchanged) |
@@ -259,7 +261,7 @@ Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
 | B8 | `/booking/[ref]` confirmation, `.ics`, mock email view and `/dev/outbox` | done on `claude/booking-flow`, awaiting review |
 | B9 | My bookings link to the booking; Resume payment and Cancel for a live hold | done on `claude/booking-flow`, awaiting review |
 | A5 | `/admin/bookings` list, filters, detail timeline, Refund pending (reservations, gm) | done on `claude/booking-flow`, awaiting review |
-| H1 | Playwright booking happy path (`pnpm test:e2e`, needs `E2E_BASE_URL`) | booking path done and passing locally; the staff draft approval path waits for Q6 |
+| H1 | Playwright booking happy path (`pnpm test:e2e`, needs `E2E_BASE_URL`) | booking path done and passing locally; staff draft approval path (`e2e/inbox.spec.ts`) done on `claude/inbox`, passing locally |
 
 ## Claude Code S2 admin and RBAC (2026-11-08, branch `claude/admin`)
 - Built per `s2-admin-rbac-runbook.md`; evidence, test counts, deviations and open items in `s2-admin-handoff.md`. Not merged.
@@ -274,3 +276,16 @@ Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
 | Audit fix | M01 rates overlay, M02 offline stock rows, M03 complete booking warning (`booking.listOverlappingForStaff`), allotment labels; merged main (PR #6) | done on `claude/admin`, awaiting review |
 | R06 | DataGrid keeps the pending cell stable, catches failed commits, ignores stale completions | done on `claude/admin`, awaiting review |
 
+## Claude Code S2 inbox (2026-11-09, branch `claude/inbox`)
+- Built per `s2-inbox-runbook.md` (reassigned to Claude Code); evidence, deviations and open items in `s2-inbox-handoff.md`. Not merged.
+
+| ID | Task | Status |
+|---|---|---|
+| Nav | Unsorted enquiries GM only (nav, page, Retry) | done on `claude/inbox`, awaiting review |
+| Q4 | `/admin/inbox` lanes by role, filters, keyset pages of 25, count badges, visibility in SQL | done on `claude/inbox`, awaiting review |
+| Q5 | Detail, editable fields with grounding badges, one-click re-route, timeline, Retry AI | done on `claude/inbox`, awaiting review |
+| Q6 | Draft editor, Regenerate, Approve and send (confirm, once), Close, `/dev/outbox` Replies | done on `claude/inbox`, awaiting review |
+| Q7 | GM bell: unread count, list, mark one or all read | done on `claude/inbox`, awaiting review |
+| Attention | Sales asks reservations and GM to look; mark seen with a reply note; Needs attention lane | done on `claude/inbox`, awaiting review |
+| Q2 (+Q9) | One `/enquire` form with optional event fields, `event_details`, `event_form` channel | done on `claude/inbox`, awaiting review. Q9 folded into Q2 |
+| H1 | Staff draft approval path (Playwright) | done on `claude/inbox`, passing locally |

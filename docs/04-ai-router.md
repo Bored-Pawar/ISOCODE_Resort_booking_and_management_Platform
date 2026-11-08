@@ -62,3 +62,6 @@ Audit remediation M3: claims increment actual processing attempts, capped at thr
 
 ## Note for R1 to R3 (from Q1)
 `enquiries.extracted` already holds `source` (webhook idempotency key) and, for web enquiries, `consent`. The classifier must merge its output into `extracted` (for example `{ ...existing, ...result }`), never replace the column, or repeated webhook deliveries would create duplicates. Web enquiries put dates, party size and room into `raw_text` as plain lines after the guest message; contact details are never in `raw_text`.
+
+## Inbox draft step (S2 inbox, Q5 and Q6)
+`aiRouter.draftForStaff` (additive) re-runs only quote and draft from the stored classification: after a staff edit of dates or guests (staff facts are grounded like a message, no model call) and on Regenerate (new model prose, same classification). Prices still come only from `pricing.quote`; the R4 guard and templates still apply. Sending happens only in `enquiries/staff/send.ts` on a staff click, to the mock outbox. The staff Retry button is GM only in the inbox (`enquiries.unsorted`).
