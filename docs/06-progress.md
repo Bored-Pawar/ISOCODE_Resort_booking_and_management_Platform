@@ -201,3 +201,18 @@ Reports: `docs/s0-review-codex.md`, `docs/s0-feature-map.md`.
 | ID | Task | Status |
 |---|---|---|
 | SB | Stay builder, view-only room detail, header account menu, My bookings | done on `claude/stay-builder`, awaiting review |
+
+## Claude Code S2 booking flow (2026-11-08, branch `claude/booking-flow`)
+- Built per `s2-booking-runbook.md` (items 1 to 9); evidence, test counts, deviations and open items in `s2-booking-handoff.md`. Not merged.
+- Contract additions recorded in `01`: `booking.cancelHeld`, staff reads `listForStaff`, `getForStaff`, `listRefundPending`; `payments.MockProvider` and `/api/payments/mock` (`PAYMENT_WEBHOOK_SECRET`). Guest action type `AcquireBookingHoldResult` adds `OUTSIDE_WINDOW` (service contract unchanged).
+- Derived outbox and failed attempts not stored: see the decisions log.
+
+| ID | Task | Status |
+|---|---|---|
+| R07 | HoldTimer fires once per target; warning state and `onWarning` | done on `claude/booking-flow`, awaiting review |
+| B6 | Promo on `/rooms`, `/book/details` (inline sign up, hold, price changed, notices, double hold guard), `/book/pay/[ref]` (timer, pay gate, Refresh hold) | done on `claude/booking-flow`, awaiting review |
+| B7 | `MockProvider` (succeeds, declined, timeout), signed webhook to `confirmPayment`, retry with a new attempt | done on `claude/booking-flow`, awaiting review |
+| B8 | `/booking/[ref]` confirmation, `.ics`, mock email view and `/dev/outbox` | done on `claude/booking-flow`, awaiting review |
+| B9 | My bookings link to the booking; Resume payment and Cancel for a live hold | done on `claude/booking-flow`, awaiting review |
+| A5 | `/admin/bookings` list, filters, detail timeline, Refund pending (reservations, gm) | done on `claude/booking-flow`, awaiting review |
+| H1 | Playwright booking happy path (`pnpm test:e2e`, needs `E2E_BASE_URL`) | booking path done and passing locally; the staff draft approval path waits for Q6 |
