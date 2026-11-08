@@ -11,7 +11,7 @@ import { releaseExpiredHoldsInTx } from "./internal";
 import { acquireHold as acquireHoldImpl } from "./hold";
 import { readBooking } from "./read";
 import { bookings } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 export type BookingStatus = "HELD" | "CONFIRMED" | "EXPIRED" | "CANCELLED";
 
@@ -107,6 +107,18 @@ export type GetBookingInput = z.input<typeof getBookingInputSchema>;
 export type GetBookingResult =
   Ok<{ booking: Booking }> | Err<"INVALID_INPUT" | "NOT_FOUND" | "FORBIDDEN">;
 
+// ---- listForGuest (additive, read only) -------------------------------
+
+/** guestId comes from the verified session only, never from client input (like acquireHold). */
+export const listForGuestInputSchema = z.object({
+  guestId: z.uuid(),
+  limit: z.number().int().min(1).max(50).default(20),
+});
+export type ListForGuestInput = z.input<typeof listForGuestInputSchema>;
+
+/** Newest stay first. Every status; a HELD row past holdExpiresAt is not yet swept (UI says so). */
+export type ListForGuestResult = Ok<{ bookings: Booking[] }> | Err<"INVALID_INPUT">;
+
 // ---- releaseExpiredHolds (cron, lazy expiry) --------------------------
 
 export type ReleaseExpiredHoldsResult = Ok<{ released: number }>;
@@ -131,6 +143,27 @@ export const booking = {
     const parsed = confirmPaymentInputSchema.safeParse(input);
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
     return confirmPaymentImpl(parsed.data);
+  },
+
+  /** Additive read for "My bookings". Never writes; no lazy expiry. */
+  async listForGuest(input: ListForGuestInput): Promise<ListForGuestResult> {
+    const parsed = listForGuestInputSchema.safeParse(input);
+    if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
+    const guestId = parsed.data.guestId.toLowerCase();
+    return getDb().transaction(async (tx) => {
+      const rows = await tx
+        .select({ id: bookings.id })
+        .from(bookings)
+        .where(eq(bookings.guestId, guestId))
+        .orderBy(desc(bookings.checkIn), desc(bookings.createdAt))
+        .limit(parsed.data.limit);
+      const list: Booking[] = [];
+      for (const r of rows) {
+        const b = await readBooking(tx, r.id);
+        if (b) list.push(b);
+      }
+      return { ok: true, bookings: list } as const;
+    });
   },
 
   async get(input: GetBookingInput, actor: BookingActor): Promise<GetBookingResult> {
