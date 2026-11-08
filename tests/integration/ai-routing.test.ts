@@ -27,6 +27,7 @@ vi.mock("@/lib/dates", async (original) => ({
 const { db, client } = dbModule.createDb(testUrl(), { max: 6 });
 const ids: string[] = [];
 const staffIds: string[] = [];
+const taxSlabIds: string[] = [];
 let room: Awaited<ReturnType<typeof coreFixture>>;
 const synthetic = {
   channel: "web" as const,
@@ -54,6 +55,14 @@ const rowsFor = (id: string) => db.select().from(t.enquiries).where(eq(t.enquiri
 const draftsFor = (id: string) =>
   db.select().from(t.replyDrafts).where(eq(t.replyDrafts.enquiryId, id));
 beforeAll(async () => {
+  const slabs = await db
+    .insert(t.taxSlabs)
+    .values([
+      { minPaise: 0, maxPaise: 750000, gstBp: 500, effectiveFrom: "2026-11-13" },
+      { minPaise: 750001, maxPaise: null, gstBp: 1800, effectiveFrom: "2026-11-13" },
+    ])
+    .returning({ id: t.taxSlabs.id });
+  taxSlabIds.push(...slabs.map((row) => row.id));
   for (const role of ["reservations", "sales", "gm"]) {
     const rows = await db
       .insert(t.users)
@@ -112,6 +121,7 @@ afterEach(async () => {
 }, 90_000);
 afterAll(async () => {
   await db.delete(t.users).where(inArray(t.users.id, staffIds));
+  if (taxSlabIds.length) await db.delete(t.taxSlabs).where(inArray(t.taxSlabs.id, taxSlabIds));
   await client.end();
 }, 90_000);
 

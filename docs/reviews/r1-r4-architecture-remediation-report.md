@@ -1,12 +1,12 @@
 # R1–R4 architecture audit remediation
 
-Date: 2026-11-08. Branch: `codex/r1-r4-ai-routing`. Reviewed baseline: `39d168f550cf9695c94f2dd54e6f98598cfdfec9`. Final implementation checkpoint: `2fe0be891a7732ef223c7efa73f92dd5e65e29f0` (the subsequent report commit changes documentation only).
+Date: 2026-11-08. Branch: `codex/r1-r4-ai-routing`. Reviewed baseline: `39d168f550cf9695c94f2dd54e6f98598cfdfec9`. Production implementation checkpoint: `2fe0be891a7732ef223c7efa73f92dd5e65e29f0`. Subsequent validation changes test setup/fixtures, documentation and evidence only.
 
 ## 1. Executive summary
 
 **B1 is resolved in the implementation:** unsupported model extraction cannot enter quote selection or attach a trusted price through the safe template. M1 and M5 are implemented with passing unit regressions. All eight findings have focused implementation commits. M2, M3, M4 and M7 corrections are implemented; M6 safety corrections are implemented, but its under-30% template fallback target is **not achieved**.
 
-Final gates: typecheck, lint, **433/433 unit tests in 49 files**, and production build pass. PostgreSQL integration execution is **held**, not passed: the scrum master confirmed the old `TEST_DATABASE_URL` was not isolated and instructed Codex to wait while it is replaced. No database connection, test, cron, migration, seed or destructive command was executed during this remediation. PostgreSQL concurrency, Retry audit and end-to-end persistence tests are authored and typechecked, awaiting explicit isolated-endpoint readiness.
+Final gates: typecheck, lint, **433/433 unit tests in 49 files**, production build, and **34/34 real PostgreSQL integration tests in two files** pass: **467 passed, zero failed**. The scrum master explicitly confirmed the replacement `TEST_DATABASE_URL` was isolated, lifting the earlier hold. Guarded preflight reached PostgreSQL 18.6 with zero public tables. Existing repository migrations were applied only to that isolated target, without new migration files, seed or reset. The focused suite passed in **382.24 seconds**; a read-only follow-up confirmed zero remaining test enquiries, drafts, events, notifications, users, rooms and tax slabs. Shared databases were untouched.
 
 Independent Claude re-audit of B1, M1 and M5 remains required. No merge readiness, independent approval or deployment is claimed. Main advanced separately during the task; no synchronization was attempted under the explicit no-merge/no-rebase instruction.
 
@@ -18,12 +18,12 @@ The audit was copied unchanged from `../resort-ai-routing-architecture-audit/doc
 
 | Finding | Focused commit | Principal files changed | Status |
 |---|---|---|---|
-| B1 | `fc0383561c248b2366f81b134427e5ae62c172f7` | ai-router grounding, processing, quote selection, draft and tests; docs | Fixed; unit-proven quote gate, PG verification held |
+| B1 | `fc0383561c248b2366f81b134427e5ae62c172f7` | ai-router grounding, processing, quote selection, draft and tests; docs | Fixed; unit and PostgreSQL quote-gate proof passed |
 | M1 | `3ab260983d63c4245fcfdd6016915bdf6c91417c` | ai-router room-preference, matching, PII and tests; docs | Fixed |
 | M2 | `851c236324d4e386c8e31455ed95a1b21bc9afad` | ai-provider execute/transport and HTTP tests; benchmark wrapper; setup docs | Fixed |
-| M3 | `78d4567b8b68324d0e76c0969c967e032fcaed89` | enquiries queue/Retry; processing; staff recovery UI; lifecycle tests; docs | Implemented; PG race/audit verification held |
-| M4 | `e092397da1b4b493648c3c02e0e3917bfcc4bc4d` | enquiries batch claim/scheduling; ai-router recovery; existing cron/tests; docs 02/04/07 | Implemented; PG concurrency verification held |
-| M5 | `93dd74662f990ee48c907c988ac0341fda78ef5f` | ai-router complaints, routing, fallback, model flag and tests; docs | Fixed; PG mixed-intent persistence test held |
+| M3 | `78d4567b8b68324d0e76c0969c967e032fcaed89` | enquiries queue/Retry; processing; staff recovery UI; lifecycle tests; docs | Fixed; PG cap, Retry race and actor audit passed |
+| M4 | `e092397da1b4b493648c3c02e0e3917bfcc4bc4d` | enquiries batch claim/scheduling; ai-router recovery; existing cron/tests; docs 02/04/07 | Fixed; PG concurrent sweep and generation tests passed |
+| M5 | `93dd74662f990ee48c907c988ac0341fda78ef5f` | ai-router complaints, routing, fallback, model flag and tests; docs | Fixed; PG mixed-intent owner and alert deduplication passed |
 | M6 | `dc7a9feff165d2f19cc41a3c01589bceff792162` | ai-router prose guard/tests; replay harness/evidence; docs | Safety fixed; quality target unmet |
 | M7 | `7a6a1e0044adebf8b8bca0df29f54fe3f28649e3` | ai-router PII and payload tests; docs | Fixed within documented pattern limits |
 
@@ -33,6 +33,8 @@ Branch relationship at final source checkpoint: merge base with `origin/main` is
 
 Final conservative B1 follow-up `2fe0be891a7732ef223c7efa73f92dd5e65e29f0` additionally rejects explicitly excluded dates (including “14–16 Nov is not possible”), negated counts, Unicode negative signs and fractional separators. These additions raise the final unit count to 433 without changing saved-output replay metrics.
 
+Isolated validation follow-up adds `tests/integration/prepare-ai-tests.mts` (existing guarded migration helper and read-only fixture check), self-owned GST fixtures in the routing tests, and `r1-r4-postgres-remediation.json`. No application, protected module or schema source changed in this follow-up.
+
 ## 3. B1 grounding verification
 
 Data path: original server `raw_text` → `groundExtraction(raw, classification, todayIST())` → evidence/eligibility → independently gated `selectQuote` → existing public catalog/inventory/pricing services → `buildDraft` checks the quote's dates and summed party against evidence → trusted quote basis → atomic settlement. Only redacted text and reference date enter the model request. Raw text is never used as provider diagnostics.
@@ -41,7 +43,7 @@ Supported common formats include ISO dates, Indian numeric day/month/year, conte
 
 Evidence is merged into existing `extracted.grounding` (`dates`, `guests`, `room`, values `ok|missing|unsupported`), preserving source idempotency/consent metadata and existing extraction fields. The additive staff review read exposes evidence without changing the frozen Enquiry list shape.
 
-Unit spies prove unsupported extraction never calls pricing or inventory. T27-style February 30 “correction”, negative adults, fractional children, contradictory dates, past check-in, explicit-year mismatches and prices resembling numeric dates are rejected. Valid explicit ranges/party, omitted-year resolution, December/January and missing-child qualification are covered. A processing test preserves model `ok`, category and reservations routing while persisting failed grounding and a null-price clarification. A separate template test proves `{{QUOTE}}` cannot bypass absent grounding.
+Unit spies prove unsupported extraction never calls pricing or inventory. T27-style February 30 “correction”, negative adults, fractional children, contradictory dates, past check-in, explicit-year mismatches and prices resembling numeric dates are rejected. Valid explicit ranges/party, omitted-year resolution, December/January and missing-child qualification are covered. PostgreSQL tests additionally prove the first five unsafe scenarios preserve model `ok` and reservations ownership, never invoke live pricing and persist a null-price clarification. The positive villa case computes a real GST-inclusive quote through public pricing, so the gate does not merely disable every quote. A separate template test proves `{{QUOTE}}` cannot bypass absent grounding.
 
 Final prose starts with trusted `Quoted for <dates>, <party>, <catalog room names>: …`, includes GST, states indicative/subject to availability/no hold, and explicitly says when children were not supplied. Catalog display labels are excluded from the saved public pricing snapshot. Schema-invalid model responses retain the existing R3 fallback policy; schema-valid but unsupported quote details preserve classification/routing.
 
@@ -49,7 +51,7 @@ Final prose starts with trusted `Quoted for <dates>, <party>, <catalog room name
 
 Shared `hasComplaint` combines model category, optional supported `isComplaint` boolean and original-text English/Hinglish/Devanagari keyword rules. Boundaries avoid unrelated-word substrings. It runs for successful classifications and is shared by rules fallback. Complaint detection is independent of owner selection: high-confidence `room` still assigns reservations while `notifyGm=true`; wedding/offsite can similarly retain sales.
 
-Settlement retains its row lock, claim generation and atomic conditional notification/draft inserts. Repeated settlement cannot duplicate an alert. Unit cases cover ordinary enquiries, refund/mixed complaints, Hindi, Hinglish, model flags, fallback and process-to-settlement payloads. New PostgreSQL mixed-intent and repeated-processing assertions are prepared; their execution remains held.
+Settlement retains its row lock, claim generation and atomic conditional notification/draft inserts. Repeated settlement cannot duplicate an alert. Unit cases cover ordinary enquiries, refund/mixed complaints, Hindi, Hinglish, model flags, fallback and process-to-settlement payloads. PostgreSQL verification passed: a high-confidence room classification with a raw complaint retained reservations, persisted `is_complaint=true`, and repeated processing left exactly one complaint notification and one draft.
 
 ## 5. Timeout, attempts, Retry and recovery
 
@@ -60,7 +62,7 @@ Settlement retains its row lock, claim generation and atomic conditional notific
 - Recovery: ingest `after()`, inbox load and existing daily cron all use bounded batch claims with `FOR UPDATE SKIP LOCKED`. Up to five workers and five stale-exhaustion transitions per sweep; no transaction spans inference. Each worker retains its original attempt/timestamp generation.
 - Cron: existing `CRON_SECRET` bearer validation, strict query schema and hold-expiry behavior retained. Same daily 00:00 UTC / 05:30 IST schedule; `maxDuration=60` verified in build manifest. Recovery failure is sanitized independently of hold expiry. No cron was invoked against any database.
 
-Authorization/orchestration unit tests pass. Real PostgreSQL lifecycle/race/rollback tests are authored and typechecked but **not claimed as passed**. Hosting termination or slow database work may still interrupt a batch; persisted recovery remains the safety mechanism.
+Authorization/orchestration unit tests and all **17 real PostgreSQL queue tests pass**. They cover concurrent SKIP LOCKED sweeps, the three-attempt cap, successful attempts one/two/three, stale final-claim exhaustion, atomic actor-audited concurrent Retry, stale Retry/settlement rejection, the exact two-minute threshold, duplicate settlement, metadata preservation, draft/notification rollback faults and protection of staff edits. Hosting termination or slow database work may still interrupt a batch; persisted recovery remains the safety mechanism.
 
 ## 6. Draft quality and safety
 
@@ -92,22 +94,25 @@ Pattern minimization is not perfect: arbitrary unintroduced names, addresses wit
 | `pnpm exec tsx --tsconfig tsconfig.json tests/benchmarks/ollama/replay-draft-guard.mts` | PASS: unchanged saved inputs; metrics above |
 | `git diff --check` | PASS |
 | Scoped Prettier | Raw folder check flags pre-existing `enquiries/fixtures.ts`; remediation code checked separately, no unrelated fixture edit |
-| PostgreSQL integration | HELD by scrum master's explicit database-isolation instruction; 0 executed, no pass claimed |
+| PostgreSQL integration | PASS: 34/34, two files, 382.24 seconds; confirmed isolated TEST_DATABASE_URL only |
+| Read-only post-test fixture check | PASS: zero enquiries, drafts, events, notifications, users, rooms and tax slabs remain |
 
-Initial sandboxed Vitest startup hit Windows `spawn EPERM`; rerunning with authorized subprocess access passed. No provider keys, URLs or raw contacts were printed. No live provider calls were made. No migration/seed/reset was run.
+Initial sandboxed Vitest startup hit Windows `spawn EPERM`; rerunning with authorized subprocess access passed. No provider keys, URLs or raw contacts were printed. No live provider calls were made. After explicit isolation confirmation, only existing migrations were applied to the initially empty isolated database. No seed, reset, new migration or shared-database write occurred. Test GST rows are owned and removed by the suite, avoiding an assumption that the isolated branch is already seeded.
 
-After the scrum master explicitly confirms Codex's isolated branch is ready, run its guarded read-only preflight and the focused suite below; do **not** run against the old/shared target:
+Executed after the scrum master's explicit isolation confirmation; JSON evidence is `r1-r4-postgres-remediation.json` (17 routing and 17 queue tests, all passed). Reproduction requires an isolated test target:
 
 ```powershell
 pnpm exec tsx --env-file-if-exists=.env.local scripts/ai-preflight.mts
-pnpm exec vitest run --config vitest.postgres.config.mts tests/integration/ai-processing.test.ts tests/integration/ai-routing.test.ts --reporter verbose
+pnpm exec tsx --tsconfig tsconfig.json --env-file-if-exists=.env.local tests/integration/prepare-ai-tests.mts
+pnpm exec vitest run --config vitest.postgres.config.mts tests/integration/ai-processing.test.ts tests/integration/ai-routing.test.ts --reporter=verbose --reporter=json --outputFile.json=docs/reviews/r1-r4-postgres-remediation.json
+pnpm exec tsx --tsconfig tsconfig.json --env-file-if-exists=.env.local tests/integration/prepare-ai-tests.mts --check
 ```
 
-The existing guard distinguishes development from test endpoints; it cannot independently prove that a test endpoint is exclusively Codex's. The scrum master's readiness confirmation is therefore required before these commands. Staff UI was compiled, not browser-tested against a database during the hold.
+The existing guard distinguishes development/protected endpoints from the test target; exclusive isolation was confirmed by the scrum master before execution. Only the focused AI suite was run in this follow-up; the broader booking integration suite was not rerun. Staff UI was compiled but not browser-tested; server Retry authorization and database audit/race behavior have separate passing tests.
 
 ## 9. Remaining release risks and review focus
 
-1. Execute isolated PostgreSQL tests after the explicit hold is lifted, especially third-failure terminalization, atomic Retry audit, concurrent sweep/claim/Retry, stale settlement, source metadata and mixed-intent notification deduplication.
+1. Review the passing PostgreSQL evidence for third-failure terminalization, atomic Retry audit, concurrent sweeps/claims, stale settlement, source metadata and mixed-intent notification deduplication. The broader booking integration suite was not part of this focused rerun.
 2. Independent Claude re-audit must inspect the **final** source checkpoint, including final regression corrections, for B1, M1 and M5.
 3. M6's quality target is unmet; patterns retain known false positives and cannot prove safety for every language/paraphrase. No protection was relaxed to improve the rate.
 4. Review later main changes separately after audit. This branch intentionally contains no merge/rebase of the 25 separately advanced main commits.
