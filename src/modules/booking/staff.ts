@@ -1,8 +1,8 @@
-import { and, asc, desc, eq, gte, inArray, lte, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, gte, inArray, lte, type SQL } from "drizzle-orm";
 import { bookingEvents, bookingNights, bookingRooms, bookings, payments } from "@/db/schema";
 import type { Tx } from "@/lib/db";
 import { getDb } from "@/lib/db";
-import { promoCodeInTx } from "@/modules/pricing/internal";
+import { promoCodesInTx } from "@/modules/pricing/internal";
 import type {
   Booking,
   BookingStatus,
@@ -13,37 +13,45 @@ import type {
   StaffPayment,
 } from "./index";
 
-/** Batched snapshot read: four queries for any number of bookings, in the order of `rows`. */
+/**
+ * Batched snapshot read: at most three more data queries (rooms, nights, promo codes) for any
+ * number of bookings, assembled in TS in the order of `rows`. With `guestId`, every query also
+ * carries the owner predicate (guest reads); staff reads pass none.
+ */
 export async function readBookings(
   tx: Tx,
   rows: (typeof bookings.$inferSelect)[],
+  opts: { guestId?: string } = {},
 ): Promise<Booking[]> {
   if (!rows.length) return [];
+  const ids = rows.map((r) => r.id);
+  const owner = opts.guestId ? eq(bookings.guestId, opts.guestId) : undefined;
   const rooms = await tx
-    .select()
+    .select(getTableColumns(bookingRooms))
     .from(bookingRooms)
-    .where(
-      inArray(
-        bookingRooms.bookingId,
-        rows.map((r) => r.id),
-      ),
-    )
+    .innerJoin(bookings, eq(bookings.id, bookingRooms.bookingId))
+    .where(and(inArray(bookingRooms.bookingId, ids), owner))
     .orderBy(asc(bookingRooms.lineNo));
   const nights = rooms.length
     ? await tx
-        .select()
+        .select(getTableColumns(bookingNights))
         .from(bookingNights)
+        .innerJoin(bookingRooms, eq(bookingRooms.id, bookingNights.bookingRoomId))
+        .innerJoin(bookings, eq(bookings.id, bookingRooms.bookingId))
         .where(
-          inArray(
-            bookingNights.bookingRoomId,
-            rooms.map((r) => r.id),
+          and(
+            inArray(
+              bookingNights.bookingRoomId,
+              rooms.map((r) => r.id),
+            ),
+            owner,
           ),
         )
         .orderBy(asc(bookingNights.date))
     : [];
-  const promoIds = [...new Set(rows.map((r) => r.promoId).filter((id): id is string => !!id))];
-  const promos = new Map<string, string | null>();
-  for (const id of promoIds) promos.set(id, await promoCodeInTx(tx, id));
+  const promos = await promoCodesInTx(tx, [
+    ...new Set(rows.map((r) => r.promoId).filter((id): id is string => !!id)),
+  ]);
   return rows.map((b) => ({
     id: b.id,
     ref: b.ref,

@@ -11,6 +11,7 @@ import { releaseExpiredHoldsInTx } from "./internal";
 import { acquireHold as acquireHoldImpl } from "./hold";
 import { cancelHeld as cancelHeldImpl } from "./cancel";
 import {
+  readBookings,
   getForStaff as getForStaffImpl,
   listForStaff as listForStaffImpl,
   listRefundPending as listRefundPendingImpl,
@@ -296,18 +297,15 @@ export const booking = {
     if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
     const guestId = parsed.data.guestId.toLowerCase();
     return getDb().transaction(async (tx) => {
+      // Batched (S2 review M2): bookings, rooms, nights and promo codes, at most 4 data
+      // queries for any limit, each carrying the owner predicate.
       const rows = await tx
-        .select({ id: bookings.id })
+        .select()
         .from(bookings)
         .where(eq(bookings.guestId, guestId))
         .orderBy(desc(bookings.checkIn), desc(bookings.createdAt))
         .limit(parsed.data.limit);
-      const list: Booking[] = [];
-      for (const r of rows) {
-        const b = await readBooking(tx, r.id);
-        if (b) list.push(b);
-      }
-      return { ok: true, bookings: list } as const;
+      return { ok: true, bookings: await readBookings(tx, rows, { guestId }) } as const;
     });
   },
 

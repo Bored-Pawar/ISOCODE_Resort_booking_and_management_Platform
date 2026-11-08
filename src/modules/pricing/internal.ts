@@ -2,7 +2,7 @@
 import type { Tx } from "@/lib/db";
 import { readQuote } from "./read";
 import type { QuoteInput, QuoteResult } from "./types";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { promoCodes } from "@/db/schema";
 
 export async function quoteInTx(tx: Tx, input: QuoteInput): Promise<QuoteResult> {
@@ -24,6 +24,16 @@ export async function promoCodeInTx(tx: Tx, id: string): Promise<string | null> 
     .from(promoCodes)
     .where(eq(promoCodes.id, id));
   return promo?.code ?? null;
+}
+
+/** Batched promoCodeInTx for booking list reads: one query for any number of promo ids. */
+export async function promoCodesInTx(tx: Tx, ids: string[]): Promise<Map<string, string>> {
+  if (!ids.length) return new Map();
+  const rows = await tx
+    .select({ id: promoCodes.id, code: promoCodes.code })
+    .from(promoCodes)
+    .where(inArray(promoCodes.id, ids));
+  return new Map(rows.map((r) => [r.id, r.code]));
 }
 
 /** Only a successful first confirmation consumes a promo use; the approved max-use overshoot remains. */
