@@ -105,3 +105,14 @@ export function rejectionMessage(r: {
     ? `At least ${r.min} (already sold or held)`
     : `At most ${r.cap} (total rooms)`;
 }
+
+/** Sold and held under the allotment: spelled out when there is room, letters on narrow screens. */
+export function stockLabel(sold: number, held: number) {
+  return { full: `${sold} sold · ${held} held`, short: `S ${sold} · H ${held}` };
+}
+
+/** Tooltip/tap text: rooms still free to sell on the website that night. */
+export function freeLabel(n: { allotment: number; sold: number; held: number }) {
+  const free = Math.max(0, n.allotment - n.sold - n.held);
+  return `${free} free to sell (allotment ${n.allotment}, ${n.sold} sold, ${n.held} held)`;
+}

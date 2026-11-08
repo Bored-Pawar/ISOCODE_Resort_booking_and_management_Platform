@@ -32,8 +32,12 @@ export type GridRow = {
   cells: Record<string, string | number | null>;
   /** Text shown instead of the raw value, e.g. "₹12,400" for 12400. */
   display?: Record<string, string>;
-  /** Small secondary text under a cell value, e.g. "3 · 1". */
-  sub?: Record<string, string>;
+  /**
+   * Small secondary text under a cell value. `{ full, short }` shows `full` from the md
+   * breakpoint and `short` below it (e.g. "0 sold · 1 held" / "S 0 · H 1"); explain `short` in a
+   * legend. Screen readers always get `full`.
+   */
+  sub?: Record<string, string | { full: string; short: string }>;
   tone?: Record<string, CellTone>;
   /** Why a cell looks the way it does; shown on hover, focus or tap. */
   note?: Record<string, string>;
@@ -141,7 +145,8 @@ export function DataGrid({
                     row.display?.[c.key] ?? (value === null ? "—" : String(value ?? ""));
                   const tone = row.tone?.[c.key];
                   const note = row.note?.[c.key];
-                  const sub = row.sub?.[c.key];
+                  const subText = row.sub?.[c.key];
+                  const sub = typeof subText === "object" ? subText.full : subText;
                   const saved = sameCell(edit.saved, here);
                   const content = (
                     <>
@@ -151,7 +156,18 @@ export function DataGrid({
                         ) : null}
                         {shown}
                       </span>
-                      {sub ? <span className="text-xs text-muted">{sub}</span> : null}
+                      {typeof subText === "object" ? (
+                        <>
+                          <span className="hidden text-xs whitespace-nowrap text-muted md:inline">
+                            {subText.full}
+                          </span>
+                          <span className="text-xs whitespace-nowrap text-muted md:hidden">
+                            {subText.short}
+                          </span>
+                        </>
+                      ) : sub ? (
+                        <span className="text-xs text-muted">{sub}</span>
+                      ) : null}
                     </>
                   );
                   return (

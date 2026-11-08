@@ -12,6 +12,7 @@ import {
   rejectionMessage,
   ALL_DAYS,
 } from "@/modules/admin/rules";
+import { freeLabel, stockLabel } from "@/modules/admin/rules";
 import type { AllotmentGridRow, BlackoutRow, RejectedAllotment } from "@/modules/admin";
 import { CheckGroup, dateColumns, DateStepper, DayPicker } from "../_components/grid-dates";
 import { setAllotmentAction } from "./actions";
@@ -79,25 +80,26 @@ export function AllotmentBoard({
   const visible = rows.filter((r) => room === "all" || r.roomTypeId === room);
   const gridRows: GridRow[] = visible.map((r) => {
     const cells: GridRow["cells"] = {};
-    const sub: Record<string, string> = {};
+    const sub: NonNullable<GridRow["sub"]> = {};
     const tone: NonNullable<GridRow["tone"]> = {};
     const note: Record<string, string> = {};
     for (const c of columns) {
       const n = r.nights[c.key];
       cells[c.key] = n ? n.allotment : null;
-      if (n) sub[c.key] = `${n.sold} · ${n.held}`;
-      else note[c.key] = "No stock row yet. Set a number to create it.";
+      if (n) sub[c.key] = stockLabel(n.sold, n.held);
       const off = offlineOn(blackouts, r.roomTypeId, c.key);
-      if (off) {
-        tone[c.key] = "offline";
-        note[c.key] =
-          `Offline${off.roomTypeId === null ? " (all rooms)" : ""}: ${off.reason ?? "no reason given"}`;
-      }
+      if (off) tone[c.key] = "offline";
       const why = rejectedCells[`${r.roomTypeId}|${c.key}`];
-      if (why) {
-        tone[c.key] = "danger";
-        note[c.key] = why;
-      }
+      if (why) tone[c.key] = "danger";
+      note[c.key] = [
+        why,
+        off
+          ? `Offline${off.roomTypeId === null ? " (all rooms)" : ""}: ${off.reason ?? "no reason given"}`
+          : null,
+        n ? freeLabel(n) : "No stock row yet. Set a number to create it.",
+      ]
+        .filter(Boolean)
+        .join(". ");
     }
     return {
       id: r.roomTypeId,
@@ -191,6 +193,10 @@ export function AllotmentBoard({
 
       <div className={panel !== "none" ? "grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]" : ""}>
         <div className="flex min-w-0 flex-col gap-2">
+          <p className="text-small text-muted" id="allotment-legend">
+            Big number: rooms the website may sell. Below it, S is sold and H is held (on narrow
+            screens). Hover or tap a night for how many are free.
+          </p>
           <DataGrid
             caption="Website allotment per night"
             columns={columns}
@@ -201,8 +207,7 @@ export function AllotmentBoard({
             emptyMessage="No room types match this filter."
           />
           <p className="text-small text-muted">
-            Large number: rooms the website may sell. Small: sold · held. Select a number to change
-            it; Enter saves, Esc cancels.
+            Select a number to change it; Enter saves, Esc cancels.
             {canToggle ? " Hatched dates are offline: no new holds." : ""}
           </p>
         </div>

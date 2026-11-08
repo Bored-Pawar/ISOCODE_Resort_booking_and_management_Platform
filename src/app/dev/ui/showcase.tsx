@@ -353,7 +353,9 @@ export function Showcase({ quoteFixture }: { quoteFixture: Quote }) {
             const n = Number(value);
             if (!Number.isInteger(n) || n < 0) return "Enter a whole number, 0 or more.";
             const row = rows.find((r) => r.id === rowId)!;
-            const committed = Number(row.sub?.[key]?.match(/sold (\d+)/)?.[1] ?? 0);
+            const sub = row.sub?.[key];
+            const text = typeof sub === "object" ? sub.full : sub;
+            const committed = Number(text?.match(/sold (\d+)/)?.[1] ?? 0);
             if (n < committed)
               return `Cannot go below ${committed}: that many rooms are already sold or held on this date.`;
             setRows((rs) =>

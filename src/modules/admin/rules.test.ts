@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  freeLabel,
+  stockLabel,
   adminWindow,
   bulkPreview,
   clampGridStart,
@@ -107,5 +109,17 @@ describe("parseRupees", () => {
     expect(parseRupees("12.5")).toBeNaN();
     expect(parseRupees("-5")).toBeNaN();
     expect(parseRupees("")).toBeNaN();
+  });
+});
+
+describe("allotment cell labels", () => {
+  it("spells out sold and held, with a short form for narrow screens", () => {
+    expect(stockLabel(0, 1)).toEqual({ full: "0 sold · 1 held", short: "S 0 · H 1" });
+  });
+  it("free count never goes below 0", () => {
+    expect(freeLabel({ allotment: 4, sold: 1, held: 1 })).toBe(
+      "2 free to sell (allotment 4, 1 sold, 1 held)",
+    );
+    expect(freeLabel({ allotment: 1, sold: 1, held: 1 })).toMatch(/^0 free/);
   });
 });
