@@ -18,12 +18,17 @@ DB guard: `TEST_DATABASE_URL` host differs from Codex's test host and from both 
 | 2.7 A3 online dates on `/admin/allotment`: offline with reason (merge), online (delete/trim/split), warning list first, hatched cells | done | c2b757b |
 | 2.2 Staff shell: nav from `navFor`, `/admin` per role (`overviewFor`), 403 screen on direct URLs incl. A5 (`PageGate`) | done | f3decb9 |
 | 2.4 `enquiryVisibility`, `canSeeEnquiry` (tested); Codex inbox lines and attention-request decision in `06` | done | be7a06e |
-| 2.8 A4 `/admin/promos`: list, create (uppercase, no case-only duplicates), switch off | done | (this commit) |
+| 2.8 A4 `/admin/promos`: list, create (uppercase, no case-only duplicates), switch off | done | 5c216d7 |
+| 4 Chrome walkthrough (sales, gm, reservations; desktop and 375px), 375px fix, docs 01/02/07/tdd-notes | done | 62428e0 |
+| 4 Review fix, major 1: blackout edits serialised by one advisory lock (+ concurrency test) | done | (this commit) |
 
-Last finished: 2.8. Next: 3 full test run, 4 verify (browser as each role, review subagent).
+Last finished: review fix. Next: final gates, dev reseed, PR.
+
+## Review (independent subagent, no context: runbook, `01`, `git diff main...HEAD`)
+No blockers. Major 1: a concurrent offline and online edit on the same blackout could lose the online part (one merged the row away while the other's `FOR UPDATE` skipped it). Fixed: `pg_advisory_xact_lock` first in `setOffline` and `setOnline`; holds never take it. Checked and found correct: permission on every entry point, stock invariants, lock order with holds, Zod, paise, window, parameterised SQL.
 
 ## Gates (latest)
-After 2.5: typecheck, lint pass; unit 386/386 (47 files); integration `admin-rates` 8/8, `admin-allotment` 9/9, `admin-availability` 6/6, `admin-promos` 8/8 on test-claude (race test repeated 5x, stable).
+After 2.5: typecheck, lint pass; unit 386/386 (47 files); integration `admin-rates` 8/8, `admin-allotment` 9/9, `admin-availability` 7/7 (with the review concurrency test), `admin-promos` 8/8 on test-claude. Full `pnpm test:integration` (before the review fix): 118/119 in 16 files, 1986 s; the one failure was the existing `booking.test.ts` "honours HOLD_MINUTES" timing out at 34.9 s of 30 s, and it passes when re-run alone (race test repeated 5x, stable).
 
 ## Deviations
 1. `main` is checked out in another worktree, so the branch was cut from `origin/main` instead of `git switch main`.
@@ -35,4 +40,5 @@ After 2.5: typecheck, lint pass; unit 386/386 (47 files); integration `admin-rat
 
 ## Open items
 1. A3 warning list reads `booking.listForStaff` (public contract): it looks back 60 days for stays that began before the range and at most 200 per status.
+3. Flaky on Neon latency, not this branch: `booking.test.ts` "honours HOLD_MINUTES" can exceed the 30 s test timeout in a full run.
 2. A room type cannot be brought online inside an all-rooms blackout (`ALL_ROOMS_OFFLINE`, nothing changes); bring all rooms online for those dates first.

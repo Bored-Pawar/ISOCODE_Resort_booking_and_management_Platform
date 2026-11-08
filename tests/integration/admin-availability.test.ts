@@ -156,6 +156,35 @@ describe("A3 online / offline (PostgreSQL)", () => {
     ).toEqual({ ok: true, removed: 1, trimmed: 0, split: 0 });
   });
 
+  it("concurrent offline and online edits on one blackout never lose the online part (review major 1)", async () => {
+    await admin.setOffline(
+      { roomTypeId: f.room.id, from: DAYS14[0], to: DAYS14[13], reason: "Works" },
+      f.reservations,
+    );
+    const [off, on] = await Promise.all([
+      admin.setOffline(
+        { roomTypeId: f.room.id, from: DAYS14[9], to: DAYS14[11], reason: "Paint" },
+        f.reservations,
+      ),
+      admin.setOnline({ roomTypeId: f.room.id, from: DAYS14[3], to: DAYS14[5] }, f.gm),
+    ]);
+    expect(off.ok && on.ok).toBe(true);
+    if (on.ok) expect(on.removed + on.trimmed + on.split).toBe(1);
+    const rows = await mine();
+    // Days 3 to 5 are online whichever edit ran first; no overlapping rows remain.
+    for (const d of [DAYS14[3], DAYS14[4], DAYS14[5]])
+      expect(
+        rows.some((b) => b.startDate <= d && b.endDate >= d),
+        d,
+      ).toBe(false);
+    for (let i = 1; i < rows.length; i++)
+      expect(rows[i].startDate > rows[i - 1].endDate).toBe(true);
+    expect(rows.map((b) => [b.startDate, b.endDate])).toEqual([
+      [DAYS14[0], DAYS14[2]],
+      [DAYS14[6], DAYS14[13]],
+    ]);
+  });
+
   it("requires a reason and stays inside the window", async () => {
     expect(
       await admin.setOffline(

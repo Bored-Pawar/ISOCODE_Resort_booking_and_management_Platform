@@ -280,6 +280,17 @@ export async function bookingsInRange(
   return { ok: true, bookings: found };
 }
 
+/**
+ * Blackout edits run one at a time: the first statement of `setOffline` and `setOnline`.
+ * Without it, an edit whose inventory range does not overlap another's can still race on the
+ * same blackout row (one merges it away while the other's FOR UPDATE skips the deleted row), so a
+ * "bring online" could be lost (S2 admin review, major 1). Holds never take this lock, so the
+ * order stays: advisory lock, then inventory in (room_type_id, date) order.
+ */
+async function lockBlackoutEdits(tx: Tx) {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended('admin:blackout_dates', 0))`);
+}
+
 /** Locks the stock rows a blackout change covers, ordered like the hold path. */
 async function lockRange(tx: Tx, roomTypeId: string | null, from: string, to: string) {
   const scope = roomTypeId ? sql`AND room_type_id = ${roomTypeId}::uuid` : sql``;
@@ -320,6 +331,7 @@ export async function setOffline(
   if (outside) return { ok: false, code: "INVALID_INPUT", errors: { form: outside } };
   const db = opts.db ?? getDb();
   return db.transaction(async (tx) => {
+    await lockBlackoutEdits(tx);
     if (roomTypeId) {
       const known = await tx.execute(sql`SELECT 1 FROM room_types WHERE id = ${roomTypeId}::uuid`);
       if (!known.length) return { ok: false, code: "NOT_FOUND" } as const;
@@ -374,6 +386,7 @@ export async function setOnline(
   if (outside) return { ok: false, code: "INVALID_INPUT", errors: { form: outside } };
   const db = opts.db ?? getDb();
   return db.transaction(async (tx) => {
+    await lockBlackoutEdits(tx);
     await lockRange(tx, roomTypeId, from, to);
     if (roomTypeId) {
       const all = await tx.execute<BlackoutRow>(sql`
