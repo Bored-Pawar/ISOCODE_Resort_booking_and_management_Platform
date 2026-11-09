@@ -202,6 +202,26 @@ it("requests non-strict json_schema (Groq strict mode rejects optional fields wi
   });
 });
 
+it("other providers get no Groq provider options", async () => {
+  const bodies: unknown[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (_url: unknown, init: RequestInit) => {
+      bodies.push(JSON.parse(String(init.body)));
+      return ok({ answer: "yes" });
+    }),
+  );
+  await executeStructured(
+    request,
+    selectProvider({
+      AI_PROVIDER: "local",
+      AI_MODEL: "m",
+      LOCAL_AI_BASE_URL: "http://localhost:11434/v1",
+    }),
+  );
+  expect(JSON.stringify(bodies[0])).not.toMatch(/strict"?\s*:\s*false/);
+});
+
 it("5xx keeps the one retry on the same pool, no rotation", async () => {
   let calls = 0;
   const used = stubGroq({
