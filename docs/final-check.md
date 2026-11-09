@@ -54,11 +54,11 @@ Covered elsewhere (cited, not re-run by the script):
 | Roles enforced in services | `tests/integration/inbox.test.ts`, `staff-read.test.ts`, the admin files; unit `src/lib/auth/permissions.test.ts` |
 
 ## The three brief enquiries
-Re-ingested through the real inbound webhooks and processed by the live pipeline:
+Re-ingested through the real inbound webhooks and processed by the live pipeline (final acceptance run, `final-check-acceptance.json`):
 | Brief | Channel | Expected | Result |
 |---|---|---|---|
 | ENQ-4410 wedding, Feb 2027, 250 guests | email | wedding, sales | wedding, sales, confidence 0.96 |
-| ENQ-4411 villa 14 to 16 Nov, 2 adults and a child | WhatsApp | room, reservations, draft with a server quote | room, reservations, 0.95, draft with a server quote |
+| ENQ-4411 villa 14 to 16 Nov, 2 adults and a child | WhatsApp | room, reservations, draft with a server quote | room, reservations, 0.97, draft with a server quote |
 | ENQ-4412 team of 45, January offsite | email | offsite, sales | offsite, sales, 0.96 |
 
 ## Bug found and mitigated in this phase
