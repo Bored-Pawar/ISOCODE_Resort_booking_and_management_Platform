@@ -1,0 +1,691 @@
+{
+  "generatedAt": "2026-11-09T00:25:41.948Z",
+  "mode": "live-model",
+  "provider": "groq",
+  "model": "openai/gpt-oss-20b",
+  "promptVersion": "enquiry-v2-audit",
+  "smoke": false,
+  "syntheticOnly": true,
+  "databaseWrites": false,
+  "requestedCases": 30,
+  "attemptedCases": 30,
+  "structuredSuccesses": 21,
+  "accuracyDenominator": 30,
+  "modelAccuracy": 0.6666666666666666,
+  "rulesAccuracy": null,
+  "schemaValidity": 0.7,
+  "safeModelDraftRate": 0.7619047619047619,
+  "fallbackRate": 0.3,
+  "unsortedRate": 0.43333333333333335,
+  "http429Responses": 7,
+  "timeouts": 0,
+  "availabilityFailures": 0,
+  "medianLatencyMs": 1588,
+  "p95LatencyMs": 2346,
+  "perCategory": {
+    "room": {
+      "cases": 9,
+      "correct": 9,
+      "accuracy": 1
+    },
+    "wedding": {
+      "cases": 6,
+      "correct": 6,
+      "accuracy": 1
+    },
+    "offsite": {
+      "cases": 5,
+      "correct": 5,
+      "accuracy": 1
+    },
+    "complaint": {
+      "cases": 5,
+      "correct": 5,
+      "accuracy": 1
+    },
+    "other": {
+      "cases": 5,
+      "correct": 4,
+      "accuracy": 0.8
+    }
+  },
+  "complaintRecall": 1,
+  "complaintsMissed": [],
+  "gmAlertsOnNonComplaints": [],
+  "draftTemplateFallbackRate": 0.4666666666666667,
+  "groundingOutcomes": {
+    "dates": {
+      "missing": 22,
+      "ok": 3,
+      "unsupported": 5
+    },
+    "guests": {
+      "missing": 27,
+      "ok": 3
+    },
+    "room": {
+      "missing": 25,
+      "ok": 5
+    }
+  },
+  "confusion": {
+    "room": {
+      "room": 7
+    },
+    "offsite": {
+      "offsite": 4
+    },
+    "wedding": {
+      "wedding": 3
+    },
+    "complaint": {
+      "complaint": 4
+    },
+    "other": {
+      "other": 2,
+      "room": 1
+    }
+  },
+  "rows": [
+    {
+      "id": "ENQ-4410",
+      "expected": "wedding",
+      "actual": "wedding",
+      "status": "fallback",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1965,
+      "rateLimits": 0,
+      "error": "INVALID_RESPONSE"
+    },
+    {
+      "id": "ENQ-4411",
+      "expected": "room",
+      "actual": "room",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "reservations",
+      "notifyGm": false,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      },
+      "latencyMs": 2178,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4412",
+      "expected": "offsite",
+      "actual": "offsite",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "sales",
+      "notifyGm": false,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1739,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4383",
+      "expected": "room",
+      "actual": "room",
+      "status": "fallback",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "ok",
+        "room": "ok"
+      },
+      "latencyMs": 1274,
+      "rateLimits": 0,
+      "error": "INVALID_RESPONSE"
+    },
+    {
+      "id": "ENQ-4384",
+      "expected": "room",
+      "actual": "room",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "reservations",
+      "notifyGm": false,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1595,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4385",
+      "expected": "room",
+      "actual": "room",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": false,
+      "ownerRole": "reservations",
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1916,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4386",
+      "expected": "room",
+      "actual": "room",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "reservations",
+      "notifyGm": false,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1031,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4387",
+      "expected": "room",
+      "actual": "room",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": false,
+      "ownerRole": "reservations",
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "ok",
+        "guests": "missing",
+        "room": "ok"
+      },
+      "latencyMs": 1529,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4388",
+      "expected": "room",
+      "actual": "room",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "reservations",
+      "notifyGm": false,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1479,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4389",
+      "expected": "room",
+      "actual": "room",
+      "status": "fallback",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "ok",
+        "room": "ok"
+      },
+      "latencyMs": 2447,
+      "rateLimits": 0,
+      "error": "INVALID_RESPONSE"
+    },
+    {
+      "id": "ENQ-4390",
+      "expected": "room",
+      "actual": "room",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "reservations",
+      "notifyGm": false,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "ok"
+      },
+      "latencyMs": 1992,
+      "rateLimits": 1,
+      "error": null
+    },
+    {
+      "id": "ENQ-4391",
+      "expected": "wedding",
+      "actual": "wedding",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": false,
+      "ownerRole": "sales",
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1529,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4392",
+      "expected": "wedding",
+      "actual": "wedding",
+      "status": "fallback",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1588,
+      "rateLimits": 0,
+      "error": "INVALID_RESPONSE"
+    },
+    {
+      "id": "ENQ-4393",
+      "expected": "wedding",
+      "actual": "wedding",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "sales",
+      "notifyGm": false,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1699,
+      "rateLimits": 1,
+      "error": null
+    },
+    {
+      "id": "ENQ-4394",
+      "expected": "wedding",
+      "actual": "wedding",
+      "status": "fallback",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 2346,
+      "rateLimits": 0,
+      "error": "INVALID_RESPONSE"
+    },
+    {
+      "id": "ENQ-4395",
+      "expected": "wedding",
+      "actual": "wedding",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "sales",
+      "notifyGm": false,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1689,
+      "rateLimits": 1,
+      "error": null
+    },
+    {
+      "id": "ENQ-4396",
+      "expected": "offsite",
+      "actual": "offsite",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "sales",
+      "notifyGm": false,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1475,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4397",
+      "expected": "offsite",
+      "actual": "offsite",
+      "status": "fallback",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1913,
+      "rateLimits": 0,
+      "error": "INVALID_RESPONSE"
+    },
+    {
+      "id": "ENQ-4398",
+      "expected": "offsite",
+      "actual": "offsite",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "sales",
+      "notifyGm": false,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1855,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4399",
+      "expected": "offsite",
+      "actual": "offsite",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": false,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1489,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4400",
+      "expected": "complaint",
+      "actual": "complaint",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "gm",
+      "notifyGm": true,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "unsupported",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1736,
+      "rateLimits": 1,
+      "error": null
+    },
+    {
+      "id": "ENQ-4401",
+      "expected": "complaint",
+      "actual": "complaint",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "gm",
+      "notifyGm": true,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1152,
+      "rateLimits": 1,
+      "error": null
+    },
+    {
+      "id": "ENQ-4402",
+      "expected": "complaint",
+      "actual": "complaint",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "gm",
+      "notifyGm": true,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1197,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4403",
+      "expected": "complaint",
+      "actual": "complaint",
+      "status": "fallback",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": true,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1451,
+      "rateLimits": 0,
+      "error": "INVALID_RESPONSE"
+    },
+    {
+      "id": "ENQ-4404",
+      "expected": "complaint",
+      "actual": "complaint",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": true,
+      "unsorted": false,
+      "ownerRole": "gm",
+      "notifyGm": true,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1436,
+      "rateLimits": 1,
+      "error": null
+    },
+    {
+      "id": "ENQ-4405",
+      "expected": "other",
+      "actual": "other",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1478,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4406",
+      "expected": "other",
+      "actual": "other",
+      "status": "fallback",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1612,
+      "rateLimits": 0,
+      "error": "INVALID_RESPONSE"
+    },
+    {
+      "id": "ENQ-4407",
+      "expected": "other",
+      "actual": "other",
+      "status": "fallback",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1319,
+      "rateLimits": 1,
+      "error": "INVALID_RESPONSE"
+    },
+    {
+      "id": "ENQ-4408",
+      "expected": "other",
+      "actual": "room",
+      "status": "ok",
+      "correct": false,
+      "safeDraft": true,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": false,
+      "usedTemplate": false,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1108,
+      "rateLimits": 0,
+      "error": null
+    },
+    {
+      "id": "ENQ-4409",
+      "expected": "other",
+      "actual": "other",
+      "status": "ok",
+      "correct": true,
+      "safeDraft": false,
+      "unsorted": true,
+      "ownerRole": null,
+      "notifyGm": false,
+      "usedTemplate": true,
+      "grounding": {
+        "dates": "missing",
+        "guests": "missing",
+        "room": "missing"
+      },
+      "latencyMs": 1356,
+      "rateLimits": 0,
+      "error": null
+    }
+  ]
+}

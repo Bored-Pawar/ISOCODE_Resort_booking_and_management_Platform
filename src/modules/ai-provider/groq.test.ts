@@ -187,6 +187,21 @@ it("all keys failing falls back to rules, unsorted, with only a sanitized error 
   noKeyLeak(outcome);
 });
 
+it("requests non-strict json_schema (Groq strict mode rejects optional fields with a 400)", async () => {
+  const bodies: unknown[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (_url: unknown, init: RequestInit) => {
+      bodies.push(JSON.parse(String(init.body)));
+      return ok({ answer: "yes" });
+    }),
+  );
+  await executeStructured(request, selectProvider(env(KEYS)));
+  expect(bodies[0]).toMatchObject({
+    response_format: { type: "json_schema", json_schema: { strict: false } },
+  });
+});
+
 it("5xx keeps the one retry on the same pool, no rotation", async () => {
   let calls = 0;
   const used = stubGroq({

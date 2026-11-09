@@ -6,6 +6,7 @@ import { safeModelDraft } from "../src/modules/ai-router/price-guard";
 import { route } from "../src/modules/ai-router/routing";
 import { PROMPT_VERSION } from "../src/modules/ai-router/prompts";
 import { groundExtraction } from "../src/modules/ai-router/grounding";
+import { buildDraft } from "../src/modules/ai-router/draft";
 
 const smoke = process.argv.includes("--smoke");
 const selection = selectProvider();
@@ -27,6 +28,10 @@ const rows: {
   correct: boolean;
   safeDraft: boolean;
   unsorted: boolean;
+  ownerRole: string | null;
+  notifyGm: boolean;
+  usedTemplate: boolean;
+  grounding: { dates: string; guests: string; room: string };
   latencyMs: number;
   rateLimits: number;
   error: string | null;
@@ -40,6 +45,10 @@ if (selection.kind !== "error")
       senderContact: item.contact,
       receivedAt: new Date("2026-11-08T12:00:00+05:30"),
     });
+    const evidence = groundExtraction(item.text, r.classification, "2026-11-08");
+    const routed = route(r.classification, r.status, item.text, r.complaintSignal);
+    // No database quote here: the draft fallback rate measures prose safety, not pricing.
+    const draft = buildDraft(r.classification, r.draftText, null, evidence, item.text);
     rows.push({
       id: item.id,
       expected: item.label,
@@ -50,7 +59,11 @@ if (selection.kind !== "error")
         rawText: item.text,
         evidence: groundExtraction(item.text, r.classification, "2026-11-08"),
       }),
-      unsorted: route(r.classification, r.status, item.text, r.complaintSignal).lane === "unsorted",
+      unsorted: routed.lane === "unsorted",
+      ownerRole: routed.ownerRole,
+      notifyGm: routed.notifyGm,
+      usedTemplate: draft.usedTemplate,
+      grounding: evidence.grounding,
       latencyMs: r.response.latencyMs,
       rateLimits: r.response.rateLimits,
       error: r.response.kind === "error" ? r.response.error : null,
@@ -69,6 +82,29 @@ for (const row of parsed) {
   confusion[row.expected] ??= {};
   confusion[row.expected][row.actual] = (confusion[row.expected][row.actual] ?? 0) + 1;
 }
+const labels = ["room", "wedding", "offsite", "complaint", "other"] as const;
+const perCategory = Object.fromEntries(
+  labels.map((l) => {
+    const of = rows.filter((r) => r.expected === l);
+    return [
+      l,
+      {
+        cases: of.length,
+        correct: of.filter((r) => r.correct).length,
+        accuracy: rate(of.filter((r) => r.correct).length, of.length),
+      },
+    ];
+  }),
+);
+const complaints = rows.filter((r) => r.expected === "complaint");
+const groundingOutcomes: Record<string, Record<string, number>> = {
+  dates: {},
+  guests: {},
+  room: {},
+};
+for (const r of rows)
+  for (const k of ["dates", "guests", "room"] as const)
+    groundingOutcomes[k][r.grounding[k]] = (groundingOutcomes[k][r.grounding[k]] ?? 0) + 1;
 const report = {
   generatedAt: new Date().toISOString(),
   mode: live ? "live-model" : selection.kind === "rules-only" ? "rules-only" : "not-configured",
@@ -94,10 +130,20 @@ const report = {
   availabilityFailures: rows.filter((r) => r.error && r.error !== "INVALID_RESPONSE").length,
   medianLatencyMs: live && latencies.length ? latencies[Math.floor(latencies.length / 2)] : null,
   p95LatencyMs: live && latencies.length ? latencies[Math.ceil(latencies.length * 0.95) - 1] : null,
+  perCategory,
+  /** Every labelled complaint must notify the GM (routing keyword rules plus the model signal). */
+  complaintRecall: rate(complaints.filter((r) => r.notifyGm).length, complaints.length),
+  complaintsMissed: complaints.filter((r) => !r.notifyGm).map((r) => r.id),
+  gmAlertsOnNonComplaints: rows
+    .filter((r) => r.expected !== "complaint" && r.notifyGm)
+    .map((r) => r.id),
+  draftTemplateFallbackRate: rate(rows.filter((r) => r.usedTemplate).length, rows.length),
+  groundingOutcomes,
   confusion,
   rows,
 };
-await mkdir("docs/evidence", { recursive: true });
-const path = `docs/evidence/ai-${smoke ? "smoke" : "evaluation"}-${report.mode}.json`;
+const outDir = process.argv.includes("--r5") ? "docs/eval" : "docs/evidence";
+await mkdir(outDir, { recursive: true });
+const path = `${outDir}/ai-${smoke ? "smoke" : "evaluation"}-${report.mode}.json`;
 await writeFile(path, JSON.stringify(report, null, 2) + "\n");
 console.log(JSON.stringify({ report: path, ...report, rows: undefined }));
