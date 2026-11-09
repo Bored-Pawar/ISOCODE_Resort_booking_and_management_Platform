@@ -1,12 +1,18 @@
 "use client";
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Send, Sparkles } from "lucide-react";
+import { AlertTriangle, RefreshCw, Send, Sparkles } from "lucide-react";
 import { Badge, Button, Card, Textarea, useToast } from "@/components/ui";
 import { formatInr } from "@/lib/money";
 import type { Draft } from "@/modules/enquiries";
 import { addsNewPrice, PRICE_WARNING } from "@/modules/enquiries/staff/display";
-import { approveAndSendAction, closeAction, regenerateAction, saveDraftAction } from "../actions";
+import {
+  approveAndSendAction,
+  closeAction,
+  rebuildQuoteAction,
+  regenerateAction,
+  saveDraftAction,
+} from "../actions";
 
 type Quote = {
   checkIn?: string;
@@ -23,6 +29,37 @@ function quoteText(q: Quote | null): string {
     .filter((n): n is number => typeof n === "number")
     .map(formatInr)
     .join(" ");
+}
+
+const OUTDATED: Record<"rebuilding" | "failed" | "stale", { title: string; text: string }> = {
+  rebuilding: {
+    title: "Quote being rebuilt",
+    text: "The saved details changed and the quote is being rebuilt. Approve is off until it finishes. If this does not clear after a refresh, use Retry.",
+  },
+  failed: {
+    title: "Quote out of date",
+    text: "The quote could not be rebuilt from the saved details, so this draft cannot be sent. Use Retry.",
+  },
+  stale: {
+    title: "Quote out of date",
+    text: "The saved details changed after this draft was priced, so it cannot be sent. Use Retry to rebuild it.",
+  },
+};
+
+/** "15 Dec to 17 Dec 2026 · 3 adults, 1 child · Pool Villa (set by staff)" */
+function builtOnText(b: NonNullable<Draft["builtOn"]>): string {
+  const parts = [
+    b.dates ? `${b.dates.from} to ${b.dates.to}` : "dates not given",
+    b.guests
+      ? `${b.guests.adults} adults, ${b.guests.children} ${b.guests.children === 1 ? "child" : "children"}`
+      : "party not given",
+    b.room.source === "cleared"
+      ? "no room (cleared by staff)"
+      : b.room.text
+        ? `${b.room.text} (${b.room.source === "staff" ? "set by staff" : "guest's message"})`
+        : "no room named",
+  ];
+  return parts.join(" · ");
 }
 
 const sentAt = new Intl.DateTimeFormat("en-IN", {
@@ -59,6 +96,8 @@ export function DraftPanel({
   const quote = (draft?.quote ?? null) as Quote | null;
   const warn = addsNewPrice(quoteText(quote), body);
   const dirty = !!draft && body.trim() !== draft.body;
+  const quoteState = draft?.quoteState ?? "current";
+  const outdated = quoteState === "current" ? null : OUTDATED[quoteState];
 
   const run = (
     fn: () => Promise<{ ok: boolean; message: string; stale?: boolean }>,
@@ -123,6 +162,29 @@ export function DraftPanel({
         </div>
       ) : (
         <>
+          {outdated ? (
+            <div
+              role="alert"
+              className="mb-3 flex flex-col items-start gap-2 rounded-control border border-warning/40 bg-warning/10 p-3 text-small"
+            >
+              <p className="flex items-center gap-1 font-semibold text-warning">
+                <AlertTriangle className="size-4" strokeWidth={1.5} aria-hidden />
+                {outdated.title}
+              </p>
+              <p>{outdated.text}</p>
+              {canWork ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  loading={pending}
+                  onClick={() => run(() => rebuildQuoteAction({ enquiryId }))}
+                >
+                  <RefreshCw className="size-4" strokeWidth={1.5} aria-hidden />
+                  Retry
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
           {quote?.totalPaise !== undefined ? (
             <div className="mb-3 rounded-control border border-accent/30 bg-accent-soft p-3 text-small">
               <p className="font-semibold text-accent">From the rate table</p>
@@ -136,6 +198,12 @@ export function DraftPanel({
               No price in this draft: the rate table had nothing to quote for these details.
             </p>
           )}
+          {draft.builtOn ? (
+            <p className="mb-3 text-small text-muted">
+              {outdated ? "This draft was built on: " : "Built on the saved details: "}
+              {builtOnText(draft.builtOn)}
+            </p>
+          ) : null}
           <Textarea
             label="Reply"
             rows={8}
@@ -179,7 +247,8 @@ export function DraftPanel({
               </Button>
               <Button
                 size="sm"
-                disabled={!body.trim() || pending}
+                disabled={!body.trim() || pending || !!outdated}
+                title={outdated ? "Rebuild the quote first (Retry)" : undefined}
                 onClick={() => dialog.current?.showModal()}
               >
                 <Send className="size-4" strokeWidth={1.5} aria-hidden />
@@ -209,6 +278,7 @@ export function DraftPanel({
               </Button>
               <Button
                 loading={pending}
+                disabled={!!outdated}
                 onClick={() =>
                   run(
                     () =>

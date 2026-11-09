@@ -2,15 +2,17 @@
  * Q5 writes: extracted field edits and one-click re-route. Each runs in one transaction with the
  * enquiry row locked, rechecks the role against the locked row, and logs one `enquiry_events` row.
  */
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
+import { asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { enquiries as e, enquiryEvents, notifications, replyDrafts, users } from "@/db/schema";
+import { enquiries as e, enquiryEvents, notifications, users } from "@/db/schema";
 import { getDb } from "@/lib/db";
 import { isDateStr } from "@/lib/dates";
 import type { Err, Ok } from "@/lib/result";
 import type { StaffRole } from "@/lib/auth/permissions";
 import { CATEGORIES, canWork, ownerRolesFor, type InboxActor } from "./rules";
 import { visibilityOf, type Extracted } from "./detail";
+import { basisOf, QUOTE_FIELDS, quoteFactsOf, roomTextOf } from "./facts";
 
 const enquiryId = z.string().trim().min(1).max(40);
 const date = z.string().refine(isDateStr, "Use a date");
@@ -45,59 +47,95 @@ type Fail = Err<"INVALID_INPUT" | "NOT_FOUND" | "FORBIDDEN" | "INVALID_OWNER">;
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
 /**
- * Saves edited fields into `extracted` (merged, never replaced) and logs `edited`. Returns whether
- * dates or guests changed, so the caller re-runs only the quote and draft step.
+ * Pure merge of a field edit into `extracted` (merged, never replaced). The Room box shows the
+ * room the quote uses (staff's, or the guest's own preference `messageRoom`), so a save that leaves
+ * it as shown keeps that state; emptying it is an explicit clear, typing another is a replacement.
+ * Any change to dates, guests or room re-prices: the basis is marked `rebuilding` under `gen` in the
+ * same write, so the old draft cannot be approved from the moment the edit commits.
+ */
+export function applyFieldEdit(
+  extracted: unknown,
+  f: z.infer<typeof fieldsInputSchema>,
+  messageRoom: string | null,
+  gen: string,
+): { changed: string[]; requote: boolean; next: Record<string, unknown> } {
+  const x = (extracted ?? {}) as Extracted & Record<string, unknown>;
+  const before = {
+    dates: x.dates?.from && x.dates?.to ? { from: x.dates.from, to: x.dates.to } : null,
+    guests:
+      x.guests?.adults !== undefined
+        ? { adults: x.guests.adults, children: x.guests.children ?? 0 }
+        : null,
+    budget: x.budget?.amountInr ?? null,
+    room: roomTextOf(quoteFactsOf(x).room, messageRoom),
+    language: x.language ?? null,
+  };
+  const after = {
+    dates: f.dates,
+    guests: f.guests,
+    budget: f.budgetInr,
+    room: f.room || null,
+    language: f.language || null,
+  };
+  const changed = (Object.keys(after) as (keyof typeof after)[]).filter(
+    (k) => !same(before[k], after[k]),
+  );
+  if (!changed.length) return { changed: [], requote: false, next: x };
+  const next: Record<string, unknown> = {
+    ...x,
+    dates: f.dates ? { ...x.dates, from: f.dates.from, to: f.dates.to } : {},
+    guests: f.guests
+      ? {
+          adults: f.guests.adults,
+          children: f.guests.children,
+          total: f.guests.adults + f.guests.children,
+        }
+      : {},
+    budget: f.budgetInr !== null ? { ...x.budget, amountInr: f.budgetInr } : {},
+    staffEdited: [...new Set([...(x.staffEdited ?? []), ...changed])],
+  };
+  // Room is written only when staff changed it: untouched, the guest's preference keeps applying.
+  if (changed.includes("room")) {
+    if (after.room) next.room = after.room;
+    else delete next.room; // explicit clear: `room` in staffEdited without a value
+  }
+  if (after.language) next.language = after.language;
+  else delete next.language; // cleared: saved as cleared, like room (review minor 3)
+  const requote = changed.some((k) => (QUOTE_FIELDS as readonly string[]).includes(k));
+  if (requote)
+    next.quoteBasis = {
+      ...(basisOf(x) ?? {}),
+      state: "rebuilding",
+      gen,
+      at: new Date().toISOString(),
+    };
+  return { changed, requote, next };
+}
+
+/**
+ * Saves edited fields into `extracted` and logs `edited`. When a quote-affecting field changed it
+ * returns the rebuild generation, so the caller re-runs only the quote and draft step.
  */
 export async function updateFields(
   input: unknown,
   actor: InboxActor,
-): Promise<Ok<{ changed: string[]; requote: boolean }> | Fail> {
+): Promise<Ok<{ changed: string[]; requote: boolean; gen: string | null }> | Fail> {
   const parsed = fieldsInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
   const f = parsed.data;
+  const { messageRoomLabel } = await import("@/modules/ai-router");
   return getDb().transaction(async (tx) => {
     const [row] = await tx.select().from(e).where(eq(e.id, f.enquiryId)).for("update");
     if (!row) return { ok: false, code: "NOT_FOUND" } as const;
     if (!canWork(actor.role, visibilityOf(row))) return { ok: false, code: "FORBIDDEN" } as const;
-    const x = (row.extracted ?? {}) as Extracted & Record<string, unknown>;
-    const before = {
-      dates: x.dates?.from && x.dates?.to ? { from: x.dates.from, to: x.dates.to } : null,
-      guests:
-        x.guests?.adults !== undefined
-          ? { adults: x.guests.adults, children: x.guests.children ?? 0 }
-          : null,
-      budget: x.budget?.amountInr ?? null,
-      room: x.room ?? null,
-      language: x.language ?? null,
-    };
-    const after = {
-      dates: f.dates,
-      guests: f.guests,
-      budget: f.budgetInr,
-      room: f.room || null,
-      language: f.language || null,
-    };
-    const changed = (Object.keys(after) as (keyof typeof after)[]).filter(
-      (k) => !same(before[k], after[k]),
+    const gen = randomUUID();
+    const { changed, requote, next } = applyFieldEdit(
+      row.extracted,
+      f,
+      messageRoomLabel(row.rawText),
+      gen,
     );
-    if (!changed.length) return { ok: true, changed: [], requote: false } as const;
-    const next: Record<string, unknown> = {
-      ...x,
-      dates: f.dates ? { ...x.dates, from: f.dates.from, to: f.dates.to } : {},
-      guests: f.guests
-        ? {
-            adults: f.guests.adults,
-            children: f.guests.children,
-            total: f.guests.adults + f.guests.children,
-          }
-        : {},
-      budget: f.budgetInr !== null ? { ...x.budget, amountInr: f.budgetInr } : {},
-      staffEdited: [...new Set([...(x.staffEdited ?? []), ...changed])],
-    };
-    if (after.room) next.room = after.room;
-    else delete next.room;
-    if (after.language) next.language = after.language;
-    else delete next.language; // cleared: saved as cleared, like room (review minor 3)
+    if (!changed.length) return { ok: true, changed: [], requote: false, gen: null } as const;
     await tx.update(e).set({ extracted: next }).where(eq(e.id, row.id));
     await tx.insert(enquiryEvents).values({
       enquiryId: row.id,
@@ -106,49 +144,7 @@ export async function updateFields(
       fromValue: "fields",
       toValue: changed.join(","),
     });
-    return {
-      ok: true,
-      changed,
-      requote: changed.includes("dates") || changed.includes("guests"),
-    } as const;
-  });
-}
-
-/** Replaces the unsent, unapproved draft (or adds one) after a re-quote. Sent drafts never change. */
-export async function replaceUnsentDraft(
-  id: string,
-  draft: {
-    body: string;
-    quote: unknown;
-    provider: string;
-    model: string | null;
-    promptVersion: string;
-  },
-): Promise<boolean> {
-  return getDb().transaction(async (tx) => {
-    await tx.select({ id: e.id }).from(e).where(eq(e.id, id)).for("update");
-    const [current] = await tx
-      .select()
-      .from(replyDrafts)
-      .where(eq(replyDrafts.enquiryId, id))
-      .orderBy(sql`${replyDrafts.sentAt} DESC NULLS FIRST`)
-      .limit(1);
-    if (current && (current.sentAt || current.approvedBy)) return false;
-    const values = {
-      body: draft.body,
-      quote: draft.quote as never,
-      provider: draft.provider,
-      model: draft.model,
-      promptVersion: draft.promptVersion,
-      edited: false,
-    };
-    if (current)
-      await tx
-        .update(replyDrafts)
-        .set(values)
-        .where(and(eq(replyDrafts.id, current.id), isNull(replyDrafts.sentAt)));
-    else await tx.insert(replyDrafts).values({ enquiryId: id, ...values });
-    return true;
+    return { ok: true, changed, requote, gen: requote ? gen : null } as const;
   });
 }
 

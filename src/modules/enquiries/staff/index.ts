@@ -1,24 +1,32 @@
 /** Staff inbox (Q4 to Q7): additive to the enquiries module, approved by the S2 inbox runbook. */
-import { safeError } from "@/lib/log";
 import { getDetail } from "./detail";
-import { redraft } from "./drafting";
+import { rebuild } from "./drafting";
 import { reroute, updateFields, fieldsInputSchema } from "./routing";
 import { laneCounts, listInbox } from "./service";
 import { bell, markAllRead, markRead } from "./notifications";
 import { requestAttention, resolveAttention } from "./attention";
-import { approveAndSend, closeEnquiry, listSentReplies, regenerateDraft, saveDraft } from "./send";
+import {
+  approveAndSend,
+  closeEnquiry,
+  listSentReplies,
+  rebuildQuote,
+  regenerateDraft,
+  saveDraft,
+} from "./send";
 import type { InboxActor } from "./rules";
 
-/** Field edit, then (only when dates or guests changed) the quote and draft step again. */
+/**
+ * Field edit, then (when dates, guests or room changed) the quote and draft step again. The edit
+ * itself already marked the quote `rebuilding`; a failed rebuild marks it `failed`. Either way the
+ * old draft cannot be approved until a rebuild from the current facts lands.
+ */
 async function saveFields(input: unknown, actor: InboxActor) {
   const res = await updateFields(input, actor);
-  if (!res.ok || !res.requote) return { ...res, draft: "unchanged" as const };
+  if (!res.ok) return res;
+  const { gen, ...saved } = res;
+  if (!saved.requote || !gen) return { ...saved, draft: "unchanged" as const };
   const { enquiryId } = fieldsInputSchema.parse(input);
-  const draft = await redraft(enquiryId, false).catch((error) => {
-    console.error("inbox re-quote failed", safeError(error));
-    return "failed" as const;
-  });
-  return { ...res, draft };
+  return { ...saved, draft: await rebuild(enquiryId, gen, false) };
 }
 
 export const inbox = {
@@ -29,6 +37,7 @@ export const inbox = {
   reroute,
   saveDraft,
   regenerateDraft,
+  rebuildQuote,
   approveAndSend,
   close: closeEnquiry,
   sentReplies: listSentReplies,
@@ -39,8 +48,9 @@ export const inbox = {
   resolveAttention,
 };
 export type { InboxPage, InboxRow, LaneCounts, Grounding } from "./service";
-export type { InboxDetail, Draft, TimelineEntry, StaffUser, Extracted } from "./detail";
+export type { InboxDetail, Draft, TimelineEntry, StaffUser, Extracted, RoomView } from "./detail";
 export type { FieldsInput, RerouteInput } from "./routing";
+export type { QuoteFacts, QuoteState, RoomFact } from "./facts";
 export type { SentReply } from "./send";
 export type { Bell, BellItem } from "./notifications";
 export {

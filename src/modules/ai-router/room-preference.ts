@@ -36,3 +36,21 @@ export function roomPreference(text: string) {
         : null;
   return { named, kind };
 }
+
+const LABELS: Record<string, string> = {
+  "plantation-room": "Plantation Room",
+  "estate-suite": "Estate Suite",
+  "garden-villa": "Garden Villa",
+  "pool-villa": "Pool Villa",
+};
+
+/**
+ * The guest's own room preference as a short label that `matchingRooms` resolves to the same
+ * types ("Garden Villa", "Garden Villa or Pool Villa", "Any villa"), or null when none is named.
+ */
+export function preferenceLabel(text: string): string | null {
+  const preference = roomPreference(text);
+  if (preference.named.length) return preference.named.map((slug) => LABELS[slug]).join(" or ");
+  if (preference.kind === "pool villa") return "Pool Villa";
+  return preference.kind ? `Any ${preference.kind}` : null;
+}

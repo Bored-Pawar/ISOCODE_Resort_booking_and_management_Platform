@@ -11,7 +11,8 @@ import { formatInr } from "@/lib/money";
 import type { Err, Ok } from "@/lib/result";
 import type { EnquiryChannel } from "../types";
 import { visibilityOf } from "./detail";
-import { redraft } from "./drafting";
+import { beginRebuild, rebuild } from "./drafting";
+import { quoteStateOf, type QuoteState } from "./facts";
 import { workSql } from "./queries";
 import { draftVersion } from "./version";
 import { addsNewPrice, canWork, type InboxActor } from "./rules";
@@ -27,8 +28,23 @@ export const sendInputSchema = z.object({ enquiryId, draftId: z.uuid(), body, ve
 export const enquiryInputSchema = z.object({ enquiryId }).strict();
 
 type Fail = Err<
-  "INVALID_INPUT" | "NOT_FOUND" | "FORBIDDEN" | "ALREADY_SENT" | "NO_DRAFT" | "STALE_DRAFT"
+  | "INVALID_INPUT"
+  | "NOT_FOUND"
+  | "FORBIDDEN"
+  | "ALREADY_SENT"
+  | "NO_DRAFT"
+  | "STALE_DRAFT"
+  | "QUOTE_REBUILDING"
+  | "QUOTE_FAILED"
+  | "QUOTE_STALE"
+  | "REBUILD_FAILED"
 >;
+
+const QUOTE_REFUSAL: Record<Exclude<QuoteState, "current">, Fail["code"]> = {
+  rebuilding: "QUOTE_REBUILDING",
+  failed: "QUOTE_FAILED",
+  stale: "QUOTE_STALE",
+};
 
 /** Rupee figures the server quote supplies; anything else in a reply is a staff-typed price. */
 export function quoteFigures(quote: unknown): string {
@@ -77,10 +93,14 @@ export async function saveDraft(
   });
 }
 
-/** Regenerate: R4 again (new prose from the model, same classification, server quote). */
-export async function regenerateDraft(
+/**
+ * Rebuild the unsent draft from the saved facts under a new generation (approval is refused until
+ * it lands). `callModel`: Regenerate asks the model for new prose; Retry uses the safe template.
+ */
+async function rebuildDraft(
   input: unknown,
   actor: InboxActor,
+  callModel: boolean,
 ): Promise<Ok<object> | Fail> {
   const parsed = enquiryInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
@@ -88,17 +108,34 @@ export async function regenerateDraft(
   const [row] = await getDb().select().from(e).where(eq(e.id, id)).limit(1);
   if (!row) return { ok: false, code: "NOT_FOUND" };
   if (!canWork(actor.role, visibilityOf(row))) return { ok: false, code: "FORBIDDEN" };
-  const done = await redraft(id, true);
+  const gen = await beginRebuild(id);
+  if (!gen) return { ok: false, code: "NOT_FOUND" };
+  const done = await rebuild(id, gen, callModel);
   if (done === "missing") return { ok: false, code: "NOT_FOUND" };
   if (done === "locked") return { ok: false, code: "ALREADY_SENT" };
-  await getDb().insert(enquiryEvents).values({
-    enquiryId: id,
-    actor: actor.userId,
-    action: "edited",
-    fromValue: "draft",
-    toValue: "draft:regenerated",
-  });
+  if (done === "failed") return { ok: false, code: "REBUILD_FAILED" };
+  // "superseded": a later edit's rebuild owns the draft now; nothing of ours was written.
+  if (done === "ok")
+    await getDb()
+      .insert(enquiryEvents)
+      .values({
+        enquiryId: id,
+        actor: actor.userId,
+        action: "edited",
+        fromValue: "draft",
+        toValue: callModel ? "draft:regenerated" : "draft:rebuilt",
+      });
   return { ok: true };
+}
+
+/** Regenerate: R4 again (new prose from the model, same classification, server quote). */
+export function regenerateDraft(input: unknown, actor: InboxActor): Promise<Ok<object> | Fail> {
+  return rebuildDraft(input, actor, true);
+}
+
+/** Retry a failed, interrupted or out-of-date quote: template prose, current saved facts. */
+export function rebuildQuote(input: unknown, actor: InboxActor): Promise<Ok<object> | Fail> {
+  return rebuildDraft(input, actor, false);
 }
 
 /**
@@ -128,6 +165,11 @@ export async function approveAndSend(
     // quote) or another staff member's save since the page loaded refuses the send.
     if (draftVersion(draft.body, draft.quote) !== seen)
       return { ok: false, code: "STALE_DRAFT" } as const;
+    // The draft must have been priced from the enquiry's current saved facts, recomputed here
+    // under the enquiry lock: refused while a rebuild is in flight, after one failed, or when a
+    // field edit came after the draft was built (production QA-02).
+    const quoteState = quoteStateOf(row.extracted, draft);
+    if (quoteState !== "current") return { ok: false, code: QUOTE_REFUSAL[quoteState] } as const;
     const [sent] = await tx
       .update(replyDrafts)
       .set({

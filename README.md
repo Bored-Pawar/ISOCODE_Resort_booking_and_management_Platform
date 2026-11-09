@@ -1,6 +1,11 @@
 # Company A: resort booking app
 
-A coffee estate resort in Chikkamagaluru: direct booking with allotment control, an enquiry inbox and an AI router. Brand name is a placeholder (`src/lib/site.ts`). Docs in `docs/` are the source of truth; start with `docs/06-progress.md`. Deployment: [`deployment.md`](deployment.md).
+A coffee estate resort in Chikkamagaluru: direct booking with allotment control, an enquiry inbox and an AI router. Brand name is a placeholder (`src/lib/site.ts`).
+
+- **Live app:** https://isocode-resort-booking-and-manageme.vercel.app/
+- **Technical design (submission):** [`documents/TDD.pdf`](documents/TDD.pdf) ([Markdown source](documents/TDD.md))
+- **Run, deploy and reviewer tour:** [`deployment.md`](deployment.md)
+- Working docs for the build are in `docs/`; start with `docs/06-progress.md`.
 
 ## What it does
 

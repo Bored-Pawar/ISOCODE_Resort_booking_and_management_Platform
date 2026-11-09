@@ -2,21 +2,33 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, useToast } from "@/components/ui";
-import type { Extracted } from "@/modules/enquiries";
+import type { Extracted, RoomView } from "@/modules/enquiries";
 import type { Evidence } from "@/modules/enquiries/staff/display";
 import { EvidenceBadge } from "./badges";
 import { saveFieldsAction } from "../actions";
 
 const num = (v: string) => (v.trim() === "" ? null : Number(v));
 
-/** Q5 extracted fields. Saving logs `edited`; a dates or guests change rebuilds the draft. */
+const ROOM_HELP: Record<RoomView["source"], string> = {
+  message:
+    "From the guest's message. Type another room to replace it, or empty it to ask the guest.",
+  staff: "Set by staff. Empty it to ask the guest instead of quoting a room.",
+  cleared: "Cleared by staff: the draft asks the guest which room they want.",
+};
+
+/**
+ * Q5 extracted fields. Saving logs `edited`; a dates, guests or room change rebuilds the draft.
+ * The Room box shows the room the quote uses, so leaving it as shown keeps the guest's own choice.
+ */
 export function FieldsForm({
   enquiryId,
   extracted,
+  room,
   canEdit,
 }: {
   enquiryId: string;
   extracted: Extracted;
+  room: RoomView;
   canEdit: boolean;
 }) {
   const router = useRouter();
@@ -33,7 +45,7 @@ export function FieldsForm({
     adults: extracted.guests?.adults?.toString() ?? "",
     children: extracted.guests?.children?.toString() ?? "",
     budget: extracted.budget?.amountInr?.toString() ?? "",
-    room: extracted.room ?? "",
+    room: room.text ?? "",
     language: extracted.language ?? "",
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -113,6 +125,7 @@ export function FieldsForm({
           onChange={set("room")}
           maxLength={60}
           placeholder="For example Pool Villa"
+          help={ROOM_HELP[room.source]}
         />
         <Input label="Language" value={f.language} onChange={set("language")} maxLength={40} />
       </fieldset>
@@ -127,7 +140,7 @@ export function FieldsForm({
             Save fields
           </Button>
           <span className="text-xs text-muted">
-            Changing dates or guests rebuilds the unsent draft.
+            Changing dates, guests or room rebuilds the unsent draft.
           </span>
         </div>
       ) : null}

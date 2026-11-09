@@ -273,7 +273,9 @@ describe("re-route and field edits (tests 2, 4, 6)", () => {
         dates: { from: "2027-02-10", to: "2027-02-12" },
         guests: { adults: 30, children: 0 },
         budgetInr: 2000000,
-        room: null,
+        // The Room box shows the guest's own preference ("villa" in the fixture message); sending
+        // it back unchanged keeps it. Sending null would be an explicit clear (production QA-01).
+        room: "Any villa",
         language: "en",
       },
       f.actor("sales"),
