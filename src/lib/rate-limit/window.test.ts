@@ -28,19 +28,15 @@ describe("sliding window limiter", () => {
     for (let t = 1; t < 1000; t += 100) l.hit("a", t);
     expect(l.hit("a", 1000).ok).toBe(true);
   });
-  it("a flood of new keys cannot evict a live counter; new keys pass untracked while full", () => {
-    const l = createLimiter({ limit: 1, windowMs: 60_000 }, 100);
+  it("a flood of new keys cannot evict a live counter; overflow keys share one counted bucket", () => {
+    const l = createLimiter({ limit: 2, windowMs: 60_000 }, 100);
+    l.hit("victim", 0);
     l.hit("victim", 0);
     for (let i = 0; i < 500; i++) l.hit(`k${i}`, 1 + i);
     expect(l.check("victim", 600).ok).toBe(false);
-    expect(l.hit("fresh", 600).ok).toBe(true);
-    expect(l.hit("fresh", 601).ok).toBe(true); // untracked (fail open), never locks others out
-  });
-  it("unrecord refunds the newest hit", () => {
-    const l = createLimiter({ limit: 1, windowMs: 1000 });
-    l.hit("a", 0);
-    l.unrecord("a");
-    expect(l.check("a", 1).ok).toBe(true);
+    // The overflow bucket already took hits from the flood: fresh keys are limited, not free.
+    expect(l.check("fresh", 600).ok).toBe(false);
+    expect(l.check("fresh", 61_000).ok).toBe(true);
   });
   it("trusts x-forwarded-for only on Vercel", () => {
     const h = (o: Record<string, string>) => new Headers(o);

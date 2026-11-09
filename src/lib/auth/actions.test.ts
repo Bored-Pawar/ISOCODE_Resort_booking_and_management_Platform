@@ -141,11 +141,20 @@ describe("rate limits (H2)", () => {
     expect(signIn).toHaveBeenCalledTimes(8);
     expect(results.filter((r) => r?.error === RATE_LIMITED_MESSAGE)).toHaveLength(12);
   });
-  it("successful logins are never charged", async () => {
-    signIn.mockResolvedValue(undefined);
-    for (let i = 0; i < 20; i++)
-      await staffLoginAction(undefined, form({ email: "gm@example.test", password: SECRET }));
-    expect(signIn).toHaveBeenCalledTimes(20);
+  it("every attempt is charged, even one next-auth turns into a redirect (no refund path)", async () => {
+    signIn.mockRejectedValue(
+      Object.assign(new Error("NEXT_REDIRECT"), { digest: "NEXT_REDIRECT" }),
+    );
+    for (let i = 0; i < 8; i++)
+      await staffLoginAction(undefined, form({ email: "gm@example.test", password: SECRET })).catch(
+        () => undefined,
+      );
+    const res = await staffLoginAction(
+      undefined,
+      form({ email: "gm@example.test", password: SECRET }),
+    );
+    expect(res?.error).toBe(RATE_LIMITED_MESSAGE);
+    expect(signIn).toHaveBeenCalledTimes(8);
   });
   it("login: the ninth failed try for one email in 15 minutes is refused before signIn", async () => {
     signIn.mockRejectedValue(new AuthError("CredentialsSignin"));

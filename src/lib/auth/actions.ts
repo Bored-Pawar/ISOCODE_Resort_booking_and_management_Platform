@@ -11,7 +11,7 @@ import { credentialsSchema } from "./credentials";
 import { signIn, signOut } from "./config";
 import { safeNext } from "./safe-next";
 import { signUpSchema } from "./sign-up-schema";
-import { allow, loginGate, RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
+import { allow, allowLogin, RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
 import { LOGIN_FAILED } from "./messages";
 
 export type FormState =
@@ -65,20 +65,17 @@ async function login(
         issue.path[0] === "password" ? "Enter your password." : "Enter a valid email address.";
     return failed(prev, formData, { fieldErrors });
   }
-  // A hit is reserved before the password check (parallel guesses all count) and refunded when
-  // the login succeeds; the strict window is IP + email (02 Security 5).
-  const gate = await loginGate(parsed.data.email);
-  if (!gate.ok) return failed(prev, formData, { error: RATE_LIMITED_MESSAGE });
+  // Charged before the password check and never refunded; strict window IP + email (02 Security 5).
+  if (!(await allowLogin(parsed.data.email)))
+    return failed(prev, formData, { error: RATE_LIMITED_MESSAGE });
   try {
     await signIn(provider, {
       ...parsed.data,
       redirectTo: safeNext(formData.get("next"), fallback),
     });
-    gate.succeeded();
   } catch (err) {
     if (err instanceof AuthError) return failed(prev, formData, { error: LOGIN_FAILED });
-    gate.succeeded(); // the redirect on success (or a server error): not a wrong password
-    throw err;
+    throw err; // includes the redirect on success
   }
 }
 

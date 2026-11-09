@@ -8,8 +8,10 @@ const MIN = 60_000;
  * Limits per action, per instance, in memory. Each window is checked first and charged only when
  * every window passes, so a refused request spends nothing. The strict window is IP + id, so
  * knowing someone's email or phone is not enough to lock them out from elsewhere; the id-only
- * window is loose and caps distributed guessing. Login reserves a hit before the password check
- * (so parallel guesses are counted) and refunds it when the login succeeds.
+ * window is loose and caps distributed guessing. Every login attempt is charged before the
+ * password check (parallel guesses all count) and never refunded: next-auth's signIn outcome
+ * cannot be trusted to tell success from failure (a client header turns a failure into a
+ * redirect), so there is no refund path to abuse.
  */
 export const RATE_RULES = {
   login: {
@@ -97,20 +99,10 @@ export async function allow(action: RateAction, id?: string | null): Promise<boo
   return gate(windowsFor(limiters[action], ip, id ? normaliseId(id) : null), true);
 }
 
-/**
- * Login: when `ok`, one hit is already reserved in every window (so N parallel guesses count as
- * N). Call `succeeded()` after a correct password to refund it; failures keep the charge.
- */
-export async function loginGate(email: string): Promise<{ ok: boolean; succeeded: () => void }> {
+/** Login: checks and charges every window before the password check. */
+export async function allowLogin(email: string): Promise<boolean> {
   const ip = await clientIp();
-  const windows = windowsFor(limiters.login, ip, normaliseId(email));
-  const ok = gate(windows, true);
-  return {
-    ok,
-    succeeded: () => {
-      if (ok) for (const [lim, k] of windows) if (k !== null) lim.unrecord(k);
-    },
-  };
+  return gate(windowsFor(limiters.login, ip, normaliseId(email)), true);
 }
 
 /** Test helper. */
