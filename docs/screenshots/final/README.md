@@ -17,7 +17,7 @@ Also:
 ## Fixed in this phase (the first walk found 26 checks with findings)
 - Badge text on its own 10% tint failed AA: `--warning` `#A86A12` to `#8A560C`, `--success` `#2E7D4F` to `#276B43` (`05` updated). This was every contrast finding (bookings, promos, inbox, enquiry detail, account, pay, room cards).
 - Home hero: the section has a dark base, so the white heading and tagline stay readable before (or without) the photo.
-- Room photo strip on phones (several photos) is a horizontal scroller: now focusable, with an inset focus ring.
+- Room photo strip on phones (several photos) is a horizontal scroller: now focusable, with an inset focus ring. On desktop (a grid, nothing to scroll) it is still one tab stop; left as is.
 
 ## Not verified
 - Loading, empty and error states were not forced or captured; the screenshots show the loaded state with seed data. (Suspense skeletons, lane empty texts and inline action errors exist in the code from earlier sprints, but this phase did not look at them rendered.)

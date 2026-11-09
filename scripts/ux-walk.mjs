@@ -36,7 +36,7 @@ async function deadLinks(page, persona) {
   const dead = [];
   // Page routes only: API routes and downloads are skipped so a GET with an effect is never hit.
   for (const href of new Set(
-    hrefs.filter((h) => !h.startsWith("/api/") && !/\.ics(\?|$)/.test(h)),
+    hrefs.filter((h) => !h.startsWith("/api/") && !/(\/ics|\.ics)(\?|$)/.test(h)),
   )) {
     const key = `${persona}|${href}`;
     if (!linkChecked.has(key)) {
@@ -165,6 +165,7 @@ let payPath = null;
   await page.getByRole("button", { name: "Hold my rooms" }).click();
   await page.waitForURL(/\/book\/pay\/CA-/, { timeout: 90_000 });
   payPath = new URL(page.url()).pathname;
+  if (!confirmed) throw new Error("no CONFIRMED booking for the seeded guest; reseed first");
   await ctx.close();
 }
 

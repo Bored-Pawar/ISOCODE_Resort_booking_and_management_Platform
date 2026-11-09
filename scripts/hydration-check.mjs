@@ -66,7 +66,6 @@ await session(
   "Work email",
 );
 await browser.close();
-const visited = [];
 console.log(JSON.stringify(hits, null, 2));
 writeFileSync(
   "docs/screenshots/final/hydration.json",
