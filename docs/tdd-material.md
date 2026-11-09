@@ -76,7 +76,7 @@ flowchart LR
   ING["enquiries.ingestFrom: Zod, secret header, ai_status=pending"] --> Q[("enquiries")]
   Q --> CL["claim SKIP LOCKED (after, sweep, cron)"]
   CL --> PII["redact PII"]
-  PII --> P{"ai-provider: groq, google, anthropic, local; 10 s x 2; Zod"}
+  PII --> P{"ai-provider: groq, google, anthropic, local or rules; 10 s x 2; Zod"}
   P -- "error or invalid" --> R["rules fallback, confidence 0.5 max"]
   P -- "ok" --> G["ground dates and party against raw text"]
   R --> G
@@ -122,7 +122,7 @@ Count: 20 tables in `src/db/schema/*.ts` (S0 had 19 tables, 23 CHECKs, `docs/tdd
 | `notifications` | kind CHECK IN ('complaint','unsorted'); read_at |
 | `export_runs` | run_date UNIQUE (A7 export, not built) |
 
-Seed (`docs/03-data-model.md`, `src/db/seed/data.ts`, `docs/tdd-notes.md` F3): 4 room types (Plantation Room 40 units / allotment 16 / max occupancy 3; Estate Suite 24 / 10 / 4; Garden Villa 8 / 3 / 5; Pool Villa 4 / 2 / 6); 12 photos; 3 plans per type (EP, CP +Rs 800, MAP +Rs 2,200, MAP non-refundable); 180 days of rates and inventory with season multipliers (Dec, Jan 1.3; Jun to Aug 0.8); GST slabs 5% to Rs 7,500 and 18% above, effective 2025-09-22; promos WELCOME10 (10%, active), HILLS1000 (flat Rs 1,000, active), MONSOON20 (20%, inactive); 2 blackouts; 3 staff + 2 guests; 30 bookings across all states, 36 room lines, 5 multi-room (`docs/s2-multiroom-handoff.md`); 30 labelled enquiries (`src/db/seed/enquiries.data.ts`).
+Seed (`docs/03-data-model.md`, `src/db/seed/data.ts`, `docs/tdd-notes.md` F3): 4 room types (Plantation Room 40 units / allotment 16 / max occupancy 3; Estate Suite 24 / 10 / 4; Garden Villa 8 / 3 / 5; Pool Villa 4 / 2 / 6); 12 photos; 3 plans per type (EP, CP +Rs 800, MAP +Rs 2,200, MAP non-refundable); 180 days of rates and inventory with season multipliers (Dec, Jan 1.3; Jun to Aug 0.8; other months 0.85 to 1.1); GST slabs 5% to Rs 7,500 and 18% above, effective 2025-09-22; promos WELCOME10 (10%, active), HILLS1000 (flat Rs 1,000, active), MONSOON20 (20%, inactive); 2 blackouts; 3 staff + 2 guests; 30 bookings across all states, 36 room lines, 5 multi-room (`docs/s2-multiroom-handoff.md`); 30 labelled enquiries (`src/db/seed/enquiries.data.ts`).
 
 Schema gaps recorded: no FK indexes such as `payments.booking_id` (`docs/06-progress.md` S0 open question 3); no index on `enquiry_events.enquiry_id`, summary search `ILIKE` on jsonb (`docs/s3-overnight-handoff.md`); no unique index on `extracted->'source'` (`docs/tdd-notes.md` Q1).
 
@@ -191,7 +191,7 @@ Source: `docs/04-ai-router.md`, `docs/s2-ai-provider-setup.md`, `src/modules/ai-
 | `rules` | no key, no network; keyword classifier, confidence 0.5 (0.3 for `other`, `src/modules/ai-router/fallback.ts`), always unsorted |
 
 - Missing credentials or model -> sanitized `NOT_CONFIGURED` -> rules fallback. No hosted model id guessed when unset.
-- Timeouts: 10 s per attempt for every provider (`ATTEMPT_TIMEOUT_MS = 10_000`, `execute.ts`), at most one transient retry, Retry-After capped at 1 s: max 21 s provider budget, below the 120 s stale lease. `maxOutputTokens: 1800` (`transport.ts`).
+- Timeouts: 10 s per attempt for every provider (`ATTEMPT_TIMEOUT_MS = 10_000`, `execute.ts`), at most one transient retry, a 429 retried only if Retry-After is 1 s or less: max 21 s provider budget, below the 120 s stale lease. `maxOutputTokens: 1800` (`transport.ts`).
 - **Groq key failover** (`docs/04-ai-router.md`; `docs/06-progress.md` S3 Phase 0): keys `GROQ_API_KEY_1` to `_4` in order, empty skipped; 429 or 401/403 cools that key in memory per instance for Retry-After, else 60 s (`KEY_COOLDOWN_MS = 60_000`), next key tried at once inside the same 10 s attempt; each key at most once per attempt; timeouts and 5xx keep the normal one retry; all failing or cooling -> `RATE_LIMIT` / `NOT_CONFIGURED` -> rules fallback (unsorted). Only log line `groq key rotated` with a count; no key value or slot anywhere. Groq called with non-strict `json_schema` (`providerOptions.groq.strictJsonSchema = false`) because strict mode rejected optional properties with HTTP 400 (`docs/eval/r5-results.md`).
 
 ### Schema (router-owned Zod, `src/modules/ai-router/schema.ts`)
@@ -240,7 +240,7 @@ Earlier evidence: rules-only smoke 5/5 and 30/30 labels, all unsorted (`docs/s2-
 
 ---
 
-**Phase 6 model finding** (`docs/final-check.md`, `docs/eval/r5-results.md` addendum): `openai/gpt-oss-20b` sometimes answers with the JSON schema itself, which fails validation; that caused the 9 R5 fallbacks. On `openai/gpt-oss-120b` the same 30 cases give 29/30 valid answers, 28/30 correct, 1/30 fallback, complaint recall 5/5. 120b is the suggested `AI_MODEL`. Groq free tier: 8,000 tokens per minute per organisation, about 2,500 tokens per classification; keys from one organisation share that limit.
+**Phase 6 model finding** (`docs/final-check.md`, `docs/eval/r5-results.md` addendum): `openai/gpt-oss-20b` sometimes answers with the JSON schema itself, which fails validation; the likely cause of most of the 9 R5 fallbacks (no per-row sub-reason recorded, so not proven for each). Switching to 120b is a mitigation, not a cure (one `INVALID_RESPONSE` left, ENQ-4397). On `openai/gpt-oss-120b` the same 30 cases give 29/30 valid answers, 28/30 correct, 1/30 fallback, complaint recall 5/5. 120b is the suggested `AI_MODEL`. Groq free tier: 8,000 tokens per minute per organisation, about 2,500 tokens per classification; keys from one organisation share that limit.
 
 ## 6. UI decisions per key screen
 
@@ -289,7 +289,7 @@ From `docs/00-requirements.md` Assumptions log:
 Pricing, tax, promos:
 - [A] GST slabs 5% up to Rs 7,500 per night and 18% above, bounds inclusive, effective 2025-09-22; verify before go-live. (`docs/06-progress.md` 2026-11-07, `src/db/seed/data.ts`)
 - [A] GST schedules are complete sets per `effective_from`, no fallback to older schedules; missing slab -> `NO_RATE`. (`docs/06-progress.md` 2026-11-08)
-- [A] Weekend rates = Fri and Sat nights; season multipliers Dec/Jan 1.3, Jun to Aug 0.8. (`docs/07-backlog.md` A1, `src/db/seed/data.ts`)
+- [A] Weekend rates = Fri and Sat nights; season multipliers Dec/Jan 1.3, Jun to Aug 0.8, other months 0.85 to 1.1. (`docs/07-backlog.md` A1, `src/db/seed/data.ts`)
 - [A] Rate plans EP, CP (+Rs 800), MAP (+Rs 2,200); MAP non-refundable. (`src/db/seed/data.ts`)
 - [A] Website allotment seeded at about 40% of units (16, 10, 3, 2); the rest is agency stock. (`docs/03-data-model.md`, `src/db/seed/data.ts`)
 - [A] Rate edits: whole rupees 1 to 5,00,000, dates today IST to today + 179 (180 day horizon). (`docs/01-booking-core.md` A1)
@@ -331,7 +331,7 @@ AI:
 - [A] Free-tier providers receive synthetic data only. (`docs/04-ai-router.md`)
 - [A] Rules provider confidence capped at 0.5 (0.3 for `other`), so always unsorted. (`docs/04-ai-router.md`, `src/modules/ai-router/fallback.ts`)
 - [A] Unsorted threshold confidence < 0.70; category `other` always unsorted. (`docs/04-ai-router.md`, `src/modules/ai-router/routing.ts`)
-- [A] 10 s per attempt, one retry, Retry-After cap 1 s (21 s budget); 120 s stale lease; 3 attempt cap. (`docs/04-ai-router.md`)
+- [A] 10 s per attempt, one retry, a 429 retried only if Retry-After is 1 s or less (21 s budget); 120 s stale lease; 3 attempt cap. (`docs/04-ai-router.md`)
 - [A] Groq key cool-down 60 s without Retry-After; in memory per instance; suggested model `openai/gpt-oss-120b` (Phase 6; `gpt-oss-20b` in Phase 0). (`docs/04-ai-router.md`)
 - [A] AI price estimates cover EP room-only plans, up to 4 lines and 180 nights; indicative, never a hold. (`docs/s2-ai-provider-setup.md`)
 - [A] Omitted year -> next non-past occurrence; omitted children -> estimate assuming none (disclosed). (`docs/04-ai-router.md`)
@@ -352,8 +352,8 @@ Platform and performance:
 | Suite | Command | Files | Tests | Result |
 |---|---|---|---|---|
 | Unit | `pnpm test` | 78 (72 under `src/`, 6 under `tests/unit/`) | 735 | 735 / 735 pass |
-| Integration (PostgreSQL) | `pnpm test:integration -- --no-file-parallelism` (`AI_PROVIDER=rules`) | 20 (`tests/integration/*.test.ts`) | 176 | 176 / 176 pass, one file at a time on test-claude |
-| Playwright | `pnpm test:e2e` (`E2E_BASE_URL`) | 3 (`e2e/*.spec.ts`) | 6 | 6 / 6 pass against `pnpm dev` |
+| Integration (PostgreSQL) | `AI_PROVIDER=rules pnpm exec vitest run --project integration --no-file-parallelism <file>`, each file, on `main` at b8b589f | 20 (`tests/integration/*.test.ts`) | 176 | 176 / 176 pass, one file at a time on test-claude |
+| Playwright | `E2E_BASE_URL=http://localhost:3300 pnpm test:e2e` against `DEV_TOOLS_ENABLED=true pnpm dev` | 3 (`e2e/*.spec.ts`) | 6 | 6 / 6 pass against `pnpm dev` |
 | Typecheck, lint, format, build | | | | pass |
 | Acceptance walk + 3 brief enquiries | `scripts/acceptance.mts`, `docs/final-check.md` | | 24 | 24 / 24 pass (Groq `openai/gpt-oss-120b`); ENQ-4410 wedding to sales, ENQ-4411 room to reservations with a server quote, ENQ-4412 offsite to sales |
 | UX walk (Phase 5) | `scripts/ux-walk.mjs` | | 72 | 0 findings |
@@ -419,7 +419,7 @@ Last recorded counts before Phase 6 (`docs/s3-overnight-handoff.md` Gates): Phas
 - Rate limits per instance and in memory; the email-only login window (50) can be exhausted by a distributed attacker (`docs/s3-overnight-handoff.md`, `deployment.md`).
 - CSP `'unsafe-inline'` scripts (`deployment.md`).
 - LCP about 3.0 to 3.2 s on `/`, `/rooms`, room page, `/book/details` (Slow 4G, local), over the 2.5 s target; `/enquire` 0.76 s; JS within budget (own JS 13 to 26 KB) (`docs/perf/h3-results.md`).
-- Groq: 9/30 answers fail and go to unsorted; draft template fallback 47% (Groq), under-30% target unmet (`docs/eval/r5-results.md`, `docs/reviews/r1-r4-draft-guard-evaluation.md`).
+- Groq: on `gpt-oss-20b` 9/30 answers failed to unsorted and draft template fallback was 47%; on `gpt-oss-120b` (now suggested) 1/30 fallback, 6/30 unsorted, draft template fallback 7/30 (`docs/final-check.md`); the under-30% template target was unmet on 20b (`docs/eval/r5-results.md`, `docs/reviews/r1-r4-draft-guard-evaluation.md`).
 - PII redaction pattern limits (`docs/04-ai-router.md`).
 - Expiry sweep is one statement over all expired holds, not batched (`docs/01-booking-core.md`, `docs/06-progress.md` B10).
 - Promo use overshoot past `max_uses` under concurrency (`docs/01-booking-core.md`).
@@ -439,7 +439,7 @@ Last recorded counts before Phase 6 (`docs/s3-overnight-handoff.md` Gates): Phas
 ### Next steps
 - Deploy: set env names in Vercel, run guarded `pnpm db:deploy`, confirm production Neon region is us-east-2 (`deployment.md`).
 - Shared rate-limit store (Upstash or Postgres) (`docs/02-architecture.md` Security 5).
-- Groq: a Groq-friendly schema (all fields required, nullable), higher output cap or `openai/gpt-oss-120b`; record a sanitized sub-reason per eval row (`docs/eval/r5-results.md`, `docs/s3-overnight-handoff.md`).
+- Groq: done in Phase 6, `openai/gpt-oss-120b` suggested (a mitigation). Still open: a Groq-friendly schema (all fields required, nullable) and a sanitized sub-reason per eval row (`docs/eval/r5-results.md`, `docs/s3-overnight-handoff.md`).
 - Draft guard quality toward the under-30% fallback target (`docs/reviews/r1-r4-draft-guard-evaluation.md`).
 - Performance: smaller mobile hero crop (under 25 KB), trim shared root-layout client code (about 24 KB), real-device and CrUX numbers after deploy (`docs/perf/h3-results.md` Not done).
 - Migration for inbox indexes (`enquiry_events.enquiry_id`, search) and a unique index on `extracted->'source'` (`docs/s3-overnight-handoff.md`, `docs/tdd-notes.md` Q1).
