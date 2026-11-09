@@ -24,7 +24,7 @@ pnpm db:reset && pnpm db:seed     # drops everything, migrates, seeds demo data 
 pnpm dev                          # http://localhost:3000
 ```
 
-AI: `AI_PROVIDER=rules` works without any key. For live classification set `AI_PROVIDER=groq`, `AI_MODEL=openai/gpt-oss-20b` and `GROQ_API_KEY_1` (up to `_4`). Dev tools: `DEV_TOOLS_ENABLED=true` opens `/dev` (UI kit, inbound email and WhatsApp simulator, mock outbox, dev tools sign in); leave it off in production unless the demo needs the outbox.
+AI: `AI_PROVIDER=rules` works without any key. For live classification set `AI_PROVIDER=groq`, `AI_MODEL=openai/gpt-oss-120b` and `GROQ_API_KEY_1` (up to `_4`). Dev tools: `DEV_TOOLS_ENABLED=true` opens `/dev` (UI kit, inbound email and WhatsApp simulator, mock outbox, dev tools sign in); leave it off in production unless the demo needs the outbox.
 
 Local Docker URL: `postgresql://resort:resort@localhost:5432/resort`.
 `AUTH_SECRET` can be any long random string (`openssl rand -base64 32`).

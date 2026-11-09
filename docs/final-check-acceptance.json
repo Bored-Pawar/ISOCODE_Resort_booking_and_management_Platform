@@ -1,0 +1,152 @@
+{
+  "at": "2026-11-09T04:53:35.795Z",
+  "base": "http://localhost:3300",
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "checks": [
+    {
+      "id": "A1",
+      "check": "search shows rooms with prices incl. GST",
+      "pass": true,
+      "evidence": "/rooms with dates: rupee prices, GST, rooms left"
+    },
+    {
+      "id": "A2",
+      "check": "room page shows availability and price incl. GST",
+      "pass": true,
+      "evidence": "/rooms/garden-villa with dates"
+    },
+    {
+      "id": "A3",
+      "check": "roles: sales cannot open Rates or the Unsorted lane",
+      "pass": true,
+      "evidence": "rates 403 screen=true, unsorted tab shown=false, active lane \"Inbox Inbox Mine\""
+    },
+    {
+      "id": "A4",
+      "check": "roles: signed-out /admin goes to staff login",
+      "pass": true,
+      "evidence": "/admin/login?next=%2Fadmin"
+    },
+    {
+      "id": "A5",
+      "check": "GM pages load: rates, allotment, promos, bookings",
+      "pass": true,
+      "evidence": "/admin/rates, /admin/allotment, /admin/promos, /admin/bookings"
+    },
+    {
+      "id": "A6",
+      "check": "web form enquiry stored with a reference",
+      "pass": true,
+      "evidence": "ENQ-4HZZL"
+    },
+    {
+      "id": "A7.1",
+      "check": "inbound email accepted (ENQ-4410)",
+      "pass": true,
+      "evidence": "200 ENQ-WBCQL"
+    },
+    {
+      "id": "A7.2",
+      "check": "inbound whatsapp accepted (ENQ-4411)",
+      "pass": true,
+      "evidence": "200 ENQ-DDE4J"
+    },
+    {
+      "id": "A7.3",
+      "check": "inbound email accepted (ENQ-4412)",
+      "pass": true,
+      "evidence": "200 ENQ-4SCXP"
+    },
+    {
+      "id": "A7.4",
+      "check": "inbound email accepted (complaint)",
+      "pass": true,
+      "evidence": "200 ENQ-T67U9"
+    },
+    {
+      "id": "A7.5",
+      "check": "inbound whatsapp accepted (ambiguous)",
+      "pass": true,
+      "evidence": "200 ENQ-CPFJW"
+    },
+    {
+      "id": "A7.6",
+      "check": "inbound with a wrong secret is refused",
+      "pass": true,
+      "evidence": "401"
+    },
+    {
+      "id": "A8 ENQ-4410",
+      "check": "brief enquiry: wedding to sales",
+      "pass": true,
+      "evidence": "ai=ok category=wedding confidence=0.96 lane=sorted owner=sales draft=no quote"
+    },
+    {
+      "id": "A10 ENQ-4410",
+      "check": "a draft exists and is not sent or approved",
+      "pass": true,
+      "evidence": "sentAt=null approvedBy=null"
+    },
+    {
+      "id": "A8 ENQ-4411",
+      "check": "brief enquiry: room to reservations",
+      "pass": true,
+      "evidence": "ai=ok category=room confidence=0.97 lane=sorted owner=reservations draft=with server quote"
+    },
+    {
+      "id": "A9",
+      "check": "room enquiry draft carries a server quote",
+      "pass": true,
+      "evidence": "ai=ok category=room confidence=0.97 lane=sorted owner=reservations draft=with server quote"
+    },
+    {
+      "id": "A10 ENQ-4411",
+      "check": "a draft exists and is not sent or approved",
+      "pass": true,
+      "evidence": "sentAt=null approvedBy=null"
+    },
+    {
+      "id": "A8 ENQ-4412",
+      "check": "brief enquiry: offsite to sales",
+      "pass": true,
+      "evidence": "ai=ok category=offsite confidence=0.96 lane=sorted owner=sales draft=no quote"
+    },
+    {
+      "id": "A10 ENQ-4412",
+      "check": "a draft exists and is not sent or approved",
+      "pass": true,
+      "evidence": "sentAt=null approvedBy=null"
+    },
+    {
+      "id": "A8 complaint",
+      "check": "complaint flagged and alerts the GM",
+      "pass": true,
+      "evidence": "ai=ok category=complaint confidence=0.96 lane=sorted owner=gm draft=no quote gmAlert=true"
+    },
+    {
+      "id": "A10 complaint",
+      "check": "a draft exists and is not sent or approved",
+      "pass": true,
+      "evidence": "sentAt=null approvedBy=null"
+    },
+    {
+      "id": "A8 ambiguous",
+      "check": "low confidence goes to unsorted (no owner)",
+      "pass": true,
+      "evidence": "ai=ok category=other confidence=0.60 lane=unsorted owner=null draft=no quote"
+    },
+    {
+      "id": "A10 ambiguous",
+      "check": "a draft exists and is not sent or approved",
+      "pass": true,
+      "evidence": "sentAt=null approvedBy=null"
+    },
+    {
+      "id": "A11",
+      "check": "web form enquiry processed",
+      "pass": true,
+      "evidence": "ai=ok category=room lane=sorted owner=reservations"
+    }
+  ]
+}
