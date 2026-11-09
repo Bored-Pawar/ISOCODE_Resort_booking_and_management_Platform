@@ -43,6 +43,8 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   // The stay builder on /rooms replaced the /book cart; old links keep their query (dates, cart).
   poweredByHeader: false,
+  // H3: the hero (LCP) is served at q=60 behind a dark gradient; everything else keeps 75.
+  images: { qualities: [60, 75] },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
