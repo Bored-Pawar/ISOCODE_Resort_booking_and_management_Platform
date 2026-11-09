@@ -6,3 +6,6 @@ coverage
 docs
 AGENTS.md
 CLAUDE.md
+
+# Submission documents (generated PDF, hand-written Markdown)
+documents/
