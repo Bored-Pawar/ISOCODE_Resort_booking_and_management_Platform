@@ -1,8 +1,8 @@
 # TDD material pack (S3 Phase 8)
 
-Raw material for the Technical Design Document. Facts, numbers and repo-relative links only. Every number cites the file it came from. `(unverified)` = could not be confirmed from a file. `<Phase 6>` = filled after the Phase 6 verification run.
+Raw material for the Technical Design Document. Facts, numbers and repo-relative links only. Every number cites the file it came from. `(unverified)` = could not be confirmed from a file. Phase 6 numbers come from `docs/final-check.md`.
 
-Written on branch `claude/s3-tdd-pack` from `main` at `b8b589f` (Phase 7 merge). Phase 5 (`claude/s3-ux`) was not merged into this base; its screenshot index is read from `origin/claude/s3-ux`.
+Written on branch `claude/s3-tdd-pack` from `main` at `b8b589f`; Phase 5 (merged at `38ff922`) and Phase 6 results added before merge.
 
 ---
 
@@ -185,7 +185,7 @@ Source: `docs/04-ai-router.md`, `docs/s2-ai-provider-setup.md`, `src/modules/ai-
 | Value | Use |
 |---|---|
 | `google` | documented demo default (Gemini free tier; free-tier content may be used by Google, so synthetic data only) |
-| `groq` | `@ai-sdk/groq`, suggested `openai/gpt-oss-20b`; used for R5 and set in `.env.local` (`docs/s3-overnight-handoff.md`) |
+| `groq` | `@ai-sdk/groq`, suggested `openai/gpt-oss-120b` since Phase 6 (R5 ran on `gpt-oss-20b`) and set in `.env.local` (`docs/s3-overnight-handoff.md`) |
 | `anthropic` | optional production option |
 | `local` | Ollama / OpenAI-compatible at `LOCAL_AI_BASE_URL`; benchmark recommended Qwen3 4B locally (`docs/reviews/r1-r4-ollama-model-benchmark.md`) |
 | `rules` | no key, no network; keyword classifier, confidence 0.5 (0.3 for `other`, `src/modules/ai-router/fallback.ts`), always unsorted |
@@ -240,11 +240,13 @@ Earlier evidence: rules-only smoke 5/5 and 30/30 labels, all unsorted (`docs/s2-
 
 ---
 
+**Phase 6 model finding** (`docs/final-check.md`, `docs/eval/r5-results.md` addendum): `openai/gpt-oss-20b` sometimes answers with the JSON schema itself, which fails validation; that caused the 9 R5 fallbacks. On `openai/gpt-oss-120b` the same 30 cases give 29/30 valid answers, 28/30 correct, 1/30 fallback, complaint recall 5/5. 120b is the suggested `AI_MODEL`. Groq free tier: 8,000 tokens per minute per organisation, about 2,500 tokens per classification; keys from one organisation share that limit.
+
 ## 6. UI decisions per key screen
 
-Design direction "Quiet estate" (`docs/05-design-system.md`): one accent (`--accent #2F4A3A` estate green) only for the primary action; warm paper `--bg #FAF8F4`; Fraunces (self-hosted via `next/font`) for headings and guest prices, system sans for UI; 4px spacing base; 44px tap targets; borders over shadows; light theme only; status colour always paired with a word or icon; copy voice "₹12,400 incl. ₹1,890 GST". Phase 5 changed `--warning` `#A86A12` -> `#8A560C` and `--success` `#2E7D4F` -> `#276B43` for AA badge contrast (`docs/screenshots/final/README.md` on `origin/claude/s3-ux`; that branch is not in this base, so `docs/05-design-system.md` here still shows the old values).
+Design direction "Quiet estate" (`docs/05-design-system.md`): one accent (`--accent #2F4A3A` estate green) only for the primary action; warm paper `--bg #FAF8F4`; Fraunces (self-hosted via `next/font`) for headings and guest prices, system sans for UI; 4px spacing base; 44px tap targets; borders over shadows; light theme only; status colour always paired with a word or icon; copy voice "₹12,400 incl. ₹1,890 GST". Phase 5 changed `--warning` `#A86A12` -> `#8A560C` and `--success` `#2E7D4F` -> `#276B43` for AA badge contrast (`docs/screenshots/final/README.md`, `docs/05-design-system.md`).
 
-Screenshots: `docs/screenshots/final/<screen>-<desktop|mobile>.jpg` (desktop 1280px, mobile 375px), from `origin/claude/s3-ux` (not yet on `main` at `b8b589f`). Phase 5 walk: 72 screen checks (36 screens x 2 widths), 0 with findings after fixes (axe-core 4.10 WCAG 2.1 A/AA serious+critical, console, horizontal scroll, internal links, focus ring); hydration warnings 0; keyboard check covered booking start only (`docs/screenshots/final/README.md`).
+Screenshots: `docs/screenshots/final/<screen>-<desktop|mobile>.jpg` (desktop 1280px, mobile 375px), (index: `docs/screenshots/final/README.md`). Phase 5 walk: 72 screen checks (36 screens x 2 widths), 0 with findings after fixes (axe-core 4.10 WCAG 2.1 A/AA serious+critical, console, horizontal scroll, internal links, focus ring); hydration warnings 0; keyboard check covered booking start only (`docs/screenshots/final/README.md`).
 
 | Screen | Path | Key decisions (source) | Screenshots |
 |---|---|---|---|
@@ -330,7 +332,7 @@ AI:
 - [A] Rules provider confidence capped at 0.5 (0.3 for `other`), so always unsorted. (`docs/04-ai-router.md`, `src/modules/ai-router/fallback.ts`)
 - [A] Unsorted threshold confidence < 0.70; category `other` always unsorted. (`docs/04-ai-router.md`, `src/modules/ai-router/routing.ts`)
 - [A] 10 s per attempt, one retry, Retry-After cap 1 s (21 s budget); 120 s stale lease; 3 attempt cap. (`docs/04-ai-router.md`)
-- [A] Groq key cool-down 60 s without Retry-After; in memory per instance; suggested model `openai/gpt-oss-20b`. (`docs/04-ai-router.md`)
+- [A] Groq key cool-down 60 s without Retry-After; in memory per instance; suggested model `openai/gpt-oss-120b` (Phase 6; `gpt-oss-20b` in Phase 0). (`docs/04-ai-router.md`)
 - [A] AI price estimates cover EP room-only plans, up to 4 lines and 180 nights; indicative, never a hold. (`docs/s2-ai-provider-setup.md`)
 - [A] Omitted year -> next non-past occurrence; omitted children -> estimate assuming none (disclosed). (`docs/04-ai-router.md`)
 - [A] PII redaction is pattern-based minimization, not full entity recognition. (`docs/04-ai-router.md`)
@@ -346,14 +348,15 @@ Platform and performance:
 
 ## 8. Test evidence
 
-### Final counts (Phase 6, running now)
+### Final counts (Phase 6, `docs/final-check.md`)
 | Suite | Command | Files | Tests | Result |
 |---|---|---|---|---|
-| Unit | `pnpm test` | 78 (72 under `src/`, 6 under `tests/unit/`) | `<Phase 6>` | `<Phase 6>` |
-| Integration (PostgreSQL) | `pnpm test:integration -- --no-file-parallelism` (`AI_PROVIDER=rules`) | 20 (`tests/integration/*.test.ts`) | `<Phase 6>` | `<Phase 6>` |
-| Playwright | `pnpm test:e2e` (`E2E_BASE_URL`) | 3 (`e2e/*.spec.ts`) | `<Phase 6>` | `<Phase 6>` |
-| Typecheck, lint, format, build | | | | `<Phase 6>` |
-| Acceptance walk + 3 brief enquiries | `docs/final-check.md` | | | `<Phase 6>` |
+| Unit | `pnpm test` | 78 (72 under `src/`, 6 under `tests/unit/`) | 735 | 735 / 735 pass |
+| Integration (PostgreSQL) | `pnpm test:integration -- --no-file-parallelism` (`AI_PROVIDER=rules`) | 20 (`tests/integration/*.test.ts`) | 176 | 176 / 176 pass, one file at a time on test-claude |
+| Playwright | `pnpm test:e2e` (`E2E_BASE_URL`) | 3 (`e2e/*.spec.ts`) | 6 | 6 / 6 pass against `pnpm dev` |
+| Typecheck, lint, format, build | | | | pass |
+| Acceptance walk + 3 brief enquiries | `scripts/acceptance.mts`, `docs/final-check.md` | | 24 | 24 / 24 pass (Groq `openai/gpt-oss-120b`); ENQ-4410 wedding to sales, ENQ-4411 room to reservations with a server quote, ENQ-4412 offsite to sales |
+| UX walk (Phase 5) | `scripts/ux-walk.mjs` | | 72 | 0 findings |
 
 Last recorded counts before Phase 6 (`docs/s3-overnight-handoff.md` Gates): Phase 7 unit 735/735, build ok; Phase 1 integration inbox 18/18, ai-processing 17/17, ai-routing 17/17; Phase 2 auth 4/4, e2e headers 4/4. Earlier full integration runs: 122/122 in 14 files (`docs/reviews/r1-r4-main-integration-report.md`); 88/88 in 12 files (`docs/s2-booking-handoff.md`); 71/71 in 7 files incl. 9 mandatory as 1-line carts and 8 B10 tests (`docs/s2-multiroom-handoff.md`); 60/60 in 6 files, 744.98 s (`docs/s1-b3-b5-handoff.md`).
 
@@ -398,7 +401,7 @@ Last recorded counts before Phase 6 (`docs/s3-overnight-handoff.md` Gates): Phas
 | S3 Phase 2 polish and security | review subagent | 1 review + 4 rechecks of the rate limiter; majors and 2 blockers fixed | rate limiter design (charge all windows before refund-free check, overflow bucket, IP only on Vercel, auth HTTP endpoints 404) (`docs/s3-overnight-handoff.md`, `docs/02-architecture.md` Security 5; per-finding list unverified) |
 | S3 Phase 3 R5 | review subagent | 1 major (wording), recheck 0/0 | wording of R5 findings (`docs/s3-overnight-handoff.md`) |
 | S3 Phase 4 H3 | review subagent | 1 major (after-batch), recheck 0/0 | re-measured after batch on committed code (`docs/perf/h3-results.md` raw-after) |
-| S3 Phase 5 UX | review subagent | 2 majors fixed, in recheck (not merged at this base) | commit `dcd4bce`: confirmed booking shot, shots before focus probe, page-only link check, strip tab stop, README honesty (`git log origin/claude/s3-ux`) |
+| S3 Phase 5 UX | review subagent | 2 majors fixed, recheck 0 blockers / 0 majors, merged `38ff922` | commit `dcd4bce`: confirmed booking shot, shots before focus probe, page-only link check, strip tab stop, README honesty (`git log origin/claude/s3-ux`) |
 | S3 Phase 7 deploy prep | review subagent | 0/0, doc minors fixed | merged `b8b589f` |
 
 ---
