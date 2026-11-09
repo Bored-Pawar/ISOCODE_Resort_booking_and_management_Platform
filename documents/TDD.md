@@ -528,6 +528,8 @@ Staff screens are denser: tables with sticky headers, tabular numbers and inline
 
 </div>
 
+**Simulator and mock outbox.** `/dev/test` posts provider shaped email and WhatsApp payloads through the real webhooks. `/dev/outbox` shows booking confirmation emails and approved replies; nothing is actually sent.
+
 ### Performance on slow hill networks
 
 Lighthouse 13.6.0 on the live site, mobile, simulated Slow 4G, median of three runs (production QA, 9 November 2026):
@@ -580,7 +582,7 @@ All five medians are under the 2.5 s target. `/rooms` had two runs with long tas
 | PostgreSQL inbox suite (`inbox.test.ts`) | 18 of 18 pass | |
 | Full PostgreSQL integration suite | Did not complete today (local memory limit) | Last full run: 176 of 176 pass |
 | Typecheck, lint, production build | Pass | `pnpm typecheck && pnpm lint && pnpm build` |
-| Playwright end to end | 6/6 at the last run (Phase 6, against a local build) | Not rerun today; today's browser checks ran on the live site instead (below) |
+| Playwright end to end | 6/6 at the last run (Phase 6, against a local build) | Not rerun today. The production QA browser checks on the live site are summarised below |
 
 **What the tests cover.** The nine mandatory booking invariants (section 6b), multi room races and deadlock checks, hold idempotency, admin editors racing holds, GST boundaries, AI claim and recovery with `SKIP LOCKED`, the three attempt cap, complaint alerts, grounding, the price guard, PII redaction, provider failover, and since today the quote lifecycle: named villa kept on date and guest edits, staff room beats the message, room only edit cannot be approved from a stale tab, a forced rebuild failure and an in flight rebuild refuse approval, and a send racing an edit matches the facts at send time.
 
