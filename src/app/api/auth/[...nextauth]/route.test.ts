@@ -12,6 +12,8 @@ it("refuses the HTTP credentials endpoints, which would skip the login rate limi
     "/api/auth/callback/guest",
     "/api/auth/signin/staff",
     "/api/auth/signin",
+    "/api/auth//callback/staff",
+    "/api/auth/callback/",
   ]) {
     const res = await POST(req(path) as never);
     expect(res.status, path).toBe(404);
