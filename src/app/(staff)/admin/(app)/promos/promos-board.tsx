@@ -7,6 +7,8 @@ import { Badge, Button, Card, EmptyState, Input, Select, useToast } from "@/comp
 import { addDays } from "@/lib/dates";
 import { formatInr } from "@/lib/money";
 import type { PromoRow } from "@/modules/admin";
+import { ConnectionAlert } from "../_components/connection-alert";
+import { send } from "../_components/transport";
 import { createPromoAction, deactivatePromoAction } from "./actions";
 
 const dayFmt = new Intl.DateTimeFormat("en-IN", {
@@ -98,7 +100,15 @@ function PromoTable({
   const deactivate = (p: PromoRow) =>
     startTransition(async () => {
       setError(null);
-      const res = await deactivatePromoAction({ id: p.id });
+      const sent = await send(() => deactivatePromoAction({ id: p.id }));
+      if (!sent.sent) {
+        // QA-05: keep the confirm step open; switching off again is harmless.
+        setError(
+          `We could not reach the server, so ${p.code} may still be on. Check your connection and confirm again.`,
+        );
+        return;
+      }
+      const res = sent.value;
       setConfirming(null);
       if (!res.ok) {
         setError(
@@ -223,21 +233,30 @@ function CreatePromo({ today, onCreated }: { today: string; onCreated: (code: st
   const [minNights, setMinNights] = useState("1");
   const [maxUses, setMaxUses] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  /** The last Create could not reach the server (QA-05): the form keeps every field. */
+  const [lost, setLost] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const create = () =>
     startTransition(async () => {
       setErrors({});
-      const res = await createPromoAction({
-        code,
-        kind,
-        value: num(value),
-        validFrom,
-        validTo,
-        minNights: num(minNights),
-        maxUses: maxUses.trim() === "" ? null : num(maxUses),
-      });
+      setLost(false);
+      const sent = await send(() =>
+        createPromoAction({
+          code,
+          kind,
+          value: num(value),
+          validFrom,
+          validTo,
+          minNights: num(minNights),
+          maxUses: maxUses.trim() === "" ? null : num(maxUses),
+        }),
+      );
+      if (!sent.sent) {
+        setLost(true);
+        return;
+      }
+      const res = sent.value;
       if (!res.ok) {
         if (res.code === "FORBIDDEN") setErrors({ form: "Your role cannot manage promo codes." });
         else if (res.code === "DUPLICATE_CODE")
@@ -252,6 +271,10 @@ function CreatePromo({ today, onCreated }: { today: string; onCreated: (code: st
       setMaxUses("");
       onCreated(res.promo.code);
     });
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    create();
   };
 
   return (
@@ -329,6 +352,14 @@ function CreatePromo({ today, onCreated }: { today: string; onCreated: (code: st
           <p role="alert" className="text-small text-danger">
             {errors.form}
           </p>
+        ) : null}
+        {lost ? (
+          <ConnectionAlert
+            onRetry={create}
+            pending={pending}
+            reloadLabel="Reload list"
+            text="We could not reach the server, so this code is not confirmed. Your entries are kept. If it was created before the connection dropped, Retry will say the code already exists."
+          />
         ) : null}
         <Button type="submit" loading={pending}>
           Create code
