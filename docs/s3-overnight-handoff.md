@@ -14,7 +14,7 @@ Memory rules were followed throughout: integration only with `--no-file-parallel
 | 5 States, mobile, accessibility (H4, H5) | `claude/s3-ux` | `38ff922` | Review: 2 majors (wrong confirmation screenshot; README overclaimed), fixed; recheck 0/0 |
 | 7 Deployment preparation | `claude/s3-deploy-prep` | `b8b589f` | Review 0/0, doc minors fixed. Merged before Phase 6 so the final check covers it |
 | 6 Full verification | `claude/s3-verify` | `a27bd77` | Review: 1 major (overstated cause and fix), fixed and acceptance rerun; recheck 0/0 |
-| 8 TDD material pack | `claude/s3-tdd-pack` | see `git log` (this file merges with it) | Review: 1 major (same overstated cause), fixed; recheck 0/0 |
+| 8 TDD material pack | `claude/s3-tdd-pack` | `c8f3e9f` | Review: 1 major (same overstated cause), fixed; recheck 0/0 |
 | 9 Wrap up | `claude/s3-tdd-pack` | same merge | Dev DB reseeded for a clean demo |
 
 ## What did not get done, and why
