@@ -11,7 +11,7 @@ import { credentialsSchema } from "./credentials";
 import { signIn, signOut } from "./config";
 import { safeNext } from "./safe-next";
 import { signUpSchema } from "./sign-up-schema";
-import { allow, RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
+import { allow, loginGate, RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
 import { LOGIN_FAILED } from "./messages";
 
 export type FormState =
@@ -65,15 +65,19 @@ async function login(
         issue.path[0] === "password" ? "Enter your password." : "Enter a valid email address.";
     return failed(prev, formData, { fieldErrors });
   }
-  if (!(await allow("login", parsed.data.email)))
-    return failed(prev, formData, { error: RATE_LIMITED_MESSAGE });
+  // Only failed logins are charged; the strict window is IP + email (02 Security 5).
+  const gate = await loginGate(parsed.data.email);
+  if (!gate.ok) return failed(prev, formData, { error: RATE_LIMITED_MESSAGE });
   try {
     await signIn(provider, {
       ...parsed.data,
       redirectTo: safeNext(formData.get("next"), fallback),
     });
   } catch (err) {
-    if (err instanceof AuthError) return failed(prev, formData, { error: LOGIN_FAILED });
+    if (err instanceof AuthError) {
+      gate.failed();
+      return failed(prev, formData, { error: LOGIN_FAILED });
+    }
     throw err; // includes the redirect on success
   }
 }

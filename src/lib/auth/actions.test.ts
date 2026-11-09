@@ -129,7 +129,13 @@ describe("auth forms keep input on failure", () => {
 });
 
 describe("rate limits (H2)", () => {
-  it("login: the ninth try for one email in 15 minutes is refused before signIn", async () => {
+  it("successful logins are never charged", async () => {
+    signIn.mockResolvedValue(undefined);
+    for (let i = 0; i < 20; i++)
+      await staffLoginAction(undefined, form({ email: "gm@example.test", password: SECRET }));
+    expect(signIn).toHaveBeenCalledTimes(20);
+  });
+  it("login: the ninth failed try for one email in 15 minutes is refused before signIn", async () => {
     signIn.mockRejectedValue(new AuthError("CredentialsSignin"));
     for (let i = 0; i < 8; i++)
       expect(

@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
+/** Vercel serves only https; a local `pnpm start` over plain http (e.g. a phone on the LAN) must not upgrade. */
+const onVercel = !!process.env.VERCEL;
 
 /**
  * H2 security headers. Next's App Router streams inline bootstrap scripts, and per-request nonces
@@ -14,13 +16,13 @@ const csp = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
-  "font-src 'self' data:",
+  "font-src 'self'",
   `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  ...(isDev ? [] : ["upgrade-insecure-requests"]),
+  ...(onVercel ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const securityHeaders = [
@@ -30,7 +32,7 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+    value: "camera=(), microphone=(), geolocation=(), payment=()",
   },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
 ];

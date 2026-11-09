@@ -113,3 +113,19 @@ describe("holdStay", () => {
     expect(updateGuestPhone).toHaveBeenCalledWith("guest-1", "+91 98450 12345");
   });
 });
+
+describe("hold rate limit (H2)", () => {
+  it("a rate-limited hold says so and never reaches acquireBookingHold", async () => {
+    const { resetRateLimits, RATE_LIMITED_MESSAGE } = await import("@/lib/rate-limit");
+    resetRateLimits();
+    vi.mocked(requireRole).mockResolvedValue({ ...guest, id: "guest-flood" });
+    vi.mocked(acquireBookingHold).mockResolvedValue({ ok: false, code: "SOLD_OUT" } as never);
+    for (let i = 0; i < 20; i++) await holdStay(undefined, form({ query })).catch(() => undefined);
+    const calls = vi.mocked(acquireBookingHold).mock.calls.length;
+    expect(await holdStay(undefined, form({ query }))).toMatchObject({
+      message: RATE_LIMITED_MESSAGE,
+    });
+    expect(vi.mocked(acquireBookingHold).mock.calls.length).toBe(calls);
+    resetRateLimits();
+  });
+});
