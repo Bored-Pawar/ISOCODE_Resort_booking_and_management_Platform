@@ -440,7 +440,7 @@ Last recorded counts before Phase 6 (`docs/s3-overnight-handoff.md` Gates): Phas
 - Deploy: set env names in Vercel, run guarded `pnpm db:deploy`, confirm production Neon region is us-east-2 (`deployment.md`).
 - Shared rate-limit store (Upstash or Postgres) (`docs/02-architecture.md` Security 5).
 - Groq: done in Phase 6, `openai/gpt-oss-120b` suggested (a mitigation). Still open: a Groq-friendly schema (all fields required, nullable) and a sanitized sub-reason per eval row (`docs/eval/r5-results.md`, `docs/s3-overnight-handoff.md`).
-- Draft guard quality toward the under-30% fallback target (`docs/reviews/r1-r4-draft-guard-evaluation.md`).
+- Draft guard quality: the under-30% template fallback target is met on 120b (7/30) but was not on 20b; keep measuring after deploy (`docs/reviews/r1-r4-draft-guard-evaluation.md`).
 - Performance: smaller mobile hero crop (under 25 KB), trim shared root-layout client code (about 24 KB), real-device and CrUX numbers after deploy (`docs/perf/h3-results.md` Not done).
 - Migration for inbox indexes (`enquiry_events.enquiry_id`, search) and a unique index on `extracted->'source'` (`docs/s3-overnight-handoff.md`, `docs/tdd-notes.md` Q1).
 - Batch the expiry sweep before real traffic (`docs/06-progress.md` B10).

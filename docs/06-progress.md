@@ -134,6 +134,7 @@ No outstanding image blocker: the `public/images/*` assets have been supplied. A
 ## Decisions log
 | Date | Decision |
 |---|---|
+| 2026-11-09 | S3 Phases 8 and 9: `docs/tdd-material.md` (raw TDD material, reviewed); dev database reseeded for a clean demo; final handoff with merge SHAs, counts, open items and deploy steps in `docs/s3-overnight-handoff.md` |
 | 2026-11-09 | S3 Phase 6 (`docs/final-check.md`): unit 735/735, integration 176/176 (20 files), Playwright 6/6, acceptance 24/24, the three brief enquiries reach the expected owners. Bug: `gpt-oss-20b` sometimes returns the JSON schema instead of an answer (likely cause of most R5 fallbacks); mitigation: suggested `AI_MODEL` is now `openai/gpt-oss-120b` (29/30 valid, 28/30 correct, 1/30 fallback, ENQ-4397). Config only, no code |
 | 2026-11-09 | S3 Phase 5 H4/H5: walk of 36 screens x 2 widths (`docs/screenshots/final/README.md`), 0 findings after fixes. Design tokens `--warning` `#8A560C` and `--success` `#276B43` (darker, AA on tinted badges, `05` updated); hero section dark base; phone photo strip focusable. Hydration warnings 0; keyboard booking start ok |
 | 2026-11-09 | S3 Phase 7: `vercel.json` `regions: ["cle1"]` (Neon is AWS us-east-2); guarded `pnpm db:deploy` (`scripts/db-deploy*.ts`, needs `ALLOW_PRODUCTION_SEED=yes` and an explicit `PRODUCTION_DATABASE_URL_UNPOOLED`, never `.env.local`; not run); `README.md` and `deployment.md` written. Not deployed (needs the scrum master's Vercel login) |
