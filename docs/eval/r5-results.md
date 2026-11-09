@@ -46,3 +46,6 @@ Run: 2026-11-09T00:25 UTC, `pnpm eval:ai --r5`, the 30 labelled synthetic seed e
 
 ## Provider fix found by this run
 The first Groq run returned HTTP 400 on every call: Groq's strict `json_schema` requires every property to be listed as required. `modules/ai-provider/transport.ts` now sends `providerOptions.groq.strictJsonSchema = false` for Groq only (unit tested); Zod validation is unchanged and still gates every answer. The failing run's JSON was overwritten by the rerun and is not kept.
+
+## Addendum (Phase 6): `openai/gpt-oss-120b`
+The 9 `INVALID_RESPONSE` results were traced in Phase 6: `gpt-oss-20b` sometimes answers with the JSON schema itself, which fails validation. The same 30 cases on `openai/gpt-oss-120b` ([`ai-evaluation-live-model-120b.json`](ai-evaluation-live-model-120b.json)): valid 29/30, correct category 28/30, fallback 1/30, unsorted 6/30, complaint recall 5/5, draft template fallback 7/30, median 1716 ms. 120b is now the suggested model; see `docs/final-check.md`.
