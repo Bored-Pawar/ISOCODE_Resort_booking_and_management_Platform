@@ -10,6 +10,14 @@ export type SelectedQuote = Quote & { roomNames?: string[] };
 
 /** Respect specific type names first, then generic category words, never broaden a named request. */
 export function matchingRooms(rooms: RoomType[], text: string): RoomType[] {
+  return roomRestriction(rooms, text) ?? rooms;
+}
+
+/**
+ * The room types the text restricts the quote to, or null when it names no room at all. An empty
+ * array means a room was asked for that matches nothing in the catalog.
+ */
+export function roomRestriction(rooms: RoomType[], text: string): RoomType[] | null {
   const normalize = (value: string) => value.toLowerCase().replace(/[-_]/g, " ");
   const normalized = normalize(text);
   const named = rooms.flatMap((room) => {
@@ -35,7 +43,37 @@ export function matchingRooms(rooms: RoomType[], text: string): RoomType[] {
         : /\bsuites?\b/i.test(normalized)
           ? "suite"
           : null);
-  return kind ? rooms.filter((r) => r.name.toLowerCase().includes(kind)) : rooms;
+  return kind ? rooms.filter((r) => r.name.toLowerCase().includes(kind)) : null;
+}
+
+/** Catalog names the text restricts to; null or empty when it names no known room type. */
+export async function namedRoomTypes(text: string): Promise<string[] | null> {
+  return roomRestriction(await catalog.listRoomTypes(), text)?.map((r) => r.name) ?? null;
+}
+
+/**
+ * Whether any room type the text asks for has stock on every night. Null when the text names no
+ * room or the stay is not a valid range. `names` is empty when the request matches no type.
+ */
+export async function preferredRoomStatus(
+  text: string,
+  from: string,
+  to: string,
+): Promise<{ names: string[]; available: boolean } | null> {
+  const restricted = roomRestriction(await catalog.listRoomTypes(), text);
+  if (!restricted) return null;
+  if (!restricted.length) return { names: [], available: false };
+  const stock = await inventory.availability({ checkIn: from, checkOut: to });
+  if (!stock.ok) return null;
+  const open = new Set(
+    stock.rooms
+      .filter((r) => !r.blackedOut && !r.soldOut && r.availableUnits > 0)
+      .map((r) => r.roomTypeId),
+  );
+  return {
+    names: restricted.map((r) => r.name),
+    available: restricted.some((r) => open.has(r.id)),
+  };
 }
 
 function allocate(types: RoomType[], adults: number, children: number): QuoteRoomInput[] | null {
