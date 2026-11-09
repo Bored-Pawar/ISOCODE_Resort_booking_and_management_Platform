@@ -13,9 +13,9 @@ import { inboxPage } from "../_lib/access";
 import { parseQuery, type SearchParams } from "../_lib/params";
 import { notFound } from "next/navigation";
 import { z } from "zod";
+import { safeError } from "@/lib/log";
 
 const enquiryIdSchema = z.string().regex(/^ENQ-[\w-]{1,40}$/);
-import { safeError } from "@/lib/log";
 
 export const metadata = { title: "Enquiry" };
 

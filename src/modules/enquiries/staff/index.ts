@@ -1,4 +1,5 @@
 /** Staff inbox (Q4 to Q7): additive to the enquiries module, approved by the S2 inbox runbook. */
+import { safeError } from "@/lib/log";
 import { getDetail } from "./detail";
 import { redraft } from "./drafting";
 import { reroute, updateFields, fieldsInputSchema } from "./routing";
@@ -54,4 +55,3 @@ export {
   type Lane,
   type ListInput,
 } from "./rules";
-import { safeError } from "@/lib/log";
