@@ -48,7 +48,8 @@ export default function Home({
   return (
     <main>
       {/* Hero: the one image that loads eagerly. */}
-      <section className="relative isolate flex min-h-[560px] items-end md:min-h-[640px]">
+      {/* Dark base under the hero: the white text stays readable before (or without) the photo. */}
+      <section className="relative isolate flex min-h-[560px] items-end bg-text md:min-h-[640px]">
         <Image
           src={heroImg}
           alt="Mist over coffee plantation hills at sunrise"

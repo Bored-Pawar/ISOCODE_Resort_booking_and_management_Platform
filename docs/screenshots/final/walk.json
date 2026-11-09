@@ -1,0 +1,1157 @@
+{
+  "at": "2026-11-09T01:30:42.623Z",
+  "results": [
+    {
+      "persona": "signed-out",
+      "screen": "home",
+      "width": "desktop",
+      "path": "/",
+      "status": 200,
+      "title": "Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "rooms",
+      "width": "desktop",
+      "path": "/rooms?checkIn=2026-11-30&checkOut=2026-12-02&adults=2&children=0",
+      "status": 200,
+      "title": "Build your stay · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "room-detail",
+      "width": "desktop",
+      "path": "/rooms/garden-villa",
+      "status": 200,
+      "title": "Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "details-signup",
+      "width": "desktop",
+      "path": "/book/details?checkIn=2026-11-30&checkOut=2026-12-02&adults=2&children=0&room=a0a2c181-511d-4e44-bb24-3dbcdbb474e4.5cdb5533-6d26-4f03-ad51-dc4ea6452051.2.0&quoteHash=…",
+      "status": 200,
+      "title": "Your details · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "enquire",
+      "width": "desktop",
+      "path": "/enquire",
+      "status": 200,
+      "title": "Send an enquiry · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "login",
+      "width": "desktop",
+      "path": "/login",
+      "status": 200,
+      "title": "Sign in · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "signup",
+      "width": "desktop",
+      "path": "/signup",
+      "status": 200,
+      "title": "Create account · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "staff-login",
+      "width": "desktop",
+      "path": "/admin/login",
+      "status": 200,
+      "title": "Staff sign in · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "guest",
+      "screen": "details",
+      "width": "desktop",
+      "path": "/book/details?checkIn=2026-11-30&checkOut=2026-12-02&adults=2&children=0&room=a0a2c181-511d-4e44-bb24-3dbcdbb474e4.5cdb5533-6d26-4f03-ad51-dc4ea6452051.2.0&quoteHash=…",
+      "status": 200,
+      "title": "Your details · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "guest",
+      "screen": "account",
+      "width": "desktop",
+      "path": "/account",
+      "status": 200,
+      "title": "My bookings · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "guest",
+      "screen": "confirmation",
+      "width": "desktop",
+      "path": "/booking/CA-GZSSB",
+      "status": 200,
+      "title": "Your booking · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "guest",
+      "screen": "pay",
+      "width": "desktop",
+      "path": "/book/pay/CA-JV3PG",
+      "status": 200,
+      "title": "Pay · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-overview",
+      "width": "desktop",
+      "path": "/admin",
+      "status": 200,
+      "title": "Overview · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-rates",
+      "width": "desktop",
+      "path": "/admin/rates",
+      "status": 200,
+      "title": "Rates · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-allotment",
+      "width": "desktop",
+      "path": "/admin/allotment",
+      "status": 200,
+      "title": "Allotment · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-promos",
+      "width": "desktop",
+      "path": "/admin/promos",
+      "status": 200,
+      "title": "Promo codes · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-bookings",
+      "width": "desktop",
+      "path": "/admin/bookings",
+      "status": 200,
+      "title": "Bookings · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-inbox",
+      "width": "desktop",
+      "path": "/admin/inbox",
+      "status": 200,
+      "title": "Inbox · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-enquiry-detail",
+      "width": "desktop",
+      "path": "/admin/inbox/ENQ-MRN5Y",
+      "status": 200,
+      "title": "Enquiry · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-outbox",
+      "width": "desktop",
+      "path": "/dev/outbox",
+      "status": 200,
+      "title": "Outbox · Dev tools",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Booking emails"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-overview",
+      "width": "desktop",
+      "path": "/admin",
+      "status": 200,
+      "title": "Overview · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-rates",
+      "width": "desktop",
+      "path": "/admin/rates",
+      "status": 200,
+      "title": "Rates · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-allotment",
+      "width": "desktop",
+      "path": "/admin/allotment",
+      "status": 200,
+      "title": "Allotment · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-promos",
+      "width": "desktop",
+      "path": "/admin/promos",
+      "status": 200,
+      "title": "Promo codes · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-bookings",
+      "width": "desktop",
+      "path": "/admin/bookings",
+      "status": 200,
+      "title": "Bookings · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-inbox",
+      "width": "desktop",
+      "path": "/admin/inbox",
+      "status": 200,
+      "title": "Inbox · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-enquiry-detail",
+      "width": "desktop",
+      "path": "/admin/inbox/ENQ-4412",
+      "status": 200,
+      "title": "Enquiry · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-outbox",
+      "width": "desktop",
+      "path": "/dev/outbox",
+      "status": 200,
+      "title": "Outbox · Dev tools",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Booking emails"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-overview",
+      "width": "desktop",
+      "path": "/admin",
+      "status": 200,
+      "title": "Overview · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-rates",
+      "width": "desktop",
+      "path": "/admin/rates",
+      "status": 200,
+      "title": "Rates · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-allotment",
+      "width": "desktop",
+      "path": "/admin/allotment",
+      "status": 200,
+      "title": "Allotment · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-promos",
+      "width": "desktop",
+      "path": "/admin/promos",
+      "status": 200,
+      "title": "Promo codes · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-bookings",
+      "width": "desktop",
+      "path": "/admin/bookings",
+      "status": 200,
+      "title": "Bookings · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-inbox",
+      "width": "desktop",
+      "path": "/admin/inbox",
+      "status": 200,
+      "title": "Inbox · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-enquiry-detail",
+      "width": "desktop",
+      "path": "/admin/inbox/ENQ-4404",
+      "status": 200,
+      "title": "Enquiry · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-outbox",
+      "width": "desktop",
+      "path": "/dev/outbox",
+      "status": 200,
+      "title": "Outbox · Dev tools",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Booking emails"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "home",
+      "width": "mobile",
+      "path": "/",
+      "status": 200,
+      "title": "Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "rooms",
+      "width": "mobile",
+      "path": "/rooms?checkIn=2026-11-30&checkOut=2026-12-02&adults=2&children=0",
+      "status": 200,
+      "title": "Build your stay · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "room-detail",
+      "width": "mobile",
+      "path": "/rooms/garden-villa",
+      "status": 200,
+      "title": "Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "details-signup",
+      "width": "mobile",
+      "path": "/book/details?checkIn=2026-11-30&checkOut=2026-12-02&adults=2&children=0&room=a0a2c181-511d-4e44-bb24-3dbcdbb474e4.5cdb5533-6d26-4f03-ad51-dc4ea6452051.2.0&quoteHash=…",
+      "status": 200,
+      "title": "Your details · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "enquire",
+      "width": "mobile",
+      "path": "/enquire",
+      "status": 200,
+      "title": "Send an enquiry · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "login",
+      "width": "mobile",
+      "path": "/login",
+      "status": 200,
+      "title": "Sign in · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "signup",
+      "width": "mobile",
+      "path": "/signup",
+      "status": 200,
+      "title": "Create account · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "signed-out",
+      "screen": "staff-login",
+      "width": "mobile",
+      "path": "/admin/login",
+      "status": 200,
+      "title": "Staff sign in · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "guest",
+      "screen": "details",
+      "width": "mobile",
+      "path": "/book/details?checkIn=2026-11-30&checkOut=2026-12-02&adults=2&children=0&room=a0a2c181-511d-4e44-bb24-3dbcdbb474e4.5cdb5533-6d26-4f03-ad51-dc4ea6452051.2.0&quoteHash=…",
+      "status": 200,
+      "title": "Your details · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "guest",
+      "screen": "account",
+      "width": "mobile",
+      "path": "/account",
+      "status": 200,
+      "title": "My bookings · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "guest",
+      "screen": "confirmation",
+      "width": "mobile",
+      "path": "/booking/CA-JV3PG",
+      "status": 200,
+      "title": "Your booking · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "guest",
+      "screen": "pay",
+      "width": "mobile",
+      "path": "/book/pay/CA-JV3PG",
+      "status": 200,
+      "title": "Pay · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-overview",
+      "width": "mobile",
+      "path": "/admin",
+      "status": 200,
+      "title": "Overview · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-rates",
+      "width": "mobile",
+      "path": "/admin/rates",
+      "status": 200,
+      "title": "Rates · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-allotment",
+      "width": "mobile",
+      "path": "/admin/allotment",
+      "status": 200,
+      "title": "Allotment · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-promos",
+      "width": "mobile",
+      "path": "/admin/promos",
+      "status": 200,
+      "title": "Promo codes · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-bookings",
+      "width": "mobile",
+      "path": "/admin/bookings",
+      "status": 200,
+      "title": "Bookings · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-inbox",
+      "width": "mobile",
+      "path": "/admin/inbox",
+      "status": 200,
+      "title": "Inbox · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-enquiry-detail",
+      "width": "mobile",
+      "path": "/admin/inbox/ENQ-MRN5Y",
+      "status": 200,
+      "title": "Enquiry · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "reservations",
+      "screen": "reservations-outbox",
+      "width": "mobile",
+      "path": "/dev/outbox",
+      "status": 200,
+      "title": "Outbox · Dev tools",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Booking emails"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-overview",
+      "width": "mobile",
+      "path": "/admin",
+      "status": 200,
+      "title": "Overview · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-rates",
+      "width": "mobile",
+      "path": "/admin/rates",
+      "status": 200,
+      "title": "Rates · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-allotment",
+      "width": "mobile",
+      "path": "/admin/allotment",
+      "status": 200,
+      "title": "Allotment · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-promos",
+      "width": "mobile",
+      "path": "/admin/promos",
+      "status": 200,
+      "title": "Promo codes · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-bookings",
+      "width": "mobile",
+      "path": "/admin/bookings",
+      "status": 200,
+      "title": "Bookings · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-inbox",
+      "width": "mobile",
+      "path": "/admin/inbox",
+      "status": 200,
+      "title": "Inbox · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-enquiry-detail",
+      "width": "mobile",
+      "path": "/admin/inbox/ENQ-4412",
+      "status": 200,
+      "title": "Enquiry · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "sales",
+      "screen": "sales-outbox",
+      "width": "mobile",
+      "path": "/dev/outbox",
+      "status": 200,
+      "title": "Outbox · Dev tools",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Booking emails"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-overview",
+      "width": "mobile",
+      "path": "/admin",
+      "status": 200,
+      "title": "Overview · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-rates",
+      "width": "mobile",
+      "path": "/admin/rates",
+      "status": 200,
+      "title": "Rates · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-allotment",
+      "width": "mobile",
+      "path": "/admin/allotment",
+      "status": 200,
+      "title": "Allotment · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-promos",
+      "width": "mobile",
+      "path": "/admin/promos",
+      "status": 200,
+      "title": "Promo codes · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-bookings",
+      "width": "mobile",
+      "path": "/admin/bookings",
+      "status": 200,
+      "title": "Bookings · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-inbox",
+      "width": "mobile",
+      "path": "/admin/inbox",
+      "status": 200,
+      "title": "Inbox · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-enquiry-detail",
+      "width": "mobile",
+      "path": "/admin/inbox/ENQ-4404",
+      "status": 200,
+      "title": "Enquiry · Company A",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Company A"
+      }
+    },
+    {
+      "persona": "gm",
+      "screen": "gm-outbox",
+      "width": "mobile",
+      "path": "/dev/outbox",
+      "status": 200,
+      "title": "Outbox · Dev tools",
+      "overflowPx": 0,
+      "consoleErrors": [],
+      "deadLinks": [],
+      "axe": [],
+      "focus": {
+        "ok": true,
+        "what": "a Booking emails"
+      }
+    }
+  ]
+}
