@@ -11,6 +11,7 @@ import { ConfirmationEmailView } from "@/app/(guest)/_components/confirmation-em
 import { RetryError } from "@/app/(guest)/_components/retry-error";
 import { DevGate } from "../_components/dev-gate";
 import { requireDevStaff } from "../_lib/access";
+import { safeError } from "@/lib/log";
 
 export const metadata = { title: "Outbox" };
 
@@ -33,7 +34,7 @@ async function Outbox() {
       getGuestContacts(result.ok ? result.bookings.map((b) => b.guestId) : []),
     ]);
   } catch (error) {
-    console.error("dev outbox failed", error);
+    console.error("dev outbox failed", safeError(error));
     return <RetryError title="We could not load the outbox" message="Please try again." />;
   }
   if (!result.ok)
@@ -83,7 +84,7 @@ async function Replies() {
   try {
     replies = await inbox.sentReplies({ userId: staff.id, role: staff.role });
   } catch (error) {
-    console.error("dev outbox replies failed", error);
+    console.error("dev outbox replies failed", safeError(error));
     return <RetryError title="We could not load sent replies" message="Please try again." />;
   }
   if (!replies.length)

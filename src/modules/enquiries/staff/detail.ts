@@ -13,6 +13,7 @@ import {
   type InboxActor,
 } from "./rules";
 import { toRow, type InboxRow } from "./service";
+import { draftVersion } from "./version";
 
 export type Extracted = {
   dates?: { from?: string; to?: string; text?: string };
@@ -28,6 +29,8 @@ export type Extracted = {
 
 export type Draft = {
   id: string;
+  /** `draftVersion(body, quote)`: echoed by save and send to refuse a stale draft. */
+  version: string;
   body: string;
   quote: unknown;
   edited: boolean;
@@ -177,6 +180,7 @@ export async function getDetail(
       draft: draft
         ? {
             id: draft.id,
+            version: draftVersion(draft.body, draft.quote),
             body: draft.body,
             quote: draft.quote,
             edited: draft.edited,

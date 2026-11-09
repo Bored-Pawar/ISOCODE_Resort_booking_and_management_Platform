@@ -39,7 +39,7 @@ ENQ-4410 attention, simulator rows); reseed (`pnpm db:seed`) before re-running t
 ## Open items / blockers
 - One React hydration-attribute warning seen once during the Chrome run; not reproduced on any inbox, enquire,
   outbox, login or simulator page at either width (likely the dev server hot-reloading mid-run).
-- `/admin` overview still shows enquiry counts as "Coming with the inbox" (`_lib/overview.ts`, an admin page,
+- Done in S3 Phase 1 (faa0e7f): `/admin` overview shows real counts. Was: "Coming with the inbox" (`_lib/overview.ts`, an admin page,
   read only per the runbook locks). `inbox.counts` can feed it; needs scrum master OK.
 - `enquiry_events` has no note column and no schema change is allowed: attention request stores the note in
   `from_value` (to_value `attention`); resolve stores `to_value = 'seen: <reply note>'` (from_value `attention`).

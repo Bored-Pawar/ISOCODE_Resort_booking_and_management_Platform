@@ -97,6 +97,7 @@ export async function updateFields(
     if (after.room) next.room = after.room;
     else delete next.room;
     if (after.language) next.language = after.language;
+    else delete next.language; // cleared: saved as cleared, like room (review minor 3)
     await tx.update(e).set({ extracted: next }).where(eq(e.id, row.id));
     await tx.insert(enquiryEvents).values({
       enquiryId: row.id,

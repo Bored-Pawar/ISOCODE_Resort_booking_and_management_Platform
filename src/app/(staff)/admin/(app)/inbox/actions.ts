@@ -8,8 +8,10 @@ import { z } from "zod";
 import { requirePermission } from "@/lib/auth/permissions";
 import { inbox, retryEnquiry } from "@/modules/enquiries";
 import { inboxActor } from "./_lib/access";
+import { safeError } from "@/lib/log";
 
-export type ActionResult = { ok: true; message: string } | { ok: false; message: string };
+export type ActionResult =
+  { ok: true; message: string } | { ok: false; message: string; stale?: boolean };
 
 const FORBIDDEN: ActionResult = { ok: false, message: "Your role cannot do this." };
 const MESSAGES: Record<string, string> = {
@@ -19,12 +21,15 @@ const MESSAGES: Record<string, string> = {
   INVALID_OWNER: "That owner's role cannot see this category. Pick another owner.",
   ALREADY_SENT: "This reply was already sent. Refresh to see it.",
   NO_DRAFT: "There is no draft yet. Use Generate draft.",
+  STALE_DRAFT:
+    "The draft changed since you opened it (rebuilt or edited by someone). Nothing was saved or sent. Review the new draft below.",
   ALREADY_OPEN: "Reservations and the GM have already been asked. Wait for them to mark it seen.",
   NOT_OPEN: "This request was already marked seen.",
 };
 const fail = (code: string): ActionResult => ({
   ok: false,
   message: MESSAGES[code] ?? "Could not save. Try again.",
+  ...(code === "STALE_DRAFT" ? { stale: true } : {}),
 });
 const refresh = () => revalidatePath("/admin/inbox", "layout");
 
@@ -44,7 +49,7 @@ export async function saveFieldsAction(input: unknown): Promise<ActionResult> {
       return { ok: true, message: "Saved. The draft could not be rebuilt; use Regenerate." };
     return { ok: true, message: "Saved." };
   } catch (error) {
-    console.error("saveFields failed", error);
+    console.error("saveFields failed", safeError(error));
     return fail("ERROR");
   }
 }
@@ -58,7 +63,7 @@ export async function rerouteAction(input: unknown): Promise<ActionResult> {
     refresh();
     return { ok: true, message: res.changed ? "Re-routed." : "Already routed there." };
   } catch (error) {
-    console.error("reroute failed", error);
+    console.error("reroute failed", safeError(error));
     return fail("ERROR");
   }
 }
@@ -74,7 +79,7 @@ export async function saveDraftAction(
     refresh();
     return { ok: true, message: "Draft saved.", priceWarning: res.priceWarning };
   } catch (error) {
-    console.error("saveDraft failed", error);
+    console.error("saveDraft failed", safeError(error));
     return fail("ERROR");
   }
 }
@@ -88,7 +93,7 @@ export async function regenerateAction(input: unknown): Promise<ActionResult> {
     refresh();
     return { ok: true, message: "New draft ready. Review it before sending." };
   } catch (error) {
-    console.error("regenerate failed", error);
+    console.error("regenerate failed", safeError(error));
     return fail("ERROR");
   }
 }
@@ -103,7 +108,7 @@ export async function approveAndSendAction(input: unknown): Promise<ActionResult
     refresh();
     return { ok: true, message: "Sent to the mock outbox. Nothing was emailed or messaged." };
   } catch (error) {
-    console.error("approveAndSend failed", error);
+    console.error("approveAndSend failed", safeError(error));
     return fail("ERROR");
   }
 }
@@ -117,7 +122,7 @@ export async function closeAction(input: unknown): Promise<ActionResult> {
     refresh();
     return { ok: true, message: "Enquiry closed." };
   } catch (error) {
-    console.error("close failed", error);
+    console.error("close failed", safeError(error));
     return fail("ERROR");
   }
 }
@@ -132,7 +137,7 @@ export async function requestAttentionAction(input: unknown): Promise<ActionResu
     refresh();
     return { ok: true, message: "Asked reservations and the GM to look." };
   } catch (error) {
-    console.error("requestAttention failed", error);
+    console.error("requestAttention failed", safeError(error));
     return fail("ERROR");
   }
 }
@@ -147,7 +152,7 @@ export async function resolveAttentionAction(input: unknown): Promise<ActionResu
     refresh();
     return { ok: true, message: "Marked seen. Sales can read your note in the timeline." };
   } catch (error) {
-    console.error("resolveAttention failed", error);
+    console.error("resolveAttention failed", safeError(error));
     return fail("ERROR");
   }
 }

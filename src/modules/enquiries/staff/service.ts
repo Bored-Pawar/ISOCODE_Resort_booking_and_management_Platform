@@ -107,9 +107,9 @@ export async function listInbox(
   };
 }
 
-/** Count badges (Unsorted, Complaints, Needs attention): open items only, one query. */
 /**
- * Open (not closed) counts per lane. Default: the badge lanes. `only` asks for other lanes (the
+ * Open (not closed) counts per lane, one query. Default: the badge lanes (Unsorted, Complaints,
+ * Needs attention). `only` asks for other lanes (the
  * `/admin` overview); it is cut to the lanes the role may open, and rows to `viewSql`.
  */
 export async function laneCounts(actor: InboxActor, only?: readonly Lane[]): Promise<LaneCounts> {

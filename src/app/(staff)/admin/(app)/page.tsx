@@ -7,6 +7,7 @@ import { booking } from "@/modules/booking";
 import { inbox, type Lane, type LaneCounts } from "@/modules/enquiries";
 import { staffOverview } from "./_lib/access";
 import { overviewFor, overviewLanes, type OverviewItem } from "./_lib/overview";
+import { safeError } from "@/lib/log";
 
 export const metadata = { title: "Overview" };
 
@@ -24,7 +25,7 @@ async function ArrivalsCount({
     );
     if (res.ok) count = res.bookings.length;
   } catch (error) {
-    console.error("arrivals count failed", error);
+    console.error("arrivals count failed", safeError(error));
   }
   if (count === null)
     return <span className="text-small text-danger">Could not load. Reload to retry.</span>;
@@ -108,7 +109,7 @@ async function Overview() {
   // One query for every enquiry row; failures show per row, the page still renders.
   const counts: Promise<LaneCounts | null> = lanes.length
     ? inbox.counts(actor, lanes).catch((error) => {
-        console.error("overview counts failed", error);
+        console.error("overview counts failed", safeError(error));
         return null;
       })
     : Promise.resolve({});

@@ -21,6 +21,7 @@ import { parseSearchParams, validateSearch } from "../../../_lib/search";
 import { HoldForm } from "../../../_components/hold-form";
 import { RetryError } from "../../../_components/retry-error";
 import { StaySummary } from "../../../_components/stay-summary";
+import { safeError } from "@/lib/log";
 
 export const metadata: Metadata = { title: "Your details" };
 
@@ -83,7 +84,7 @@ async function Details({ searchParams }: { searchParams: Params }) {
       }),
     ]);
   } catch (error) {
-    console.error("details step failed", error);
+    console.error("details step failed", safeError(error));
     return (
       <RetryError
         title="We could not load your stay"

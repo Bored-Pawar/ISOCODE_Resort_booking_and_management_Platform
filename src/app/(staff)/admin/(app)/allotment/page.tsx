@@ -7,6 +7,7 @@ import { RetryError } from "@/app/(guest)/_components/retry-error";
 import { Forbidden } from "../_components/forbidden";
 import { staffPage } from "../_lib/access";
 import { AllotmentBoard } from "./allotment-board";
+import { safeError } from "@/lib/log";
 
 export const metadata = { title: "Allotment" };
 
@@ -23,7 +24,7 @@ async function Content({ searchParams }: { searchParams: Params }) {
   try {
     data = await admin.readAllotment({ from: start, to: end }, access.actor);
   } catch (error) {
-    console.error("allotment read failed", error);
+    console.error("allotment read failed", safeError(error));
     return <RetryError title="We could not load allotment" message="Please try again." />;
   }
   if (!data.ok) return <Forbidden />;

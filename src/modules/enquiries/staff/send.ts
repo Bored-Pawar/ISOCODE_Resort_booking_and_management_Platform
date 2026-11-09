@@ -13,16 +13,22 @@ import type { EnquiryChannel } from "../types";
 import { visibilityOf } from "./detail";
 import { redraft } from "./drafting";
 import { workSql } from "./queries";
+import { draftVersion } from "./version";
 import { addsNewPrice, canWork, type InboxActor } from "./rules";
 
 const enquiryId = z.string().trim().min(1).max(40);
 const body = z.string().trim().min(1, "Write a reply.").max(5000);
 
-export const saveDraftInputSchema = z.object({ enquiryId, body }).strict();
-export const sendInputSchema = z.object({ enquiryId, draftId: z.uuid(), body }).strict();
+/** The draft version the client loaded (`draftVersion`). */
+const version = z.string().regex(/^[0-9a-f]{16}$/);
+
+export const saveDraftInputSchema = z.object({ enquiryId, body, version }).strict();
+export const sendInputSchema = z.object({ enquiryId, draftId: z.uuid(), body, version }).strict();
 export const enquiryInputSchema = z.object({ enquiryId }).strict();
 
-type Fail = Err<"INVALID_INPUT" | "NOT_FOUND" | "FORBIDDEN" | "ALREADY_SENT" | "NO_DRAFT">;
+type Fail = Err<
+  "INVALID_INPUT" | "NOT_FOUND" | "FORBIDDEN" | "ALREADY_SENT" | "NO_DRAFT" | "STALE_DRAFT"
+>;
 
 /** Rupee figures the server quote supplies; anything else in a reply is a staff-typed price. */
 export function quoteFigures(quote: unknown): string {
@@ -38,7 +44,7 @@ export async function saveDraft(
 ): Promise<Ok<{ priceWarning: boolean }> | Fail> {
   const parsed = saveDraftInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
-  const { enquiryId: id, body: text } = parsed.data;
+  const { enquiryId: id, body: text, version: seen } = parsed.data;
   return getDb().transaction(async (tx) => {
     const [row] = await tx.select().from(e).where(eq(e.id, id)).for("update");
     if (!row) return { ok: false, code: "NOT_FOUND" } as const;
@@ -52,6 +58,8 @@ export async function saveDraft(
       .for("update");
     if (!draft) return { ok: false, code: "NO_DRAFT" } as const;
     if (draft.sentAt) return { ok: false, code: "ALREADY_SENT" } as const;
+    if (draftVersion(draft.body, draft.quote) !== seen)
+      return { ok: false, code: "STALE_DRAFT" } as const;
     const priceWarning = addsNewPrice(quoteFigures(draft.quote), text);
     if (text === draft.body) return { ok: true, priceWarning } as const;
     await tx
@@ -104,7 +112,7 @@ export async function approveAndSend(
 ): Promise<Ok<{ sentAt: string; channel: EnquiryChannel }> | Fail> {
   const parsed = sendInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
-  const { enquiryId: id, draftId, body: text } = parsed.data;
+  const { enquiryId: id, draftId, body: text, version: seen } = parsed.data;
   return getDb().transaction(async (tx) => {
     const [row] = await tx.select().from(e).where(eq(e.id, id)).for("update");
     if (!row) return { ok: false, code: "NOT_FOUND" } as const;
@@ -116,6 +124,10 @@ export async function approveAndSend(
       .for("update");
     if (!draft) return { ok: false, code: "NO_DRAFT" } as const;
     if (draft.sentAt) return { ok: false, code: "ALREADY_SENT" } as const;
+    // The body and quote the sender reviewed must still be the stored ones: a rebuild (new
+    // quote) or another staff member's save since the page loaded refuses the send.
+    if (draftVersion(draft.body, draft.quote) !== seen)
+      return { ok: false, code: "STALE_DRAFT" } as const;
     const [sent] = await tx
       .update(replyDrafts)
       .set({
