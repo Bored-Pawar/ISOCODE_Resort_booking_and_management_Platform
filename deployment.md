@@ -15,7 +15,7 @@ Company A resort booking app: Next.js 16 (App Router) on **Vercel**, PostgreSQL 
 ## How it is deployed
 
 - **Vercel** builds with `pnpm build` (framework preset Next.js, install `pnpm install`). No custom build command.
-- **Region match.** The Neon project is in AWS `us-east-2` (Ohio; read from the database host name). `vercel.json` pins the functions to Vercel region **`cle1`** (Cleveland, us-east-2), so each query is a few milliseconds instead of a cross-region round trip. If the Neon project moves, change `regions` to the matching Vercel region.
+- **Region match.** The Neon project is in AWS `us-east-2` (Ohio; read from the database host name). `vercel.json` pins the functions to Vercel region **`cle1`** (Cleveland, us-east-2), so each query is a few milliseconds instead of a cross-region round trip. Confirm the production database host also contains `us-east-2` before deploying (the region was read from the development branch host); if the project is elsewhere, change `regions` to the matching Vercel region.
 - **Cron.** `vercel.json` runs `GET /api/cron/expire-holds` daily at 00:00 UTC (05:30 IST; Vercel Hobby allows daily crons). Vercel sends `Authorization: Bearer $CRON_SECRET`. The route expires stale holds and sweeps stuck AI work. Holds also expire lazily on every read, so the daily cron is a backstop, not the main mechanism.
 - **Database connections.** The app uses the pooled `DATABASE_URL` at runtime. Migrations need the direct (unpooled) connection.
 - **Migrations and demo seed** are manual and guarded, run once from your PC against the production database:
@@ -54,7 +54,7 @@ Not set in Vercel: `ALLOW_PRODUCTION_SEED`, `PRODUCTION_DATABASE_URL_UNPOOLED` (
 
 ## Demo logins (seeded data)
 
-All demo accounts use the password `Demo@12345` (public, demo only; do not seed a database holding real data).
+All demo accounts use the password `Demo@12345`. `db:deploy` seeds production with the same accounts, so the public password gives staff access on the live URL: accepted for the judged demo; for anything else change the staff passwords right after seeding (or do not seed). Never seed a database holding real data.
 
 | Role         | Email                                      | Sign in at     |
 | ------------ | ------------------------------------------ | -------------- |
