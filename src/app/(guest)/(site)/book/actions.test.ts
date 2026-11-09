@@ -85,9 +85,10 @@ describe("holdStay", () => {
 
   it("validates input first and never holds on a broken query", async () => {
     vi.mocked(requireRole).mockResolvedValue(guest);
-    expect(await holdStay(undefined, form({}))).toEqual({ step: { kind: "error" } });
+    expect(await holdStay(undefined, form({}))).toEqual({ step: { kind: "error" }, attempt: 1 });
     expect(await holdStay(undefined, form({ query: "checkIn=2099-11-14" }))).toEqual({
       step: { kind: "error" },
+      attempt: 1,
     });
     expect(acquireBookingHold).not.toHaveBeenCalled();
   });
@@ -101,7 +102,8 @@ describe("holdStay", () => {
   it("updates only a changed phone, and reports a bad one without holding", async () => {
     vi.mocked(requireRole).mockResolvedValue(guest);
     const bad = await holdStay(undefined, form({ query, phone: "12", phoneBefore: "" }));
-    expect(bad).toEqual({ phoneError: "Enter a valid phone number" });
+    // The typed phone comes back so the field keeps it after React resets the form.
+    expect(bad).toEqual({ phoneError: "Enter a valid phone number", phone: "12", attempt: 1 });
     expect(acquireBookingHold).not.toHaveBeenCalled();
 
     vi.mocked(acquireBookingHold).mockResolvedValue({ ok: false, code: "INVALID_INPUT" });
@@ -109,5 +111,21 @@ describe("holdStay", () => {
     expect(updateGuestPhone).not.toHaveBeenCalled();
     await holdStay(undefined, form({ query, phone: "+91 98450 12345", phoneBefore: "" }));
     expect(updateGuestPhone).toHaveBeenCalledWith("guest-1", "+91 98450 12345");
+  });
+});
+
+describe("hold rate limit (H2)", () => {
+  it("a rate-limited hold says so and never reaches acquireBookingHold", async () => {
+    const { resetRateLimits, RATE_LIMITED_MESSAGE } = await import("@/lib/rate-limit");
+    resetRateLimits();
+    vi.mocked(requireRole).mockResolvedValue({ ...guest, id: "guest-flood" });
+    vi.mocked(acquireBookingHold).mockResolvedValue({ ok: false, code: "SOLD_OUT" } as never);
+    for (let i = 0; i < 20; i++) await holdStay(undefined, form({ query })).catch(() => undefined);
+    const calls = vi.mocked(acquireBookingHold).mock.calls.length;
+    expect(await holdStay(undefined, form({ query }))).toMatchObject({
+      message: RATE_LIMITED_MESSAGE,
+    });
+    expect(vi.mocked(acquireBookingHold).mock.calls.length).toBe(calls);
+    resetRateLimits();
   });
 });

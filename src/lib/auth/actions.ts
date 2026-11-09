@@ -11,13 +11,46 @@ import { credentialsSchema } from "./credentials";
 import { signIn, signOut } from "./config";
 import { safeNext } from "./safe-next";
 import { signUpSchema } from "./sign-up-schema";
+import { allow, allowLogin, RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
+import { LOGIN_FAILED } from "./messages";
 
-export type FormState = { error?: string; fieldErrors?: Record<string, string> } | undefined;
+export type FormState =
+  | {
+      error?: string;
+      fieldErrors?: Record<string, string>;
+      /** Non secret values echoed back so a failed submit keeps what was typed. Never passwords. */
+      values?: Record<string, string>;
+      /** Changes on every failed submit; the form remounts with `key={attempt}`. */
+      attempt?: number;
+    }
+  | undefined;
+
+/** Fields that may be echoed back. Passwords are never in this list. */
+const ECHO = ["email", "name", "phone", "consent"] as const;
+
+function echo(formData: FormData): Record<string, string> {
+  const values: Record<string, string> = {};
+  for (const k of ECHO) {
+    const v = formData.get(k);
+    if (typeof v === "string") values[k] = v.slice(0, 254);
+  }
+  return values;
+}
+/** Every failed result carries the typed values and a new attempt number. */
+function failed(
+  prev: FormState,
+  formData: FormData,
+  out: Omit<NonNullable<FormState>, "values" | "attempt">,
+): FormState {
+  return { ...out, values: echo(formData), attempt: (prev?.attempt ?? 0) + 1 };
+}
 
 // Public entry points (login, sign up, sign out): Zod validated, no role to require yet.
+// Rate limited per IP and per email (in memory, per instance; `lib/rate-limit`).
 
 async function login(
   provider: "guest" | "staff",
+  prev: FormState,
   formData: FormData,
   fallback: string,
 ): Promise<FormState> {
@@ -25,33 +58,44 @@ async function login(
     email: formData.get("email"),
     password: formData.get("password"),
   });
-  if (!parsed.success) return { error: "Enter a valid email and password." };
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues)
+      fieldErrors[String(issue.path[0])] ??=
+        issue.path[0] === "password" ? "Enter your password." : "Enter a valid email address.";
+    return failed(prev, formData, { fieldErrors });
+  }
+  // Charged before the password check and never refunded; strict window IP + email (02 Security 5).
+  if (!(await allowLogin(parsed.data.email)))
+    return failed(prev, formData, { error: RATE_LIMITED_MESSAGE });
   try {
     await signIn(provider, {
       ...parsed.data,
       redirectTo: safeNext(formData.get("next"), fallback),
     });
   } catch (err) {
-    if (err instanceof AuthError) return { error: "That email and password do not match." };
+    if (err instanceof AuthError) return failed(prev, formData, { error: LOGIN_FAILED });
     throw err; // includes the redirect on success
   }
 }
 
-export async function guestLoginAction(_: FormState, formData: FormData) {
-  return login("guest", formData, "/account");
+export async function guestLoginAction(prev: FormState, formData: FormData) {
+  return login("guest", prev, formData, "/account");
 }
 
-export async function staffLoginAction(_: FormState, formData: FormData) {
-  return login("staff", formData, "/admin");
+export async function staffLoginAction(prev: FormState, formData: FormData) {
+  return login("staff", prev, formData, "/admin");
 }
 
-export async function guestSignUpAction(_: FormState, formData: FormData): Promise<FormState> {
+export async function guestSignUpAction(prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = signUpSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
     for (const issue of parsed.error.issues) fieldErrors[String(issue.path[0])] ??= issue.message;
-    return { fieldErrors };
+    return failed(prev, formData, { fieldErrors });
   }
+  if (!(await allow("signup", parsed.data.email)))
+    return failed(prev, formData, { error: RATE_LIMITED_MESSAGE });
   const { name, email, phone, password } = parsed.data;
   const inserted = await getDb()
     .insert(users)
@@ -67,7 +111,9 @@ export async function guestSignUpAction(_: FormState, formData: FormData): Promi
     .onConflictDoNothing({ target: users.email })
     .returning({ id: users.id });
   if (inserted.length === 0) {
-    return { fieldErrors: { email: "An account with this email already exists. Try signing in." } };
+    return failed(prev, formData, {
+      fieldErrors: { email: "An account with this email already exists. Try signing in." },
+    });
   }
   try {
     await signIn("guest", {
@@ -77,15 +123,16 @@ export async function guestSignUpAction(_: FormState, formData: FormData): Promi
     });
   } catch (err) {
     if (isRedirectError(err)) throw err;
-    if (err instanceof AuthError) return { error: "Account created. Please sign in." };
+    if (err instanceof AuthError)
+      return failed(prev, formData, { error: "Account created. Please sign in." });
     throw err;
   }
 }
 
 /** Same staff credentials as /admin; only the landing page differs. Off unless dev tools are on. */
-export async function devLoginAction(_: FormState, formData: FormData) {
+export async function devLoginAction(prev: FormState, formData: FormData) {
   if (!isDevToolsEnabled()) return { error: "Not available." };
-  return login("staff", formData, "/dev");
+  return login("staff", prev, formData, "/dev");
 }
 
 export async function signOutAction() {
