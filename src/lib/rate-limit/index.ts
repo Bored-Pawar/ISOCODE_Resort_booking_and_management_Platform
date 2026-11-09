@@ -16,7 +16,7 @@ const MIN = 60_000;
 export const RATE_RULES = {
   login: {
     ip: { limit: 30, windowMs: 15 * MIN },
-    ipId: { limit: 8, windowMs: 15 * MIN },
+    ipId: { limit: 20, windowMs: 15 * MIN },
     id: { limit: 50, windowMs: 15 * MIN },
   },
   signup: { ip: { limit: 20, windowMs: 60 * MIN }, id: { limit: 3, windowMs: 60 * MIN } },
@@ -52,7 +52,10 @@ export function ipFrom(
 ): string | null {
   if (!trustForwarded) return null;
   const forwarded = h.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return (forwarded || h.get("x-real-ip")?.trim() || "unknown").slice(0, 64);
+  const ip = (forwarded || h.get("x-real-ip")?.trim() || "unknown").slice(0, 64);
+  // IPv6: one subscriber usually holds a whole /64, so the window is per /64 prefix.
+  if (ip.includes(":")) return `${ip.split(":").slice(0, 4).join(":")}::/64`;
+  return ip;
 }
 
 /** Emails lower-cased; phone numbers reduced to their last 10 digits (one budget per number). */

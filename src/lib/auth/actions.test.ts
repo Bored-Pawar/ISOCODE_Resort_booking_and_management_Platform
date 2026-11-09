@@ -129,23 +129,23 @@ describe("auth forms keep input on failure", () => {
 });
 
 describe("rate limits (H2)", () => {
-  it("parallel wrong guesses are all counted: at most 8 reach signIn", async () => {
+  it("parallel wrong guesses are all counted: at most 20 reach signIn", async () => {
     signIn.mockImplementation(
       () => new Promise((_, reject) => setTimeout(() => reject(new AuthError("x")), 20)),
     );
     const results = await Promise.all(
-      Array.from({ length: 20 }, () =>
+      Array.from({ length: 30 }, () =>
         staffLoginAction(undefined, form({ email: "gm@example.test", password: SECRET })),
       ),
     );
-    expect(signIn).toHaveBeenCalledTimes(8);
-    expect(results.filter((r) => r?.error === RATE_LIMITED_MESSAGE)).toHaveLength(12);
+    expect(signIn).toHaveBeenCalledTimes(20);
+    expect(results.filter((r) => r?.error === RATE_LIMITED_MESSAGE)).toHaveLength(10);
   });
   it("every attempt is charged, even one next-auth turns into a redirect (no refund path)", async () => {
     signIn.mockRejectedValue(
       Object.assign(new Error("NEXT_REDIRECT"), { digest: "NEXT_REDIRECT" }),
     );
-    for (let i = 0; i < 8; i++)
+    for (let i = 0; i < 20; i++)
       await staffLoginAction(undefined, form({ email: "gm@example.test", password: SECRET })).catch(
         () => undefined,
       );
@@ -154,11 +154,11 @@ describe("rate limits (H2)", () => {
       form({ email: "gm@example.test", password: SECRET }),
     );
     expect(res?.error).toBe(RATE_LIMITED_MESSAGE);
-    expect(signIn).toHaveBeenCalledTimes(8);
+    expect(signIn).toHaveBeenCalledTimes(20);
   });
-  it("login: the ninth failed try for one email in 15 minutes is refused before signIn", async () => {
+  it("login: the 21st failed try for one email in 15 minutes is refused before signIn", async () => {
     signIn.mockRejectedValue(new AuthError("CredentialsSignin"));
-    for (let i = 0; i < 8; i++)
+    for (let i = 0; i < 20; i++)
       expect(
         (await staffLoginAction(undefined, form({ email: "gm@example.test", password: SECRET })))
           ?.error,
@@ -168,7 +168,7 @@ describe("rate limits (H2)", () => {
       form({ email: "GM@example.test", password: SECRET }),
     );
     expect(res?.error).toBe(RATE_LIMITED_MESSAGE);
-    expect(signIn).toHaveBeenCalledTimes(8);
+    expect(signIn).toHaveBeenCalledTimes(20);
   });
   it("sign up: three accounts per email an hour", async () => {
     insertReturning.mockResolvedValue([]);

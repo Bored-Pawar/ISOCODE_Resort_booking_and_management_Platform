@@ -43,6 +43,9 @@ describe("sliding window limiter", () => {
     expect(ipFrom(h({ "x-forwarded-for": "203.0.113.5, 10.0.0.1" }), true)).toBe("203.0.113.5");
     expect(ipFrom(h({ "x-real-ip": "198.51.100.2" }), true)).toBe("198.51.100.2");
     expect(ipFrom(h({ "x-forwarded-for": "203.0.113.5" }), false)).toBeNull();
+    expect(ipFrom(h({ "x-forwarded-for": "2001:db8:1:2:aaaa::1" }), true)).toBe(
+      "2001:db8:1:2::/64",
+    );
   });
   it("normalises contacts: one budget per email or phone number", () => {
     expect(normaliseId(" A@Example.test ")).toBe("a@example.test");
