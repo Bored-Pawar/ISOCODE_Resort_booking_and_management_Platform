@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, RefreshCw, Send, Sparkles } from "lucide-react";
 import { Badge, Button, Card, Textarea, useToast } from "@/components/ui";
@@ -13,6 +13,13 @@ import {
   regenerateAction,
   saveDraftAction,
 } from "../actions";
+import {
+  discardUnsaved,
+  keepUnsaved,
+  recoverable,
+  sessionStore,
+  type Recovered,
+} from "./draft-recovery";
 
 type Quote = {
   checkIn?: string;
@@ -92,6 +99,8 @@ export function DraftPanel({
   const [pending, start] = useTransition();
   const [body, setBody] = useState(draft?.body ?? "");
   const [error, setError] = useState<string | null>(null);
+  /** Unsaved prose kept from a stale refusal (QA-04), loaded after mount (browser storage). */
+  const [kept, setKept] = useState<Recovered | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const quote = (draft?.quote ?? null) as Quote | null;
   const warn = addsNewPrice(quoteText(quote), body);
@@ -108,8 +117,13 @@ export function DraftPanel({
       const res = await fn();
       if (!res.ok && res.stale) {
         // The panel remounts with the new draft (keyed by its version), so say it in a toast.
+        // The refusal stands; unsaved prose is kept so it can be reused deliberately (QA-04).
         dialog.current?.close();
-        toast(res.message, "error");
+        const keptText = !!draft && keepUnsaved(sessionStore, enquiryId, body, draft.body);
+        toast(
+          keptText ? `${res.message} Your unsaved text is kept under the new draft.` : res.message,
+          "error",
+        );
         router.refresh();
       } else if (!res.ok) setError(res.message);
       else {
@@ -118,6 +132,13 @@ export function DraftPanel({
         router.refresh();
       }
     });
+
+  const currentBody = draft?.body ?? "";
+  useEffect(() => {
+    // Browser storage is read only after mount, so the server render and hydration agree.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setKept(recoverable(sessionStore, enquiryId, currentBody));
+  }, [enquiryId, currentBody]);
 
   if (draft?.sentAt)
     return (
@@ -212,6 +233,46 @@ export function DraftPanel({
             disabled={!canWork || pending}
             onChange={(e) => setBody(e.target.value)}
           />
+          {kept && canWork ? (
+            <section
+              aria-label="Your unsaved text"
+              className="mt-3 rounded-control border border-border bg-surface-2 p-3 text-small"
+            >
+              <p className="font-semibold">Your unsaved text (not saved, not sent)</p>
+              <p className="text-muted">
+                It was written before the draft changed. Check every date, room and price against
+                the quote above before you use it.
+              </p>
+              <p className="mt-2 max-h-48 overflow-y-auto rounded-control border border-border bg-surface p-2 whitespace-pre-wrap">
+                {kept.text}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() => {
+                    setBody(kept.text);
+                    discardUnsaved(sessionStore, enquiryId);
+                    setKept(null);
+                  }}
+                >
+                  Put it in the editor
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() => {
+                    discardUnsaved(sessionStore, enquiryId);
+                    setKept(null);
+                  }}
+                >
+                  Discard
+                </Button>
+              </div>
+            </section>
+          ) : null}
           {warn ? (
             <p role="status" className="mt-2 flex items-center gap-1 text-small text-warning">
               <AlertTriangle className="size-4" strokeWidth={1.5} aria-hidden />

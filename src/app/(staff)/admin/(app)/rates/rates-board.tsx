@@ -15,7 +15,9 @@ import {
 } from "@/modules/admin/rules";
 import { MAX_RATE_RUPEES } from "@/modules/admin/schemas";
 import type { RateGridRow } from "@/modules/admin";
+import { ConnectionAlert } from "../_components/connection-alert";
 import { CheckGroup, dateColumns, DateStepper, DayPicker } from "../_components/grid-dates";
+import { send } from "../_components/transport";
 import { setRatesAction } from "./actions";
 import { cellKey, emptyOverlay, overlayReducer, shownPrice, type BulkScope } from "./rate-overlay";
 
@@ -233,6 +235,8 @@ function BulkPanel({
   const [days, setDays] = useState<number[]>([...WEEKEND_DAYS]);
   const [price, setPrice] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  /** The last Apply could not reach the server (QA-05): inputs stay, nothing is reported saved. */
+  const [lost, setLost] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const preview = bulkPreview({ rooms, roomTypeIds: roomIds, planCodes: codes, from, to, days });
@@ -242,9 +246,17 @@ function BulkPanel({
   const apply = () =>
     startTransition(async () => {
       setErrors({});
+      setLost(false);
       const scope: BulkScope = { roomTypeIds: roomIds, planCodes: codes, from, to, days };
       const version = nextVersion();
-      const res = await setRatesAction({ mode: "range", ...scope, rupees: parseRupees(price) });
+      const sent = await send(() =>
+        setRatesAction({ mode: "range", ...scope, rupees: parseRupees(price) }),
+      );
+      if (!sent.sent) {
+        setLost(true);
+        return;
+      }
+      const res = sent.value;
       if (!res.ok) {
         setErrors(
           res.code === "FORBIDDEN" ? { form: "Your role cannot change rates." } : res.errors,
@@ -310,6 +322,7 @@ function BulkPanel({
           {errors.form}
         </p>
       ) : null}
+      {lost ? <ConnectionAlert onRetry={apply} pending={pending} /> : null}
       <Button onClick={apply} disabled={!canApply} loading={pending}>
         Apply
       </Button>

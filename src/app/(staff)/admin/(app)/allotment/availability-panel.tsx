@@ -5,6 +5,8 @@ import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
 import { Button, Card, Input, Select, Textarea } from "@/components/ui";
 import type { AffectedBooking } from "@/modules/admin";
+import { ConnectionAlert } from "../_components/connection-alert";
+import { send } from "../_components/transport";
 import { bookingsInRangeAction, setOfflineAction, setOnlineAction } from "./actions";
 
 const dayFmt = new Intl.DateTimeFormat("en-IN", {
@@ -48,6 +50,8 @@ export function AvailabilityPanel({
     bookings: AffectedBooking[];
     truncated: boolean;
   } | null>(null);
+  /** Retry for the last call that could not reach the server (QA-05); null when none. */
+  const [lost, setLost] = useState<null | (() => void)>(null);
   const [pending, startTransition] = useTransition();
 
   const roomTypeId = room === "all" ? null : room;
@@ -63,12 +67,16 @@ export function AvailabilityPanel({
     (v: T) => {
       set(v);
       setErrors({});
+      setLost(null);
     };
 
   const check = () =>
     startTransition(async () => {
       setErrors({});
-      const res = await bookingsInRangeAction({ roomTypeId, from, to });
+      setLost(null);
+      const sent = await send(() => bookingsInRangeAction({ roomTypeId, from, to }));
+      if (!sent.sent) return setLost(() => check);
+      const res = sent.value;
       if (!res.ok) {
         setErrors(
           res.code === "FORBIDDEN" ? { form: "Your role cannot change online dates." } : res.errors,
@@ -80,7 +88,10 @@ export function AvailabilityPanel({
 
   const takeOffline = () =>
     startTransition(async () => {
-      const res = await setOfflineAction({ roomTypeId, from, to, reason });
+      setLost(null);
+      const sent = await send(() => setOfflineAction({ roomTypeId, from, to, reason }));
+      if (!sent.sent) return setLost(() => takeOffline);
+      const res = sent.value;
       if (!res.ok) {
         if (res.code === "FORBIDDEN") setErrors({ form: "Your role cannot change online dates." });
         else if (res.code === "NOT_FOUND") setErrors({ form: "That room type no longer exists." });
@@ -96,7 +107,10 @@ export function AvailabilityPanel({
 
   const bringOnline = () =>
     startTransition(async () => {
-      const res = await setOnlineAction({ roomTypeId, from, to });
+      setLost(null);
+      const sent = await send(() => setOnlineAction({ roomTypeId, from, to }));
+      if (!sent.sent) return setLost(() => bringOnline);
+      const res = sent.value;
       if (!res.ok) {
         if (res.code === "FORBIDDEN") setErrors({ form: "Your role cannot change online dates." });
         else if (res.code === "ALL_ROOMS_OFFLINE")
@@ -219,6 +233,7 @@ export function AvailabilityPanel({
           {errors.form}
         </p>
       ) : null}
+      {lost ? <ConnectionAlert onRetry={lost} pending={pending} /> : null}
       {mode === "offline" ? (
         reviewed ? (
           <Button onClick={takeOffline} loading={pending} disabled={reason.trim().length < 3}>
