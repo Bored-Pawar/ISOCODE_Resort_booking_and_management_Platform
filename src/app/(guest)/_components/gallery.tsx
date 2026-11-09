@@ -15,10 +15,11 @@ export function Gallery({ photos, name }: { photos: RoomPhoto[]; name: string })
     <div
       role="group"
       aria-label={`${name} photos`}
-      // On phones this is a horizontal scroller: focusable so it scrolls with the arrow keys.
-      tabIndex={0}
+      // On phones, with several photos, this is a horizontal scroller: focusable so it scrolls
+      // with the arrow keys (inset ring: the strip touches the screen edges).
+      tabIndex={shown.length > 1 ? 0 : undefined}
       className={cn(
-        "-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 md:mx-0 md:grid md:h-[440px] md:grid-cols-[2fr_1fr] md:grid-rows-2 md:overflow-visible md:px-0",
+        "-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 focus-visible:outline-offset-[-2px] md:mx-0 md:grid md:h-[440px] md:grid-cols-[2fr_1fr] md:grid-rows-2 md:overflow-visible md:px-0",
         shown.length === 1 && "md:grid-cols-1 md:grid-rows-1",
       )}
     >

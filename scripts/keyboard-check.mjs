@@ -1,5 +1,6 @@
 // H5: the booking flow can start with the keyboard only. Tab to "Add room", Enter, Tab to
 // "Continue", Enter, and land on /book/details. Usage: node scripts/keyboard-check.mjs <base>
+import { writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 
 const base = process.argv[2] ?? "http://localhost:3300";
@@ -36,7 +37,14 @@ await page.waitForFunction(
 const b = await tabTo("Continue");
 await page.keyboard.press("Enter");
 await page.waitForURL(/\/book\/details\?.*quoteHash=/, { timeout: 120_000 });
-console.log(
-  `keyboard ok: Add room after ${a} tabs, Continue after ${b} more, reached /book/details`,
+const line = `keyboard ok: Add room after ${a} tabs, Continue after ${b} more, reached /book/details`;
+console.log(line);
+writeFileSync(
+  "docs/screenshots/final/keyboard.json",
+  JSON.stringify(
+    { at: new Date().toISOString(), width: 375, scope: "rooms to /book/details", result: line },
+    null,
+    2,
+  ) + String.fromCharCode(10),
 );
 await browser.close();

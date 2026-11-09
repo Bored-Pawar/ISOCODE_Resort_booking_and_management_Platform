@@ -4,7 +4,8 @@
 // Usage: DEV_TOOLS_ENABLED=true pnpm start -p 3300 (development database), then
 //   node scripts/ux-walk.mjs http://localhost:3300 [--shots]
 // Writes docs/screenshots/final/walk.json (and screenshots with --shots). Creates one HELD
-// booking for the seeded guest (it expires on its own); reseed afterwards for a clean demo.
+// booking for the seeded guest, once, before the width loop (it expires on its own); reseed
+// afterwards for a clean demo.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { chromium } from "@playwright/test";
@@ -33,7 +34,10 @@ async function deadLinks(page, persona) {
       .filter((h) => h && h.startsWith("/") && !h.startsWith("//")),
   );
   const dead = [];
-  for (const href of new Set(hrefs)) {
+  // Page routes only: API routes and downloads are skipped so a GET with an effect is never hit.
+  for (const href of new Set(
+    hrefs.filter((h) => !h.startsWith("/api/") && !/\.ics(\?|$)/.test(h)),
+  )) {
     const key = `${persona}|${href}`;
     if (!linkChecked.has(key)) {
       const r = await page.request.get(base + href, { maxRedirects: 5 }).catch(() => null);
@@ -91,6 +95,14 @@ async function check(page, persona, screen, path, width) {
       }));
   });
   const dead = await deadLinks(page, persona);
+  // Screenshot before the focus probe, so no focus outline shows in the TDD images.
+  if (shots)
+    await page.screenshot({
+      path: `${outDir}/${screen}-${width.name}.jpg`,
+      fullPage: true,
+      type: "jpeg",
+      quality: 70,
+    });
   // Focus ring: Tab once from the top and inspect the focused element.
   await page.mouse.click(1, 1);
   await page.keyboard.press("Tab");
@@ -106,13 +118,6 @@ async function check(page, persona, screen, path, width) {
       what: `${el.tagName.toLowerCase()} ${(el.textContent ?? "").trim().slice(0, 30)}`,
     };
   });
-  if (shots)
-    await page.screenshot({
-      path: `${outDir}/${screen}-${width.name}.jpg`,
-      fullPage: true,
-      type: "jpeg",
-      quality: 70,
-    });
   page.off("console", onConsole);
   page.off("pageerror", onPageError);
   const row = {
@@ -135,6 +140,33 @@ async function check(page, persona, screen, path, width) {
 }
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
+
+// Guest setup once: a CONFIRMED booking for the confirmation screen, and one hold for the pay
+// screen (both widths reuse them).
+let confirmed = null;
+let payPath = null;
+{
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  await login(page, "/login", "asha@guest.example");
+  await page.goto(base + "/account", { waitUntil: "networkidle" });
+  const refs = await page
+    .locator('a[href^="/booking/CA-"]')
+    .evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")))]);
+  for (const href of refs) {
+    await page.goto(base + href, { waitUntil: "networkidle" });
+    if (await page.getByRole("heading", { name: "Your stay is confirmed" }).count()) {
+      confirmed = href;
+      break;
+    }
+  }
+  const details = await cartDetails(page);
+  await page.goto(base + details);
+  await page.getByRole("button", { name: "Hold my rooms" }).click();
+  await page.waitForURL(/\/book\/pay\/CA-/, { timeout: 90_000 });
+  payPath = new URL(page.url()).pathname;
+  await ctx.close();
+}
 
 for (const width of WIDTHS) {
   // Signed out.
@@ -160,21 +192,11 @@ for (const width of WIDTHS) {
     const ctx = await browser.newContext({ viewport: width });
     const page = await ctx.newPage();
     await login(page, "/login", "asha@guest.example");
-    await page.goto(base + "/account", { waitUntil: "networkidle" });
-    const confirmed = await page
-      .locator('a[href^="/booking/CA-"]')
-      .first()
-      .getAttribute("href")
-      .catch(() => null);
     const details = await cartDetails(page);
     await check(page, "guest", "details", details, width);
     await check(page, "guest", "account", "/account", width);
     if (confirmed) await check(page, "guest", "confirmation", confirmed, width);
-    // One real hold to reach the pay page (expires on its own).
-    await page.goto(base + details);
-    await page.getByRole("button", { name: "Hold my rooms" }).click();
-    await page.waitForURL(/\/book\/pay\/CA-/, { timeout: 90_000 });
-    await check(page, "guest", "pay", new URL(page.url()).pathname, width);
+    if (payPath) await check(page, "guest", "pay", payPath, width);
     await ctx.close();
   }
   // Staff roles.

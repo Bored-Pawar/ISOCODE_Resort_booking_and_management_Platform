@@ -2,6 +2,7 @@
 // signed out, as the seeded guest and as the GM (twice each, the second after the compile) and
 // prints every console warning or error that mentions hydration or a mismatch.
 // Usage: DEV_TOOLS_ENABLED=true pnpm dev -p 3300, then node scripts/hydration-check.mjs http://localhost:3300
+import { writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 
 const base = process.argv[2] ?? "http://localhost:3300";
@@ -65,5 +66,14 @@ await session(
   "Work email",
 );
 await browser.close();
+const visited = [];
 console.log(JSON.stringify(hits, null, 2));
+writeFileSync(
+  "docs/screenshots/final/hydration.json",
+  JSON.stringify(
+    { at: new Date().toISOString(), pages: 16, loadsPerPage: 2, warnings: hits },
+    null,
+    2,
+  ) + "\n",
+);
 console.log(`${hits.length} hydration warnings`);
