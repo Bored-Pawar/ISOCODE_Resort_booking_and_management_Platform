@@ -1,0 +1,226 @@
+{
+  "measuredAt": "2026-11-09T00:55:56.487Z",
+  "base": "http://localhost:3200",
+  "results": [
+    {
+      "page": "home",
+      "path": "/",
+      "js": {
+        "scripts": 10,
+        "gzipKb": 162.6
+      },
+      "lighthouse": {
+        "median": {
+          "score": 67,
+          "lcpMs": 3126,
+          "fcpMs": 918,
+          "tbtMs": 1633,
+          "cls": 0,
+          "lcpElement": null
+        },
+        "runs": [
+          {
+            "score": 94,
+            "lcpMs": 3099,
+            "fcpMs": 915,
+            "tbtMs": 27,
+            "cls": 0,
+            "lcpElement": null
+          },
+          {
+            "score": 67,
+            "lcpMs": 3126,
+            "fcpMs": 918,
+            "tbtMs": 1633,
+            "cls": 0,
+            "lcpElement": null
+          },
+          {
+            "score": 67,
+            "lcpMs": 3154,
+            "fcpMs": 922,
+            "tbtMs": 1768,
+            "cls": 0,
+            "lcpElement": null
+          }
+        ]
+      }
+    },
+    {
+      "page": "rooms-search",
+      "path": "/rooms?checkIn=2026-11-30&checkOut=2026-12-02&adults=2&children=0",
+      "js": {
+        "scripts": 10,
+        "gzipKb": 169.3
+      },
+      "lighthouse": {
+        "median": {
+          "score": 92,
+          "lcpMs": 3221,
+          "fcpMs": 761,
+          "tbtMs": 24,
+          "cls": 0,
+          "lcpElement": null
+        },
+        "runs": [
+          {
+            "score": 93,
+            "lcpMs": 3131,
+            "fcpMs": 761,
+            "tbtMs": 25,
+            "cls": 0,
+            "lcpElement": null
+          },
+          {
+            "score": 92,
+            "lcpMs": 3221,
+            "fcpMs": 761,
+            "tbtMs": 24,
+            "cls": 0,
+            "lcpElement": null
+          },
+          {
+            "score": 92,
+            "lcpMs": 3241,
+            "fcpMs": 761,
+            "tbtMs": 24,
+            "cls": 0,
+            "lcpElement": null
+          }
+        ]
+      }
+    },
+    {
+      "page": "room-detail",
+      "path": "/rooms/garden-villa",
+      "js": {
+        "scripts": 10,
+        "gzipKb": 165.3
+      },
+      "lighthouse": {
+        "median": {
+          "score": 69,
+          "lcpMs": 2896,
+          "fcpMs": 763,
+          "tbtMs": 1632,
+          "cls": 0,
+          "lcpElement": null
+        },
+        "runs": [
+          {
+            "score": 68,
+            "lcpMs": 2822,
+            "fcpMs": 763,
+            "tbtMs": 1840,
+            "cls": 0,
+            "lcpElement": null
+          },
+          {
+            "score": 69,
+            "lcpMs": 2896,
+            "fcpMs": 763,
+            "tbtMs": 1632,
+            "cls": 0,
+            "lcpElement": null
+          },
+          {
+            "score": 95,
+            "lcpMs": 2928,
+            "fcpMs": 758,
+            "tbtMs": 25,
+            "cls": 0,
+            "lcpElement": null
+          }
+        ]
+      }
+    },
+    {
+      "page": "book-details",
+      "path": "/book/details?…",
+      "js": {
+        "scripts": 9,
+        "gzipKb": 162.7
+      },
+      "lighthouse": {
+        "median": {
+          "score": 94,
+          "lcpMs": 2964,
+          "fcpMs": 908,
+          "tbtMs": 56,
+          "cls": 0.065,
+          "lcpElement": null
+        },
+        "runs": [
+          {
+            "score": 94,
+            "lcpMs": 2936,
+            "fcpMs": 909,
+            "tbtMs": 27,
+            "cls": 0.065,
+            "lcpElement": null
+          },
+          {
+            "score": 94,
+            "lcpMs": 2964,
+            "fcpMs": 908,
+            "tbtMs": 56,
+            "cls": 0.065,
+            "lcpElement": null
+          },
+          {
+            "score": 93,
+            "lcpMs": 3168,
+            "fcpMs": 909,
+            "tbtMs": 34,
+            "cls": 0.065,
+            "lcpElement": null
+          }
+        ]
+      }
+    },
+    {
+      "page": "enquire",
+      "path": "/enquire",
+      "js": {
+        "scripts": 9,
+        "gzipKb": 156.3
+      },
+      "lighthouse": {
+        "median": {
+          "score": 100,
+          "lcpMs": 760,
+          "fcpMs": 760,
+          "tbtMs": 52,
+          "cls": 0,
+          "lcpElement": null
+        },
+        "runs": [
+          {
+            "score": 100,
+            "lcpMs": 759,
+            "fcpMs": 759,
+            "tbtMs": 48,
+            "cls": 0,
+            "lcpElement": null
+          },
+          {
+            "score": 100,
+            "lcpMs": 760,
+            "fcpMs": 760,
+            "tbtMs": 52,
+            "cls": 0,
+            "lcpElement": null
+          },
+          {
+            "score": 100,
+            "lcpMs": 761,
+            "fcpMs": 761,
+            "tbtMs": 48,
+            "cls": 0,
+            "lcpElement": null
+          }
+        ]
+      }
+    }
+  ]
+}
