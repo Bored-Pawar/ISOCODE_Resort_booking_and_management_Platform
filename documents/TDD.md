@@ -1,4 +1,4 @@
-# Company A: Direct Booking and AI Enquiry Inbox
+Live since 23:40 on 9 Nov (67873dd), rechecked on the live app |Live since 23:40 on 9 Nov (67873dd), rechecked on the live app |Live since 23:40 on 9 Nov (67873dd), rechecked on the live app |# Company A: Direct Booking and AI Enquiry Inbox
 
 ## Technical Design Document
 
@@ -624,7 +624,6 @@ All five medians are under the 2.5 s target. `/rooms` had two runs with long tas
 | Real payment gateway | Out of scope; a mock with a signed webhook exercises the same exactly once path |
 | Real email and WhatsApp | Simulated with real payload shapes; Meta signature verification and the GET handshake are not implemented |
 | Channel manager or reservation system integration | Out of scope in the brief |
-| Deploying QA-05, QA-03 and QA-04 before the deadline | Fixed and unit tested on unmerged branches, but not yet reviewed or checked in a browser, so they were not merged. The QA-01 and QA-02 fixes were merged without a full PostgreSQL run on the day (section 10) |
 
 ---
 
@@ -641,7 +640,7 @@ All five medians are under the 2.5 s target. `/rooms` had two runs with long tas
 9. **Webhook dedupe** uses an advisory lock and a scan, not a unique index.
 10. **Zero total stays** cannot be paid online. Failed and timed out payment attempts are not stored.
 11. **Verified only locally, not on the live site**: concurrent holds, late payment webhooks, real shared admin writes, provider failover under a 429 storm, and the stale AI recovery cap. They are covered by the PostgreSQL suite, which does not run against production.
-12. **Three QA fixes not live.** QA-05 (bulk editor lost on a network failure), QA-03 (date toolbar overflow at 320 px) and QA-04 (unsaved reply text lost on a stale refusal) are fixed on unmerged branches only, so these issues still occur on the live app. QA-01 and QA-02 are fixed and live. Approving from a stale second tab without reloading was not tested live.
+12. All five QA findings are fixed and live. Approving from a stale second tab without reloading was not tested live.
 13. **Full PostgreSQL run not repeated today.** The last complete run passed 176 of 176; today only the quote (16) and inbox (18) suites were confirmed alongside the unit tests.
 14. **Not every loading and error state** was forced during production QA.
 
@@ -651,7 +650,7 @@ All five medians are under the 2.5 s target. `/rooms` had two runs with long tas
 
 | Priority | Work | Why (metric) |
 |---|---|---|
-| 0 | Run the full PostgreSQL suite on `main`, then review, merge and deploy the QA-05, QA-03 and QA-04 branches and recheck each on the live app | Staff tools must not lose work; confirms the merged quote fix with the full suite |
+| 0 | Run the full PostgreSQL suite on main to confirm the merged fixes | Staff tools must not lose work; confirms the merged quote fix with the full suite |
 | 1 | Q8 response metrics: median first reply in working hours, per lane and owner | Measures the 30 minute target directly; the data is already stored |
 | 2 | Real WhatsApp Business and email integration with signature checks | Most enquiries arrive there today; required before the inbox replaces the GM's phone |
 | 3 | Real payment gateway (Razorpay or similar) using the same webhook path | Required to take real direct bookings (direct share 12% to 20%) |
