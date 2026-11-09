@@ -1,6 +1,16 @@
 # Company A: resort booking app
 
-A coffee estate resort in Chikkamagaluru: direct booking with allotment control, an enquiry inbox and an AI router. Brand name is a placeholder (`src/lib/site.ts`). Docs in `docs/` are the source of truth; start with `docs/06-progress.md`.
+A coffee estate resort in Chikkamagaluru: direct booking with allotment control, an enquiry inbox and an AI router. Brand name is a placeholder (`src/lib/site.ts`). Docs in `docs/` are the source of truth; start with `docs/06-progress.md`. Deployment: [`deployment.md`](deployment.md).
+
+## What it does
+
+- **Guests** search dates and party, build a stay of 1 to 4 rooms with live availability and prices including GST, sign up inline, hold the rooms for 10 minutes, pay through a mock gateway and get a confirmation. `/enquire` takes questions and event requests.
+- **Staff** (reservations, sales, GM) edit nightly rates, allotment and offline dates, promo codes and bookings, and work an enquiry inbox. Each role sees only its lanes.
+- **AI router**: every enquiry (web form, simulated email and WhatsApp) is classified, its dates and party extracted and checked against the message, routed to an owner, and given a draft reply priced only from the server quote. Low confidence goes to an unsorted lane; complaints always alert the GM; nothing is sent without a staff approval.
+
+## Stack
+
+Next.js 16 (App Router, React 19, server actions), TypeScript, Tailwind CSS 4, Drizzle ORM on PostgreSQL 16 (Neon), Auth.js v5 (JWT), Vercel AI SDK (Groq, Gemini, Anthropic or a local model; a rules fallback needs no key), Zod, Vitest and Playwright. Deployed on Vercel.
 
 ## Run locally
 
@@ -13,6 +23,8 @@ docker compose up -d              # optional local Postgres 16, see docker-compo
 pnpm db:reset && pnpm db:seed     # drops everything, migrates, seeds demo data (repeatable)
 pnpm dev                          # http://localhost:3000
 ```
+
+AI: `AI_PROVIDER=rules` works without any key. For live classification set `AI_PROVIDER=groq`, `AI_MODEL=openai/gpt-oss-20b` and `GROQ_API_KEY_1` (up to `_4`). Dev tools: `DEV_TOOLS_ENABLED=true` opens `/dev` (UI kit, inbound email and WhatsApp simulator, mock outbox, dev tools sign in); leave it off in production unless the demo needs the outbox.
 
 Local Docker URL: `postgresql://resort:resort@localhost:5432/resort`.
 `AUTH_SECRET` can be any long random string (`openssl rand -base64 32`).
@@ -28,10 +40,13 @@ Local Docker URL: `postgresql://resort:resort@localhost:5432/resort`.
 | `pnpm test`                                                | Unit tests (no database)                                                                                             |
 | `pnpm test:integration`                                    | Integration tests. They require `TEST_DATABASE_URL` (a separate database), migrate it, and the seed test re-seeds it |
 | `pnpm db:generate` / `db:migrate` / `db:reset` / `db:seed` | Drizzle migrations and demo data                                                                                     |
+| `pnpm db:deploy`                                           | Guarded production migration and demo seed, see `deployment.md` (never run by CI)                                    |
+| `pnpm test:e2e`                                            | Playwright against a running app (`E2E_BASE_URL`)                                                                    |
+| `pnpm eval:ai`                                             | AI evaluation over the 30 labelled seed enquiries (`--r5` writes `docs/eval/`)                                       |
 
-## Demo logins (seed data, development only)
+## Demo logins (seed data)
 
-All demo accounts use the password `Demo@12345`.
+All demo accounts use the password `Demo@12345` (public; see `deployment.md` before seeding production).
 
 | Role         | Email                           | Sign in at     |
 | ------------ | ------------------------------- | -------------- |
@@ -45,4 +60,8 @@ New guests can sign up at `/signup`. Staff and guest logins are separate: a gues
 
 ## Structure
 
-See `docs/02-architecture.md`. Modules under `src/modules/*` talk only through their `index.ts`; in this walking skeleton they return fixtures.
+See `docs/02-architecture.md`. Modules under `src/modules/*` (catalog, pricing, inventory, booking, payments, enquiries, ai-provider, ai-router) talk only through their `index.ts`; money is integer paise, dates are IST, prices come only from `pricing`.
+
+## Tests
+
+`pnpm test` runs the unit suite (no database). `pnpm test:integration -- --no-file-parallelism` runs the PostgreSQL suite against `TEST_DATABASE_URL` (a separate database; prefix `AI_PROVIDER=rules` if `.env.local` selects a live provider). `pnpm test:e2e` runs the Playwright flows (guest books and pays; staff approves a draft; security headers) against `E2E_BASE_URL`.

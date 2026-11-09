@@ -55,6 +55,8 @@ export default function Home({
           alt="Mist over coffee plantation hills at sunrise"
           fill
           priority
+          fetchPriority="high"
+          quality={60}
           sizes="100vw"
           placeholder="blur"
           className="-z-20 object-cover object-[62%_50%]"

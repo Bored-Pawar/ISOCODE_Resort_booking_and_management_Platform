@@ -36,6 +36,7 @@ export function Gallery({ photos, name }: { photos: RoomPhoto[]; name: string })
             alt={photo.alt}
             fill
             priority={i === 0}
+            fetchPriority={i === 0 ? "high" : undefined}
             loading={i === 0 ? undefined : "lazy"}
             sizes={
               i === 0

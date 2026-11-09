@@ -19,6 +19,7 @@
     "db:seed": "tsx --tsconfig tsconfig.json --env-file-if-exists=.env.local src/db/seed/index.ts",
     "db:reset": "tsx --tsconfig tsconfig.json --env-file-if-exists=.env.local src/db/reset.mts && pnpm db:migrate",
     "db:studio": "drizzle-kit studio",
+    "db:deploy": "tsx --tsconfig tsconfig.json scripts/db-deploy.mts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
