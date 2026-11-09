@@ -1,5 +1,5 @@
 {
-  "at": "2026-11-09T04:45:21.722Z",
+  "at": "2026-11-09T04:53:35.795Z",
   "base": "http://localhost:3300",
   "provider": "groq",
   "model": "openai/gpt-oss-120b",
@@ -20,7 +20,7 @@
       "id": "A3",
       "check": "roles: sales cannot open Rates or the Unsorted lane",
       "pass": true,
-      "evidence": "rates 403 screen=true, unsorted tab shown=false, lane param unsorted"
+      "evidence": "rates 403 screen=true, unsorted tab shown=false, active lane \"Inbox Inbox Mine\""
     },
     {
       "id": "A4",
@@ -30,7 +30,7 @@
     },
     {
       "id": "A5",
-      "check": "GM opens rates, allotment (offline dates), promos, bookings",
+      "check": "GM pages load: rates, allotment, promos, bookings",
       "pass": true,
       "evidence": "/admin/rates, /admin/allotment, /admin/promos, /admin/bookings"
     },
@@ -38,37 +38,37 @@
       "id": "A6",
       "check": "web form enquiry stored with a reference",
       "pass": true,
-      "evidence": "ENQ-MP9YT"
+      "evidence": "ENQ-4HZZL"
     },
     {
       "id": "A7.1",
       "check": "inbound email accepted (ENQ-4410)",
       "pass": true,
-      "evidence": "200 ENQ-3SQKD"
+      "evidence": "200 ENQ-WBCQL"
     },
     {
       "id": "A7.2",
       "check": "inbound whatsapp accepted (ENQ-4411)",
       "pass": true,
-      "evidence": "200 ENQ-XXW4W"
+      "evidence": "200 ENQ-DDE4J"
     },
     {
       "id": "A7.3",
       "check": "inbound email accepted (ENQ-4412)",
       "pass": true,
-      "evidence": "200 ENQ-FBNAJ"
+      "evidence": "200 ENQ-4SCXP"
     },
     {
       "id": "A7.4",
       "check": "inbound email accepted (complaint)",
       "pass": true,
-      "evidence": "200 ENQ-NAHN4"
+      "evidence": "200 ENQ-T67U9"
     },
     {
       "id": "A7.5",
       "check": "inbound whatsapp accepted (ambiguous)",
       "pass": true,
-      "evidence": "200 ENQ-CCVB2"
+      "evidence": "200 ENQ-CPFJW"
     },
     {
       "id": "A7.6",
@@ -84,7 +84,7 @@
     },
     {
       "id": "A10 ENQ-4410",
-      "check": "draft is never sent automatically",
+      "check": "a draft exists and is not sent or approved",
       "pass": true,
       "evidence": "sentAt=null approvedBy=null"
     },
@@ -92,17 +92,17 @@
       "id": "A8 ENQ-4411",
       "check": "brief enquiry: room to reservations",
       "pass": true,
-      "evidence": "ai=ok category=room confidence=0.95 lane=sorted owner=reservations draft=with server quote"
+      "evidence": "ai=ok category=room confidence=0.97 lane=sorted owner=reservations draft=with server quote"
     },
     {
       "id": "A9",
-      "check": "room enquiry draft carries a server quote (prices only from pricing)",
+      "check": "room enquiry draft carries a server quote",
       "pass": true,
-      "evidence": "ai=ok category=room confidence=0.95 lane=sorted owner=reservations draft=with server quote"
+      "evidence": "ai=ok category=room confidence=0.97 lane=sorted owner=reservations draft=with server quote"
     },
     {
       "id": "A10 ENQ-4411",
-      "check": "draft is never sent automatically",
+      "check": "a draft exists and is not sent or approved",
       "pass": true,
       "evidence": "sentAt=null approvedBy=null"
     },
@@ -114,7 +114,7 @@
     },
     {
       "id": "A10 ENQ-4412",
-      "check": "draft is never sent automatically",
+      "check": "a draft exists and is not sent or approved",
       "pass": true,
       "evidence": "sentAt=null approvedBy=null"
     },
@@ -126,7 +126,7 @@
     },
     {
       "id": "A10 complaint",
-      "check": "draft is never sent automatically",
+      "check": "a draft exists and is not sent or approved",
       "pass": true,
       "evidence": "sentAt=null approvedBy=null"
     },
@@ -138,7 +138,7 @@
     },
     {
       "id": "A10 ambiguous",
-      "check": "draft is never sent automatically",
+      "check": "a draft exists and is not sent or approved",
       "pass": true,
       "evidence": "sentAt=null approvedBy=null"
     },

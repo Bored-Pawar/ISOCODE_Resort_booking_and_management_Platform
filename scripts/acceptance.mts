@@ -31,7 +31,7 @@ const stay = `checkIn=${ist(21)}&checkOut=${ist(23)}&adults=2&children=0`;
   record(
     "A1",
     "search shows rooms with prices incl. GST",
-    /₹/.test(html) && /GST/i.test(html) && /left/.test(html),
+    /₹/.test(html) && /GST/i.test(html) && /\d+\s+left/.test(html.replace(/<[^>]*>/g, " ")),
     "/rooms with dates: rupee prices, GST, rooms left",
   );
   const room = await (await fetch(`${base}/rooms/garden-villa?${stay}`)).text();
@@ -61,13 +61,14 @@ async function staff(role: string) {
   await page.goto(`${base}/admin/rates`, { timeout: 120_000 });
   const forbidden = await page.getByText("Your role doesn't include this page").count();
   await page.goto(`${base}/admin/inbox?lane=unsorted`, { timeout: 120_000 });
-  const lane = new URL(page.url()).searchParams.get("lane");
   const unsortedTab = await page.getByRole("link", { name: /^Unsorted/ }).count();
+  // The page falls back to the role's first lane: the active lane (aria-current) must not be Unsorted.
+  const active = (await page.locator('a[aria-current="page"]').allTextContents()).join(" ").trim();
   record(
     "A3",
     "roles: sales cannot open Rates or the Unsorted lane",
-    forbidden > 0 && unsortedTab === 0,
-    `rates 403 screen=${forbidden > 0}, unsorted tab shown=${unsortedTab > 0}, lane param ${lane}`,
+    forbidden > 0 && unsortedTab === 0 && !!active && !/Unsorted/.test(active),
+    `rates 403 screen=${forbidden > 0}, unsorted tab shown=${unsortedTab > 0}, active lane "${active.slice(0, 40)}"`,
   );
   await ctx.close();
   const guest = await browser.newContext();
@@ -93,7 +94,7 @@ async function staff(role: string) {
   }
   record(
     "A5",
-    "GM opens rates, allotment (offline dates), promos, bookings",
+    "GM pages load: rates, allotment, promos, bookings",
     loaded.length === 4,
     loaded.join(", "),
   );
@@ -230,8 +231,6 @@ while (Date.now() < deadline) {
     rows.every((r) => !["pending", "processing"].includes(r.aiStatus))
   )
     break;
-  // Inbox loads also schedule a sweep; poke one so after() work cannot be missed in dev.
-  await fetch(`${base}/`).catch(() => null);
   await new Promise((r) => setTimeout(r, 5000));
 }
 const byKey = (k: string) => rows.find((r) => r.id === ids.get(k));
@@ -283,19 +282,13 @@ for (const m of msgs) {
       ev,
     );
   if (m.key === "ENQ-4411")
-    record(
-      "A9",
-      "room enquiry draft carries a server quote (prices only from pricing)",
-      !!draft?.quote,
-      ev,
-    );
-  if (draft)
-    record(
-      `A10 ${m.key}`,
-      "draft is never sent automatically",
-      draft.sentAt === null && draft.approvedBy === null,
-      `sentAt=${draft.sentAt} approvedBy=${draft.approvedBy}`,
-    );
+    record("A9", "room enquiry draft carries a server quote", !!draft?.quote, ev);
+  record(
+    `A10 ${m.key}`,
+    "a draft exists and is not sent or approved",
+    !!draft && draft.sentAt === null && draft.approvedBy === null,
+    draft ? `sentAt=${draft.sentAt} approvedBy=${draft.approvedBy}` : "no draft",
+  );
 }
 const web = rows.find((r) => r.id === webRef);
 record(
