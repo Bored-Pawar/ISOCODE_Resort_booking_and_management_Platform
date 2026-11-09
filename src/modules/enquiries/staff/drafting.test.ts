@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { staffFactsOf } from "./drafting";
+import { quoteFactsOf } from "./facts";
 
-type Row = Parameters<typeof staffFactsOf>[0];
-const row = (extracted: Record<string, unknown>) => ({ extracted }) as unknown as Row;
+// Moved from drafting.staffFactsOf to facts.quoteFactsOf (production QA-01); cases unchanged.
+const staffFactsOf = (row: { extracted: unknown }) => quoteFactsOf(row.extracted);
+const row = (extracted: Record<string, unknown>) => ({ extracted });
 const dates = { from: "2026-11-14", to: "2026-11-16" };
 const guests = { adults: 2, children: 1, total: 3 };
 

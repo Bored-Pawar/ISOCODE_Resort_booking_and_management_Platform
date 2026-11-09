@@ -14,6 +14,15 @@ import {
 } from "./rules";
 import { toRow, type InboxRow } from "./service";
 import { draftVersion } from "./version";
+import {
+  builtOnFacts,
+  quoteFactsOf,
+  quoteStateOf,
+  roomTextOf,
+  type QuoteBasis,
+  type QuoteFacts,
+  type QuoteState,
+} from "./facts";
 
 export type Extracted = {
   dates?: { from?: string; to?: string; text?: string };
@@ -25,7 +34,11 @@ export type Extracted = {
   grounding?: { dates?: string; guests?: string; room?: string };
   staffEdited?: string[];
   guest_hint?: string;
+  quoteBasis?: QuoteBasis;
 };
+
+/** A room as shown to staff: the text quoted (null: none) and where it came from. */
+export type RoomView = { text: string | null; source: QuoteFacts["room"]["source"] };
 
 export type Draft = {
   id: string;
@@ -37,6 +50,14 @@ export type Draft = {
   approvedBy: string | null;
   sentAt: string | null;
   provider: string;
+  /** Unsent drafts only: `current` is approvable; anything else needs Retry (QA-02). */
+  quoteState: QuoteState | null;
+  /** The saved facts this draft was priced from, when known. */
+  builtOn: {
+    dates: QuoteFacts["dates"];
+    guests: QuoteFacts["guests"];
+    room: RoomView;
+  } | null;
 };
 
 export type TimelineEntry = {
@@ -60,6 +81,8 @@ export type InboxDetail = {
     aiUpdatedAt: string;
   };
   extracted: Extracted;
+  /** The room the next quote uses, for the Room field (staff's, the message's, or cleared). */
+  room: RoomView;
   draft: Draft | null;
   event: {
     eventType: string;
@@ -164,6 +187,14 @@ export async function getDetail(
   ]);
   const r = found.r;
   const open = attentionOpen(events);
+  const { messageRoomLabel } = await import("@/modules/ai-router");
+  const messageRoom = messageRoomLabel(r.rawText);
+  const roomView = (room: QuoteFacts["room"]): RoomView => ({
+    text: roomTextOf(room, messageRoom),
+    source: room.source,
+  });
+  const quoteState = draft && !draft.sentAt ? quoteStateOf(r.extracted, draft) : null;
+  const builtOn = quoteState ? builtOnFacts(r.extracted, quoteState) : null;
   return {
     ok: true,
     detail: {
@@ -177,6 +208,7 @@ export async function getDetail(
         aiUpdatedAt: r.aiUpdatedAt.toISOString(),
       },
       extracted: (r.extracted ?? {}) as Extracted,
+      room: roomView(quoteFactsOf(r.extracted).room),
       draft: draft
         ? {
             id: draft.id,
@@ -187,6 +219,10 @@ export async function getDetail(
             approvedBy: draft.approvedBy,
             sentAt: draft.sentAt?.toISOString() ?? null,
             provider: draft.provider,
+            quoteState,
+            builtOn: builtOn
+              ? { dates: builtOn.dates, guests: builtOn.guests, room: roomView(builtOn.room) }
+              : null,
           }
         : null,
       event: event
