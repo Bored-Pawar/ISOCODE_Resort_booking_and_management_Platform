@@ -108,6 +108,12 @@ export async function executeWithDeadline<T>(
                 output: Output.object({ schema: request.schema }),
                 maxRetries: 0,
                 maxOutputTokens: 1800,
+                // Groq's strict json_schema mode demands every property be required, which our
+                // optional fields (budget.amountInr, dates.text...) are not: it answers 400.
+                // Non-strict json_schema still guides the model; Zod below stays the gate.
+                ...(selection.provider === "groq"
+                  ? { providerOptions: { groq: { strictJsonSchema: false } } }
+                  : {}),
                 abortSignal: controller.signal,
                 telemetry: { isEnabled: false },
               }),
