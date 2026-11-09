@@ -9,28 +9,23 @@ Worktrees: Phase 1 and 3 in `../resort-inbox`, Phase 2 in `../resort-claude`. Me
 |---|---|---|---|
 | 0 Groq failover | claude/s3-groq | merged (code in `modules/ai-provider`, not `ai-router/provider.ts`) | 2a482cb |
 | 1 Inbox | claude/inbox | merged after review (3 majors fixed) and recheck (0/0) | 4f3a74a |
-| 2 Polish and security | claude/s3-polish | gates green; third limiter recheck running | |
-| 3 AI eval R5 | claude/s3-eval | gates green; review running | |
-| 4 Performance H3 | claude/s3-perf | todo | |
-| 5 UX H4 H5 | claude/s3-ux | todo | |
-| 6 Verify | claude/s3-verify | todo | |
-| 7 Deploy prep | claude/s3-deploy-prep | todo | |
-| 8 TDD pack | claude/s3-tdd-pack | todo | |
+| 2 Polish and security | claude/s3-polish | merged after 1 review + 4 rechecks of the rate limiter (majors and 2 blockers fixed) | 8c300e6 |
+| 3 AI eval R5 | claude/s3-eval | merged after review (1 major, wording) and recheck (0/0); includes the Groq strict-schema fix | 1536067 |
+| 4 Performance H3 | claude/s3-perf | merged after review (1 major, after-batch) and recheck (0/0); LCP still over 2.5 s | 997e9e8 |
+| 5 UX H4 H5 | claude/s3-ux | in review recheck (2 majors fixed) | |
+| 6 Verify | claude/s3-verify | todo (after Phase 5 merges) | |
+| 7 Deploy prep | claude/s3-deploy-prep | merged after review (0/0, doc minors fixed); merged before 6 so verify covers it | b8b589f |
+| 8 TDD pack | claude/s3-tdd-pack | drafting (subagent writing `docs/tdd-material.md`) | |
 | 9 Wrap up | main | todo | |
 
 ## Last done
-- Phase 1: test-claude had 0 leftover fixture rows. Overview counts from `inbox.counts(actor, lanes)`. Review fixes: single-field re-quote keeps the price, draft version (`STALE_DRAFT`), `safeError()` logging everywhere.
-- Phase 2: forms keep input (`attempt` key), favicon, CSP and headers (e2e `headers.spec.ts` 4/4 on `pnpm start`), rate limits. The limiter went through three review rounds: (1) lockout and eviction majors, (2) a race major, (3) a refund blocker via `X-Auth-Return-Redirect`. Now every login attempt is charged before the password check and never refunded. Secret scan of tree and history clean. `codex/polish` does not exist.
-- Phase 3: the first Groq run found HTTP 400 on every call (strict json_schema). Fixed by sending Groq non-strict (Zod unchanged). R5: complaint recall 100 percent (rules and Groq), Groq model accuracy 67 percent, 9/30 Zod failures fall back to rules. `docs/eval/r5-results.md`.
+Phase 7 merged. Phase 5 walk: 72 checks, 0 findings after fixes; hydration 0; keyboard booking start ok. Usage limit hit around 08:00 and reset at 09:00 IST; the Phase 5 review was resumed.
 
 ## Next
-Merge Phase 2 and 3 when their reviews have no blockers or majors, then Phase 4 (perf) from the new main.
+Phase 5 merge on a clean recheck, then Phase 6 on `claude/s3-verify` from main: reseed dev DB, full integration file by file (`AI_PROVIDER=rules`), unit, build, Playwright (booking, inbox, headers) on `pnpm dev`, acceptance walk, the three brief enquiries, `docs/final-check.md`. Then fill Phase 8 counts, Phase 9.
 
 ## Gates (last run)
-- Phase 0 (claude/s3-groq): typecheck, lint, format:check, unit 639/639, build ok.
-- Phase 1 (claude/inbox, merged tree = 4f3a74a): typecheck, lint, format:check, build ok; unit 703/703; integration on test-claude one file at a time: inbox 18/18, ai-processing 17/17, ai-routing 17/17.
-- Phase 2 (claude/s3-polish): typecheck, lint, format:check, build ok; unit 726/726; integration auth 4/4; e2e headers 4/4 against `pnpm start`.
-- Phase 3 (claude/s3-eval): typecheck, lint, format:check, build ok; unit 704/704; integration ai-routing 17/17, ai-processing 17/17 (AI_PROVIDER=rules); eval rules 30 cases, Groq 30 cases.
+- Phase 0: unit 639/639, build ok. Phase 1: unit 703/703; integration inbox 18/18, ai-processing 17/17, ai-routing 17/17. Phase 2: unit 728/728; integration auth 4/4; e2e headers 4/4. Phase 3: unit 730/730 (merged result); integration ai-routing 17/17, ai-processing 17/17. Phase 4: unit 730/730, build ok. Phase 5: unit 730/730, build ok. Phase 7: unit 735/735, build ok.
 
 ## Open items
 - Inbox minors left open: keyset cursor millisecond precision; reservations keep read access after an attention request is seen (decided 2026-11-08); no index on `enquiry_events.enquiry_id` / `received_at`, summary search ILIKE on jsonb (needs a migration); a stale-draft refusal discards the sender's unsaved text; a failed rebuild after a field edit leaves the old-priced draft sendable (staff are told to Regenerate).
