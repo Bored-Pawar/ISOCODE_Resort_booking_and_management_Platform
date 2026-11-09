@@ -370,7 +370,7 @@ flowchart LR
 | Worker crash mid processing | Row is reclaimed after 2 minutes. After 3 attempts it is marked failed and goes to the GM with a Retry button |
 | Sending | Never automatic. Every reply needs a staff click and a confirm dialog |
 
-### Quote integrity (QA-01, QA-02 and the failed rebuild risk: fixed on a branch, pending deployment)
+### Quote integrity (QA-01, QA-02 and the failed rebuild risk: fixed and live)
 
 Production QA found that staff edits could leave a wrong price sendable. A date only edit on a Garden Villa enquiry re-quoted the cheapest room (Plantation Room), and a Room only edit left the old Garden Villa price approvable; it was actually sent to the mock outbox. The fix:
 
@@ -378,10 +378,20 @@ Production QA found that staff edits could leave a wrong price sendable. A date 
 2. **Every quote affecting edit rebuilds.** Dates, guests and room all re-price the unsent draft.
 3. **Facts recorded with each draft.** `extracted.quoteBasis` (existing JSON column, no migration) stores the fingerprint of the facts, the draft id and a key of its quote. The edit marks it `rebuilding` in the same transaction; a rebuild commits only if it is still the latest; a failure marks it `failed`.
 4. **Approval checks facts under the enquiry lock.** Send recomputes the fingerprint from the saved facts inside the lock and refuses QUOTE_REBUILDING, QUOTE_FAILED or QUOTE_STALE. The older STALE_DRAFT and ALREADY_SENT checks still run first.
-5. **The panel shows it.** "Quote being rebuilt" or "Quote out of date" with Retry, and Approve disabled. Each draft shows the dates, party and room it was built on.
+5. **The panel shows it.** Each draft shows the dates, party and room it was built on ("Built on the saved details: ..."). A normal edit rebuilds the quote inside the same save, so staff see the new quote straight away and no warning. The "Quote being rebuilt" or "Quote out of date" warning, with Retry and Approve disabled, appears only when a rebuild fails or is still in flight, or for a draft edited under the old code.
 6. **Legacy rule.** A draft with no recorded basis stays approvable only if no quote affecting field was ever edited. Drafts rebuilt by the old code after an edit must be rebuilt first.
 
-Status: fixed and tested on branch `claude/s3-tdd-pack` (752 unit tests, a new 16 test PostgreSQL quote suite and the 18 test inbox suite pass). **Not yet deployed**: the live app still runs the previous code until this branch is merged (section 12).
+**Status: live.** Merged to `main` as `82d81c4` and deployed at 23:20 IST on 9 November 2026. Tested before merge with 752 unit tests, a new 16 test PostgreSQL quote suite and the 18 test inbox suite.
+
+**Live recheck after deploy (synthetic WhatsApp enquiries, nothing approved):**
+
+| Check | Result |
+|---|---|
+| ENQ-V4YB5: "Is a Garden Villa free 14-16 Dec 2026 for 2 adults and 1 child?" | Garden Villa, ₹38,350 including ₹5,850 GST |
+| Change only check-in to 15 Dec | Still Garden Villa: ₹19,175 including ₹2,925 GST for one night. Built on "Garden Villa (guest's message)". QA-01 pass |
+| Change only Room to Pool Villa (ENQ-2AZ95, same message) | Rebuilt within the save to Pool Villa: ₹55,224 including ₹8,424 GST, marked "set by staff". A second tab, after reload, showed only the new quote. QA-02 pass |
+| ENQ-U79PZ, a draft edited under the old code | Shows "Quote out of date" with Approve disabled (legacy rule) |
+| Not tested live | Approving from a stale second tab without reloading it (no approval was clicked). This path is covered by the PostgreSQL quote suite |
 
 ### Evaluation
 
@@ -506,7 +516,7 @@ Staff screens are denser: tables with sticky headers, tabular numbers and inline
 
 **Enquiry detail.** The original message, the AI category, confidence and owner, extracted fields with "From the message" or "Edited by staff" badges, the quote block labelled "From the rate table", and the draft editor. Synthetic enquiry captured on the live app on 9 November 2026.
 
-**Quote out of date (pending deployment).** The fix adds a warning panel ("Quote being rebuilt" or "Quote out of date") with Retry, disables Approve until the quote matches the saved details, and shows the dates, party and room each draft was built on. It is not on the live app yet, so no screenshot is included.
+**Quote out of date.** Each draft shows the dates, party and room it was built on. Normal edits rebuild the quote within the save, so the "Quote out of date" warning (with Retry, and Approve disabled) appears only when a rebuild fails or for drafts edited under the old code, such as ENQ-U79PZ on the live app. No screenshot is included because that legacy draft displays the old, wrong quote it was built on.
 
 ![Complaint with GM alert](screenshots/20-complaint-alert.jpg)
 
@@ -594,12 +604,12 @@ All five medians are under the 2.5 s target. `/rooms` had two runs with long tas
 
 | Finding | Fix | Status |
 |---|---|---|
-| QA-01 date edit loses named villa | Room keeps the guest's preference; three room states | Fixed and tested on `claude/s3-tdd-pack`, pending deployment |
-| QA-02 obsolete quote approvable | Every quote affecting edit rebuilds; approval checks saved facts under the enquiry lock | Fixed and tested on `claude/s3-tdd-pack`, pending deployment |
-| Failed rebuild risk | Failed or in flight rebuild blocks approval; Retry | Fixed and tested on `claude/s3-tdd-pack`, pending deployment |
-| QA-05 bulk editor lost on network failure | Inputs kept, inline error with Retry, never reports success | Fixed on a local branch, pending review and deployment |
-| QA-03 date toolbar overflow at 320 px | Toolbar stacks under the small breakpoint | Fixed on a local branch, pending review and deployment |
-| QA-04 unsaved prose lost on stale refusal | Unsaved text kept under the current draft; refusal unchanged | Fixed on a local branch, pending review and deployment |
+| QA-01 date edit loses named villa | Room keeps the guest's preference; three room states | Live since 23:20 on 9 Nov (`82d81c4`), rechecked on the live app |
+| QA-02 obsolete quote approvable | Every quote affecting edit rebuilds; approval checks saved facts under the enquiry lock | Live since 23:20 on 9 Nov (`82d81c4`), rechecked on the live app |
+| Failed rebuild risk | Failed or in flight rebuild blocks approval; Retry | Live since 23:20 on 9 Nov (`82d81c4`). Covered by PostgreSQL tests; a failure was not induced live |
+| QA-05 bulk editor lost on network failure | Inputs kept, inline error with Retry, never reports success | Fixed on an unmerged branch, pending review and deployment |
+| QA-03 date toolbar overflow at 320 px | Toolbar stacks under the small breakpoint | Fixed on an unmerged branch, pending review and deployment |
+| QA-04 unsaved prose lost on stale refusal | Unsaved text kept under the current draft; refusal unchanged | Fixed on an unmerged branch, pending review and deployment |
 
 
 ---
@@ -614,7 +624,7 @@ All five medians are under the 2.5 s target. `/rooms` had two runs with long tas
 | Real payment gateway | Out of scope; a mock with a signed webhook exercises the same exactly once path |
 | Real email and WhatsApp | Simulated with real payload shapes; Meta signature verification and the GET handshake are not implemented |
 | Channel manager or reservation system integration | Out of scope in the brief |
-| Deploying the QA fixes before the deadline | The full PostgreSQL run needed before merging did not complete on the local machine (memory), so the fixes were not merged to `main`. They are on branches, tested as listed in section 10 |
+| Deploying QA-05, QA-03 and QA-04 before the deadline | Fixed and unit tested on unmerged branches, but not yet reviewed or checked in a browser, so they were not merged. The QA-01 and QA-02 fixes were merged without a full PostgreSQL run on the day (section 10) |
 
 ---
 
@@ -631,7 +641,7 @@ All five medians are under the 2.5 s target. `/rooms` had two runs with long tas
 9. **Webhook dedupe** uses an advisory lock and a scan, not a unique index.
 10. **Zero total stays** cannot be paid online. Failed and timed out payment attempts are not stored.
 11. **Verified only locally, not on the live site**: concurrent holds, late payment webhooks, real shared admin writes, provider failover under a 429 storm, and the stale AI recovery cap. They are covered by the PostgreSQL suite, which does not run against production.
-12. **QA fixes not live.** On the live app, a date only edit can still re-quote a cheaper room (QA-01) and a room only edit can still leave an old price approvable (QA-02); staff must check the quote against the saved details before approving. The fixes are on `claude/s3-tdd-pack`. QA-05, QA-03 and QA-04 are fixed on local branches only.
+12. **Three QA fixes not live.** QA-05 (bulk editor lost on a network failure), QA-03 (date toolbar overflow at 320 px) and QA-04 (unsaved reply text lost on a stale refusal) are fixed on unmerged branches only, so these issues still occur on the live app. QA-01 and QA-02 are fixed and live. Approving from a stale second tab without reloading was not tested live.
 13. **Full PostgreSQL run not repeated today.** The last complete run passed 176 of 176; today only the quote (16) and inbox (18) suites were confirmed alongside the unit tests.
 14. **Not every loading and error state** was forced during production QA.
 
@@ -641,7 +651,7 @@ All five medians are under the 2.5 s target. `/rooms` had two runs with long tas
 
 | Priority | Work | Why (metric) |
 |---|---|---|
-| 0 | Complete the full PostgreSQL run, merge `claude/s3-tdd-pack`, deploy, then review and deploy the QA-05, QA-03 and QA-04 branches, and recheck each on the live app | Correct quotes are a precondition for fast first replies; staff tools must not lose work |
+| 0 | Run the full PostgreSQL suite on `main`, then review, merge and deploy the QA-05, QA-03 and QA-04 branches and recheck each on the live app | Staff tools must not lose work; confirms the merged quote fix with the full suite |
 | 1 | Q8 response metrics: median first reply in working hours, per lane and owner | Measures the 30 minute target directly; the data is already stored |
 | 2 | Real WhatsApp Business and email integration with signature checks | Most enquiries arrive there today; required before the inbox replaces the GM's phone |
 | 3 | Real payment gateway (Razorpay or similar) using the same webhook path | Required to take real direct bookings (direct share 12% to 20%) |
