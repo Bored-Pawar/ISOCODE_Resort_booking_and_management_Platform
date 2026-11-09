@@ -129,6 +129,18 @@ describe("auth forms keep input on failure", () => {
 });
 
 describe("rate limits (H2)", () => {
+  it("parallel wrong guesses are all counted: at most 8 reach signIn", async () => {
+    signIn.mockImplementation(
+      () => new Promise((_, reject) => setTimeout(() => reject(new AuthError("x")), 20)),
+    );
+    const results = await Promise.all(
+      Array.from({ length: 20 }, () =>
+        staffLoginAction(undefined, form({ email: "gm@example.test", password: SECRET })),
+      ),
+    );
+    expect(signIn).toHaveBeenCalledTimes(8);
+    expect(results.filter((r) => r?.error === RATE_LIMITED_MESSAGE)).toHaveLength(12);
+  });
   it("successful logins are never charged", async () => {
     signIn.mockResolvedValue(undefined);
     for (let i = 0; i < 20; i++)

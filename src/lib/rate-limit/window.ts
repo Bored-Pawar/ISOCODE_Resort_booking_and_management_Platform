@@ -4,8 +4,10 @@
  * to blunt credential stuffing and form spam on the demo; a shared store (e.g. Upstash) is the
  * production step. Pure apart from the clock, so it is unit tested without a server.
  *
- * `check` only looks; `record` charges one hit. Callers check every window first and record only
- * when all pass (or, for login, only on a failure), so a refused request never spends budget.
+ * `check` only looks; `record` charges one hit; `unrecord` refunds the newest. Callers check every
+ * window first and record only when all pass, so a refused request never spends budget. When the
+ * key map is full of live counters, a new key is let through untracked (fail open): live
+ * counters are never evicted, and a flood of fresh keys cannot lock everyone else out.
  */
 export type RateRule = { limit: number; windowMs: number };
 export type RateResult = { ok: true } | { ok: false; retryAfterMs: number };
@@ -38,16 +40,20 @@ export function createLimiter(rule: RateRule, maxKeys = MAX_KEYS) {
       const times = live(key, now);
       if (times.length >= rule.limit)
         return { ok: false, retryAfterMs: rule.windowMs - (now - times[0]) };
-      // Full of live keys: a new key is refused rather than evicting someone's live counter
-      // (evicting would let a flood of fresh keys reset a victim's window).
-      if (full(key, now)) return { ok: false, retryAfterMs: 1000 };
       return { ok: true };
     },
     record(key: string, now = Date.now()) {
-      if (full(key, now)) return;
+      if (full(key, now)) return; // fail open: untracked rather than evicting a live counter
       const times = live(key, now);
       times.push(now);
       hits.set(key, times);
+    },
+    /** Refunds the newest hit (a reserved attempt that turned out fine). */
+    unrecord(key: string) {
+      const times = hits.get(key);
+      if (!times?.length) return;
+      times.pop();
+      if (!times.length) hits.delete(key);
     },
     /** check then record: one call for a caller with a single window. */
     hit(key: string, now = Date.now()): RateResult {

@@ -65,7 +65,8 @@ async function login(
         issue.path[0] === "password" ? "Enter your password." : "Enter a valid email address.";
     return failed(prev, formData, { fieldErrors });
   }
-  // Only failed logins are charged; the strict window is IP + email (02 Security 5).
+  // A hit is reserved before the password check (parallel guesses all count) and refunded when
+  // the login succeeds; the strict window is IP + email (02 Security 5).
   const gate = await loginGate(parsed.data.email);
   if (!gate.ok) return failed(prev, formData, { error: RATE_LIMITED_MESSAGE });
   try {
@@ -73,12 +74,11 @@ async function login(
       ...parsed.data,
       redirectTo: safeNext(formData.get("next"), fallback),
     });
+    gate.succeeded();
   } catch (err) {
-    if (err instanceof AuthError) {
-      gate.failed();
-      return failed(prev, formData, { error: LOGIN_FAILED });
-    }
-    throw err; // includes the redirect on success
+    if (err instanceof AuthError) return failed(prev, formData, { error: LOGIN_FAILED });
+    gate.succeeded(); // the redirect on success (or a server error): not a wrong password
+    throw err;
   }
 }
 
