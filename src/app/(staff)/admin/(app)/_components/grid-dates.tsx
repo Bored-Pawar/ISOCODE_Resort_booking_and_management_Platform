@@ -43,7 +43,11 @@ export function dateColumns(start: string, editable = true): GridColumn[] {
   });
 }
 
-/** Previous / next 30 days, kept inside the editable window. */
+/**
+ * Previous / next 30 days, kept inside the editable window. Under `sm` the range label takes its
+ * own row above two half-width buttons, so the toolbar never widens the page at 320 px (QA-03).
+ * DOM order stays Previous, label, Next for keyboard users.
+ */
 export function DateStepper({
   start,
   window,
@@ -58,9 +62,9 @@ export function DateStepper({
   const next = start < latest ? addDays(start, GRID_DAYS) : null;
   const end = addDays(start, GRID_DAYS - 1);
   const label = (d: string) => longFmt.format(new Date(`${d}T00:00:00Z`)).replace(",", "");
-  const step = buttonVariants({ variant: "secondary", size: "sm" });
+  const step = cn(buttonVariants({ variant: "secondary", size: "sm" }), "w-full sm:w-auto");
   return (
-    <div className="flex items-center gap-2">
+    <div className="grid w-full grid-cols-2 items-center gap-2 sm:flex sm:w-auto">
       {prev ? (
         <Link
           href={hrefFor(prev < window.first ? window.first : prev)}
@@ -74,7 +78,7 @@ export function DateStepper({
           <ChevronLeft className="size-4" aria-hidden /> Previous
         </span>
       )}
-      <span className="text-small whitespace-nowrap text-muted tabular-nums">
+      <span className="order-first col-span-2 text-small text-muted tabular-nums sm:order-none sm:whitespace-nowrap">
         {label(start)} to {label(end)}
       </span>
       {next ? (
