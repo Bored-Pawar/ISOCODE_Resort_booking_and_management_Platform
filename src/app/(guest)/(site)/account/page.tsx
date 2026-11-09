@@ -15,6 +15,7 @@ import { RetryError } from "../../_components/retry-error";
 import { HeldActions } from "../../_components/held-actions";
 import { PAY_COPY } from "../../_lib/pay-flow";
 import Link from "next/link";
+import { safeError } from "@/lib/log";
 
 export const metadata = { title: "My bookings" };
 
@@ -58,7 +59,7 @@ async function Content() {
     list = result.bookings;
     names = new Map(types.map((t) => [t.id, t.name]));
   } catch (error) {
-    console.error("my bookings failed", error);
+    console.error("my bookings failed", safeError(error));
     return (
       <>
         <Header name={user.name} email={user.email} />

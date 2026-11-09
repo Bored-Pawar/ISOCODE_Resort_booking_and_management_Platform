@@ -13,6 +13,7 @@ import { cartFromBooking, PAY_COPY, payGate } from "../../../../_lib/pay-flow";
 import { PayPanel } from "../../../../_components/pay-panel";
 import { RetryError } from "../../../../_components/retry-error";
 import { StaySummary } from "../../../../_components/stay-summary";
+import { safeError } from "@/lib/log";
 
 export const metadata: Metadata = { title: "Pay", robots: { index: false } };
 
@@ -39,7 +40,7 @@ async function Pay({ params }: { params: Params }) {
       catalog.listRoomTypes(),
     ]);
   } catch (error) {
-    console.error("pay step failed", error);
+    console.error("pay step failed", safeError(error));
     return (
       <RetryError
         title="We could not load your booking"

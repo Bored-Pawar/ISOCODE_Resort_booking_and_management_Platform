@@ -29,3 +29,5 @@ export const aiRouter = {
     return processEnquiry(input);
   },
 };
+// S2 inbox runbook (Q5, Q6), additive: staff re-draft (quote and draft only, keeps classification).
+export { draftForStaff, factsText, type StaffFacts, type StaffDraft } from "./staff-draft";

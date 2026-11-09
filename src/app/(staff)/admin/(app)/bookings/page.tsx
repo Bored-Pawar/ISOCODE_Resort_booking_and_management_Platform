@@ -13,6 +13,7 @@ import { roomsSummary } from "@/app/(guest)/_lib/account";
 import { PageGate } from "../_components/page-gate";
 import { requireBookingStaff } from "./_lib/access";
 import { parseFilters, STATUS_TONE, STATUSES, type BookingFilters } from "./_lib/filters";
+import { safeError } from "@/lib/log";
 
 export const metadata = { title: "Bookings" };
 
@@ -67,7 +68,7 @@ async function BookingsTable({ filters }: { filters: BookingFilters }) {
       getGuestContacts(result.ok ? result.bookings.map((b) => b.guestId) : []),
     ]);
   } catch (error) {
-    console.error("staff bookings failed", error);
+    console.error("staff bookings failed", safeError(error));
     return <RetryError title="We could not load bookings" message="Please try again." />;
   }
   if (!result.ok)
@@ -145,7 +146,7 @@ async function RefundTable() {
   try {
     result = await booking.listRefundPending({ limit: 100 }, actor);
   } catch (error) {
-    console.error("refund list failed", error);
+    console.error("refund list failed", safeError(error));
     return <RetryError title="We could not load refunds" message="Please try again." />;
   }
   if (!result.ok)

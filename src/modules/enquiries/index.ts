@@ -15,6 +15,7 @@ import {
 
 export * from "./types";
 export { CONTACT_ERROR, isUsableContact, MIN_PHONE_DIGITS } from "./contact";
+export { GUEST_HINTS, EVENT_NEEDS, type GuestHint, type EventInput } from "./store";
 
 const DEFAULT_LIST_LIMIT = 200;
 
@@ -46,3 +47,5 @@ export * from "./inbound";
 export { handleInbound } from "./inbound-route";
 // Approved audit-remediation additions; existing frozen service signatures are unchanged.
 export { retryEnquiry, listReviewQueue } from "./retry";
+// S2 inbox runbook (Q4 to Q7): staff inbox service, additive.
+export * from "./staff";

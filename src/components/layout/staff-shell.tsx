@@ -3,15 +3,18 @@ import { StaffNav, type StaffNavItem } from "./staff-nav";
 
 /**
  * Staff frame: 232px left sidebar on desktop, a compact top bar on mobile.
- * `account` is a slot for the signed-in user and sign-out button.
+ * `account` is a slot for the signed-in user and sign-out button. `bell` (GM only) renders once,
+ * in a slim header bar above the content on every breakpoint.
  */
 export function StaffShell({
   nav,
   account,
+  bell,
   children,
 }: {
   nav: StaffNavItem[];
   account?: React.ReactNode;
+  bell?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -28,6 +31,11 @@ export function StaffShell({
             <StaffNav items={nav} orientation="horizontal" />
           </div>
         </header>
+        {bell ? (
+          <div className="flex h-12 items-center justify-end border-b border-border bg-surface px-4 md:px-8">
+            {bell}
+          </div>
+        ) : null}
         <main className="min-w-0 flex-1 p-4 md:p-8">{children}</main>
         <div className="border-t border-border bg-surface p-4 md:hidden">{account}</div>
       </div>

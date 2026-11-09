@@ -7,6 +7,7 @@ import { RetryError } from "@/app/(guest)/_components/retry-error";
 import { Forbidden } from "../_components/forbidden";
 import { staffPage } from "../_lib/access";
 import { RatesBoard } from "./rates-board";
+import { safeError } from "@/lib/log";
 
 export const metadata = { title: "Rates" };
 
@@ -28,7 +29,7 @@ async function Content({ searchParams }: { searchParams: Params }) {
       catalog.listRoomTypes(),
     ]);
   } catch (error) {
-    console.error("rates read failed", error);
+    console.error("rates read failed", safeError(error));
     return <RetryError title="We could not load rates" message="Please try again." />;
   }
   if (!rates.ok) return <Forbidden />;

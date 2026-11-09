@@ -18,6 +18,7 @@ import { RetryError } from "./retry-error";
 import { SearchForm } from "./search-form";
 import { SearchSummary } from "./search-summary";
 import { StayEditor } from "./stay-editor";
+import { safeError } from "@/lib/log";
 
 type Params = Promise<Record<string, string | string[] | undefined>>;
 
@@ -155,7 +156,7 @@ export async function StayBuilder({ searchParams }: { searchParams: Params }) {
       quote = toCartQuote(result);
     }
   } catch (error) {
-    console.error("stay builder failed", error);
+    console.error("stay builder failed", safeError(error));
     return (
       <div className="flex flex-col gap-6">
         <SearchSummary values={values} today={today} />

@@ -109,11 +109,28 @@ describe("navFor", () => {
       "/admin/promos",
     ]);
   });
-  it("sales: overview and the unsorted-enquiry queue only", () => {
+  it("sales: overview and the inbox (its own lanes) only", () => {
     expect(hrefs("sales")).toEqual(["/admin", "/admin/inbox"]);
   });
   it("gm: everything built", () => {
-    expect(hrefs("gm")).toEqual(hrefs("reservations"));
+    expect(hrefs("gm")).toEqual([
+      "/admin",
+      "/admin/inbox",
+      "/admin/bookings",
+      "/admin/rates",
+      "/admin/allotment",
+      "/admin/promos",
+    ]);
+  });
+  it("the inbox appears exactly for roles holding an enquiries capability", () => {
+    const caps = [
+      "enquiries.room",
+      "enquiries.events",
+      "enquiries.complaints",
+      "enquiries.unsorted",
+    ] as const;
+    for (const role of ROLES)
+      expect(hrefs(role).includes("/admin/inbox")).toBe(caps.some((c) => can(role, c)));
   });
   it("guests get no staff nav", () => {
     expect(navFor("guest")).toEqual([]);

@@ -43,6 +43,17 @@ export type Enquiry = {
 export type IngestMetaInput = {
   source?: { provider: string; messageId: string };
   consentVersion?: string;
+  /** Q2: guest's "What is it about?" choice, stored as `extracted.guest_hint` (a hint only). */
+  guestHint?: "stay" | "wedding" | "offsite" | "other";
+  /** Q2 (absorbs Q9): event fields saved to `event_details` in the same transaction. */
+  event?: {
+    eventType: "wedding" | "offsite";
+    dateFrom: string | null;
+    dateTo: string | null;
+    guests: number | null;
+    budgetPaise: number | null;
+    needs: ("rooms" | "catering" | "decor" | "conference hall")[];
+  };
 };
 export type IngestFromResult =
   Ok<{ enquiryId: string; aiStatus: "pending"; duplicate: boolean }> | Err<"INVALID_INPUT">;

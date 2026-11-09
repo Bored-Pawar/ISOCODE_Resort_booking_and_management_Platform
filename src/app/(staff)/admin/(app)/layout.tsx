@@ -14,8 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSessionUser, STAFF_ROLES } from "@/lib/auth";
-import { navFor, type NavIcon } from "@/lib/auth/permissions";
+import { can, navFor, type NavIcon } from "@/lib/auth/permissions";
 import { signOutAction } from "@/lib/auth/actions";
+import { GmBellLoader } from "./inbox/_components/gm-bell-loader";
 
 const ICONS: Record<NavIcon, React.ReactNode> = {
   overview: <LayoutDashboard strokeWidth={1.5} />,
@@ -41,6 +42,13 @@ async function Gate({ children }: { children: React.ReactNode }) {
   return (
     <StaffShell
       nav={navFor(role).map((n) => ({ href: n.href, label: n.label, icon: ICONS[n.icon] }))}
+      bell={
+        can(role, "notifications.gm") ? (
+          <Suspense fallback={<Skeleton className="size-11" />}>
+            <GmBellLoader />
+          </Suspense>
+        ) : undefined
+      }
       account={
         <div className="flex flex-col gap-2">
           <div className="text-small font-semibold">{user.name}</div>
