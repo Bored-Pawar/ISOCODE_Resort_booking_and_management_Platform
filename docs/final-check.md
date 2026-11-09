@@ -6,7 +6,7 @@ Run on 9 Nov 2026 against `main` at 38ff922 (Phases 0 to 5 and 7 merged). Develo
 | Check | Command | Result |
 |---|---|---|
 | Typecheck, lint, format | `pnpm typecheck && pnpm lint && pnpm format:check` | pass |
-| Unit | `pnpm test` | **735 / 735** (77 files) |
+| Unit | `pnpm test` | **735 / 735** (78 files) |
 | Build | `pnpm build` | pass |
 | Integration (PostgreSQL) | `AI_PROVIDER=rules pnpm exec vitest run --project integration --no-file-parallelism <file>`, each of 20 files | **176 / 176**: admin-allotment 9, admin-availability 8, admin-promos 8, admin-rates 8, admin-warning 3, ai-processing 17, ai-routing 17, auth 4, booking 28, booking-list 3, cancel 6, hold-idempotency 5, inbox 18, inventory 12, list-query-depth 1, multiroom 9, pricing 6, schema 5, seed 7, staff-read 2 |
 | Playwright | `E2E_BASE_URL=http://localhost:3300 pnpm test:e2e` against `DEV_TOOLS_ENABLED=true pnpm dev` | **6 / 6**: guest searches, builds a stay, signs up inline, holds, pays, sees the confirmation (`e2e/booking.spec.ts`); staff opens ENQ-4411, edits the draft, approves and sends, sees it replied and in the outbox (`e2e/inbox.spec.ts`); security headers, no CSP violation or console error on public and staff pages, failed login keeps the email (`e2e/headers.spec.ts`, 4 tests) |
