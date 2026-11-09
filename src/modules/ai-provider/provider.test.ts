@@ -67,6 +67,18 @@ describe("provider transport", () => {
       abortSignal: expect.any(AbortSignal),
     });
   });
+  it("only Groq gets provider options (non-strict json_schema)", async () => {
+    vi.mocked(generateText).mockResolvedValue({ output: { answer: "yes" } } as never);
+    await executeStructured(request, local());
+    expect(vi.mocked(generateText).mock.calls[0][0]).not.toHaveProperty("providerOptions");
+    await executeStructured(
+      request,
+      selectProvider({ AI_PROVIDER: "groq", AI_MODEL: "m", GROQ_API_KEY_1: "synthetic" }),
+    );
+    expect(vi.mocked(generateText).mock.calls[1][0]).toMatchObject({
+      providerOptions: { groq: { strictJsonSchema: false } },
+    });
+  });
   it("invalid output/schema is not retried", async () => {
     vi.mocked(generateText).mockResolvedValueOnce({ output: { answer: 4 } } as never);
     expect(await executeStructured(request, local())).toMatchObject({
