@@ -6,7 +6,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { chromium } from "@playwright/test";
 
@@ -142,7 +142,7 @@ for (const p of pages) {
   });
   console.log(p.name, js.gzipKb, "KB", "LCP", lh.median.lcpMs, "ms", "score", lh.median.score);
 }
-mkdirSync("docs/perf", { recursive: true });
+mkdirSync(dirname(out), { recursive: true });
 writeFileSync(
   out,
   JSON.stringify({ measuredAt: new Date().toISOString(), base, results }, null, 2) + "\n",
