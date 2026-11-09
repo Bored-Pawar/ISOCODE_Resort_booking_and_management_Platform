@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-09T01:07:47.011Z",
+  "measuredAt": "2026-11-09T01:19:02.208Z",
   "base": "http://localhost:3200",
   "results": [
     {
@@ -11,37 +11,37 @@
       },
       "lighthouse": {
         "median": {
-          "score": 67,
-          "lcpMs": 3131,
-          "fcpMs": 918,
-          "tbtMs": 1665,
+          "score": 93,
+          "lcpMs": 3210,
+          "fcpMs": 920,
+          "tbtMs": 33,
           "cls": 0,
-          "lcpElement": null
+          "lcpElement": "<img alt=\"Mist over coffee plantation hills at sunrise\" fetchpriority=\"high\" decoding=\"async\" data-nimg=\"fill\" class=\"-z"
         },
         "runs": [
           {
-            "score": 94,
-            "lcpMs": 3128,
-            "fcpMs": 913,
+            "score": 68,
+            "lcpMs": 3053,
+            "fcpMs": 914,
+            "tbtMs": 1582,
+            "cls": 0,
+            "lcpElement": "<img alt=\"Mist over coffee plantation hills at sunrise\" fetchpriority=\"high\" decoding=\"async\" data-nimg=\"fill\" class=\"-z"
+          },
+          {
+            "score": 93,
+            "lcpMs": 3210,
+            "fcpMs": 920,
             "tbtMs": 33,
             "cls": 0,
-            "lcpElement": null
+            "lcpElement": "<img alt=\"Mist over coffee plantation hills at sunrise\" fetchpriority=\"high\" decoding=\"async\" data-nimg=\"fill\" class=\"-z"
           },
           {
-            "score": 67,
-            "lcpMs": 3131,
-            "fcpMs": 918,
-            "tbtMs": 1665,
+            "score": 92,
+            "lcpMs": 3391,
+            "fcpMs": 917,
+            "tbtMs": 37,
             "cls": 0,
-            "lcpElement": null
-          },
-          {
-            "score": 67,
-            "lcpMs": 3256,
-            "fcpMs": 915,
-            "tbtMs": 1419,
-            "cls": 0,
-            "lcpElement": null
+            "lcpElement": "<img alt=\"Mist over coffee plantation hills at sunrise\" fetchpriority=\"high\" decoding=\"async\" data-nimg=\"fill\" class=\"-z"
           }
         ]
       }
@@ -56,36 +56,36 @@
       "lighthouse": {
         "median": {
           "score": 92,
-          "lcpMs": 3259,
-          "fcpMs": 760,
-          "tbtMs": 27,
+          "lcpMs": 3225,
+          "fcpMs": 758,
+          "tbtMs": 34,
           "cls": 0,
-          "lcpElement": null
+          "lcpElement": "<img alt=\"\" width=\"2000\" height=\"1333\" decoding=\"async\" data-nimg=\"1\" class=\"aspect-[4/3] w-full object-cover\" style=\"co"
         },
         "runs": [
           {
-            "score": 93,
-            "lcpMs": 3144,
-            "fcpMs": 760,
-            "tbtMs": 25,
+            "score": 92,
+            "lcpMs": 3224,
+            "fcpMs": 759,
+            "tbtMs": 24,
             "cls": 0,
-            "lcpElement": null
+            "lcpElement": "<img alt=\"\" width=\"2000\" height=\"1333\" decoding=\"async\" data-nimg=\"1\" class=\"aspect-[4/3] w-full object-cover\" style=\"co"
           },
           {
             "score": 92,
-            "lcpMs": 3259,
-            "fcpMs": 760,
-            "tbtMs": 27,
+            "lcpMs": 3225,
+            "fcpMs": 758,
+            "tbtMs": 34,
             "cls": 0,
-            "lcpElement": null
+            "lcpElement": "<img alt=\"\" width=\"2000\" height=\"1333\" decoding=\"async\" data-nimg=\"1\" class=\"aspect-[4/3] w-full object-cover\" style=\"co"
           },
           {
-            "score": 92,
-            "lcpMs": 3319,
-            "fcpMs": 760,
+            "score": 91,
+            "lcpMs": 3392,
+            "fcpMs": 761,
             "tbtMs": 29,
             "cls": 0,
-            "lcpElement": null
+            "lcpElement": "<img alt=\"\" width=\"2000\" height=\"1333\" decoding=\"async\" data-nimg=\"1\" class=\"aspect-[4/3] w-full object-cover\" style=\"co"
           }
         ]
       }
@@ -100,36 +100,36 @@
       "lighthouse": {
         "median": {
           "score": 67,
-          "lcpMs": 2948,
-          "fcpMs": 764,
-          "tbtMs": 1824,
+          "lcpMs": 3062,
+          "fcpMs": 760,
+          "tbtMs": 1738,
           "cls": 0,
-          "lcpElement": null
+          "lcpElement": "<img alt=\"Villa exterior in the garden\" fetchpriority=\"high\" decoding=\"async\" data-nimg=\"fill\" class=\"object-cover\" styl"
         },
         "runs": [
           {
-            "score": 69,
-            "lcpMs": 2893,
-            "fcpMs": 760,
-            "tbtMs": 1651,
+            "score": 95,
+            "lcpMs": 2963,
+            "fcpMs": 761,
+            "tbtMs": 26,
             "cls": 0,
-            "lcpElement": null
+            "lcpElement": "<img alt=\"Villa exterior in the garden\" fetchpriority=\"high\" decoding=\"async\" data-nimg=\"fill\" class=\"object-cover\" styl"
           },
           {
             "score": 67,
-            "lcpMs": 2948,
-            "fcpMs": 764,
-            "tbtMs": 1824,
+            "lcpMs": 3062,
+            "fcpMs": 760,
+            "tbtMs": 1738,
             "cls": 0,
-            "lcpElement": null
+            "lcpElement": "<img alt=\"Villa exterior in the garden\" fetchpriority=\"high\" decoding=\"async\" data-nimg=\"fill\" class=\"object-cover\" styl"
           },
           {
-            "score": 66,
-            "lcpMs": 3121,
-            "fcpMs": 763,
-            "tbtMs": 1933,
+            "score": 94,
+            "lcpMs": 3071,
+            "fcpMs": 760,
+            "tbtMs": 29,
             "cls": 0,
-            "lcpElement": null
+            "lcpElement": "<img alt=\"Villa exterior in the garden\" fetchpriority=\"high\" decoding=\"async\" data-nimg=\"fill\" class=\"object-cover\" styl"
           }
         ]
       }
@@ -143,37 +143,37 @@
       },
       "lighthouse": {
         "median": {
-          "score": 95,
-          "lcpMs": 2809,
-          "fcpMs": 909,
-          "tbtMs": 50,
+          "score": 94,
+          "lcpMs": 2961,
+          "fcpMs": 908,
+          "tbtMs": 53,
           "cls": 0.065,
-          "lcpElement": null
+          "lcpElement": "<p class=\"text-small text-muted\">"
         },
         "runs": [
           {
             "score": 95,
-            "lcpMs": 2806,
-            "fcpMs": 908,
-            "tbtMs": 48,
-            "cls": 0.065,
-            "lcpElement": null
-          },
-          {
-            "score": 95,
             "lcpMs": 2809,
-            "fcpMs": 909,
-            "tbtMs": 50,
+            "fcpMs": 908,
+            "tbtMs": 51,
             "cls": 0.065,
-            "lcpElement": null
+            "lcpElement": "<p class=\"text-small text-muted\">"
           },
           {
             "score": 94,
-            "lcpMs": 3019,
-            "fcpMs": 910,
-            "tbtMs": 50,
+            "lcpMs": 2961,
+            "fcpMs": 908,
+            "tbtMs": 53,
             "cls": 0.065,
-            "lcpElement": null
+            "lcpElement": "<p class=\"text-small text-muted\">"
+          },
+          {
+            "score": 94,
+            "lcpMs": 3018,
+            "fcpMs": 909,
+            "tbtMs": 49,
+            "cls": 0.065,
+            "lcpElement": "<p class=\"text-small text-muted\">"
           }
         ]
       }
@@ -187,37 +187,37 @@
       },
       "lighthouse": {
         "median": {
-          "score": 69,
-          "lcpMs": 761,
-          "fcpMs": 761,
-          "tbtMs": 992,
-          "cls": 0.199,
-          "lcpElement": null
+          "score": 100,
+          "lcpMs": 762,
+          "fcpMs": 762,
+          "tbtMs": 24,
+          "cls": 0,
+          "lcpElement": "<p class=\"mt-2 max-w-read text-body text-muted\">"
         },
         "runs": [
           {
-            "score": 74,
+            "score": 100,
             "lcpMs": 761,
             "fcpMs": 761,
-            "tbtMs": 1606,
+            "tbtMs": 53,
             "cls": 0,
-            "lcpElement": null
+            "lcpElement": "<p class=\"mt-2 max-w-read text-body text-muted\">"
           },
           {
-            "score": 69,
-            "lcpMs": 761,
-            "fcpMs": 761,
-            "tbtMs": 992,
+            "score": 100,
+            "lcpMs": 762,
+            "fcpMs": 762,
+            "tbtMs": 24,
+            "cls": 0,
+            "lcpElement": "<p class=\"mt-2 max-w-read text-body text-muted\">"
+          },
+          {
+            "score": 91,
+            "lcpMs": 765,
+            "fcpMs": 765,
+            "tbtMs": 27,
             "cls": 0.199,
-            "lcpElement": null
-          },
-          {
-            "score": 73,
-            "lcpMs": 763,
-            "fcpMs": 763,
-            "tbtMs": 1693,
-            "cls": 0,
-            "lcpElement": null
+            "lcpElement": "<p class=\"mt-2 max-w-read text-body text-muted\">"
           }
         ]
       }

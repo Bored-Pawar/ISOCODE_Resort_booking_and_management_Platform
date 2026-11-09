@@ -11,6 +11,10 @@ import { gzipSync } from "node:zlib";
 import { chromium } from "@playwright/test";
 
 const base = process.argv[2] ?? "http://localhost:3200";
+// Local servers only: the script signs in with the demo credentials, and arguments pass
+// through a shell (pnpm is a .cmd on Windows), so the base URL must be plain.
+if (!/^http:\/\/(localhost|127\.0\.0\.1):\d{2,5}$/.test(base))
+  throw new Error("base must be http://localhost:<port>");
 const out = process.argv[3] ?? "docs/perf/raw.json";
 
 function istDate(days) {
@@ -82,40 +86,46 @@ function lighthouse(path, auth) {
   const dir = join(tmpdir(), `lh-${Date.now()}`);
   mkdirSync(dir, { recursive: true });
   const runs = [];
-  for (let i = 0; i < 3; i++) {
-    const file = join(dir, `${i}.json`);
-    // shell: true (pnpm is a .cmd on Windows): quote the URL (it has &) and pass headers by file.
-    const args = [
-      "dlx",
-      "lighthouse@13.6.0",
-      `"${base + path}"`,
-      "--only-categories=performance",
-      "--form-factor=mobile",
-      "--throttling-method=simulate",
-      "--output=json",
-      `--output-path="${file}"`,
-      "--quiet",
-      "--chrome-flags=--headless=new",
-    ];
-    if (auth) {
-      const headers = join(dir, "headers.json");
-      writeFileSync(headers, JSON.stringify({ Cookie: cookie }));
-      args.push(`--extra-headers="${headers}"`);
+  try {
+    for (let i = 0; i < 3; i++) {
+      const file = join(dir, `${i}.json`);
+      // shell: true (pnpm is a .cmd on Windows): quote the URL (it has &) and pass headers by file.
+      const args = [
+        "dlx",
+        "lighthouse@13.6.0",
+        `"${base + path}"`,
+        "--only-categories=performance",
+        "--form-factor=mobile",
+        "--throttling-method=simulate",
+        "--output=json",
+        `--output-path="${file}"`,
+        "--quiet",
+        "--chrome-flags=--headless=new",
+      ];
+      if (auth) {
+        const headers = join(dir, "headers.json");
+        writeFileSync(headers, JSON.stringify({ Cookie: cookie }));
+        args.push(`--extra-headers="${headers}"`);
+      }
+      execFileSync("pnpm", args, { stdio: "ignore", shell: true, timeout: 240_000, cwd: tmpdir() });
+      const r = JSON.parse(readFileSync(file, "utf8"));
+      runs.push({
+        score: Math.round(r.categories.performance.score * 100),
+        lcpMs: Math.round(r.audits["largest-contentful-paint"].numericValue),
+        fcpMs: Math.round(r.audits["first-contentful-paint"].numericValue),
+        tbtMs: Math.round(r.audits["total-blocking-time"].numericValue),
+        cls: Math.round(r.audits["cumulative-layout-shift"].numericValue * 1000) / 1000,
+        // Lighthouse 13: the LCP node is the "node" item of the LCP breakdown insight.
+        lcpElement:
+          r.audits["lcp-breakdown-insight"]?.details?.items
+            ?.find((x) => x.type === "node")
+            ?.snippet?.slice(0, 120) ?? null,
+      });
     }
-    execFileSync("pnpm", args, { stdio: "ignore", shell: true, timeout: 240_000, cwd: tmpdir() });
-    const r = JSON.parse(readFileSync(file, "utf8"));
-    runs.push({
-      score: Math.round(r.categories.performance.score * 100),
-      lcpMs: Math.round(r.audits["largest-contentful-paint"].numericValue),
-      fcpMs: Math.round(r.audits["first-contentful-paint"].numericValue),
-      tbtMs: Math.round(r.audits["total-blocking-time"].numericValue),
-      cls: Math.round(r.audits["cumulative-layout-shift"].numericValue * 1000) / 1000,
-      lcpElement:
-        r.audits["largest-contentful-paint-element"]?.details?.items?.[0]?.items?.[0]?.node
-          ?.snippet ?? null,
-    });
+  } finally {
+    // The headers file holds the session cookie: always removed, even after a failed run.
+    rmSync(dir, { recursive: true, force: true });
   }
-  rmSync(dir, { recursive: true, force: true });
   runs.sort((a, b) => a.lcpMs - b.lcpMs);
   return { median: runs[1], runs };
 }
