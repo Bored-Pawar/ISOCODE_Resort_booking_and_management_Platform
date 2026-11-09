@@ -64,6 +64,9 @@ Staff eligibility (D2): `users` has no active/disabled flag. All existing accoun
 7. **Forms keep input on failure**: React 19 resets uncontrolled fields after a form action, so auth, hold and enquire actions return the non secret values plus an `attempt` number; fields use `defaultValue` and the form remounts with `key={attempt}`. Passwords are never returned. Login failure always says "Email or password is incorrect."
 8. **Logs**: caught errors are logged with `safeError()` (`src/lib/log.ts`): class name and SQLSTATE only, never the message or object (drizzle messages carry bound values).
 
+## Deployment
+Vercel functions pinned to `cle1` (us-east-2) to match the Neon project region (`vercel.json`); daily cron for hold expiry; manual guarded `pnpm db:deploy`. Details: `deployment.md`.
+
 ## Performance budget (slow hill networks)
 1. Each guest page adds no more than 30 KB (gzip) of its own JS above the framework baseline (about 120 KB gzip: React DOM and the Next client). Decided by the scrum master after S1 G1 measured a 100 KB total as unreachable on this stack. The baseline is recorded in `tdd-notes.md`.
 2. Hard target: LCP under 2.5 s on Lighthouse Slow 4G, measured in H3.
@@ -88,6 +91,7 @@ Staff eligibility (D2): `users` has no active/disabled flag. All existing accoun
 | `CRON_SECRET` | Vercel Cron auth |
 | `PAYMENT_WEBHOOK_SECRET` | B7 mock gateway: HMAC SHA-256 key for `/api/payments/mock` (signature in `x-payment-signature`, hex over the raw body). At least 16 characters. Missing or short: every webhook is 401, so test payments cannot confirm. Set per environment (F6 deploy note) |
 | `HOLD_MINUTES` | Default 10 |
+| `ALLOW_PRODUCTION_SEED`, `PRODUCTION_DATABASE_URL_UNPOOLED` | Shell only, never in Vercel or `.env.local`: `pnpm db:deploy` (guarded production migration and demo seed, `deployment.md`) |
 | `TEST_DATABASE_URL` | Required for `test:integration`. A separate Neon branch (direct string). No fallback; must not share a host with `DATABASE_URL*` |
 | `DB_PROTECTED_HOSTS` | Comma separated host fragments that `db:seed`, `db:reset` and the integration tests refuse to touch (e.g. the production endpoint) |
 | `DB_TARGET` | Internal. Set to `test` by the integration tests for the seed child process so it targets `TEST_DATABASE_URL`. Never set by hand |
