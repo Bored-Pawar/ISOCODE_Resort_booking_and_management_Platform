@@ -85,7 +85,7 @@ Vercel functions pinned to `cle1` (us-east-2) to match the Neon project region (
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini |
 | `ANTHROPIC_API_KEY` | Optional |
 | `LOCAL_AI_BASE_URL` | OpenAI compatible local server, e.g. Ollama |
-| `GROQ_API_KEY_1` to `GROQ_API_KEY_4` | Groq keys for `AI_PROVIDER=groq`, tried in order 1 to 4, empty ones skipped. A key hitting 429/401/403 cools down (Retry-After, else 60 s) and the next is used. Suggested `AI_MODEL`: `openai/gpt-oss-20b` |
+| `GROQ_API_KEY_1` to `GROQ_API_KEY_4` | Groq keys for `AI_PROVIDER=groq`, tried in order 1 to 4, empty ones skipped. A key hitting 429/401/403 cools down (Retry-After, else 60 s) and the next is used. Suggested `AI_MODEL`: `openai/gpt-oss-120b` |
 | `INBOUND_WEBHOOK_SECRET` | Shared secret for `/api/inbound/email` and `/api/inbound/whatsapp`, sent in the `x-inbound-secret` header. Missing or wrong: 401 |
 | `DEV_TOOLS_ENABLED` | `true` turns on the hidden `/dev` area (UI kit, inbound simulator, dev login). Anything else, or unset: every `/dev` URL is a 404. Leave off in production |
 | `CRON_SECRET` | Vercel Cron auth |

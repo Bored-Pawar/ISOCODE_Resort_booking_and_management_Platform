@@ -34,7 +34,7 @@ Room preference and room-count matching use original server text, independently 
 | `google` | Default for dev and demo | Gemini Flash free tier. Free tier content may be used by Google to improve products, so only synthetic seed data goes through it. Paid tier recommended for production (documented in TDD). |
 | `local` | Dev fallback on own GPU | Ollama or similar, OpenAI compatible endpoint at `LOCAL_AI_BASE_URL`. Works only where the app and model run on the same network. |
 | `anthropic` | Optional production option | |
-| `groq` | Hosted, free tier friendly | `@ai-sdk/groq`, model from `AI_MODEL` (suggested `openai/gpt-oss-20b`, structured outputs). Keys `GROQ_API_KEY_1` to `_4`, tried in order, empty ones skipped. Failover rule below. Synthetic data only on a free tier. |
+| `groq` | Hosted, free tier friendly | `@ai-sdk/groq`, model from `AI_MODEL` (suggested `openai/gpt-oss-120b`; `gpt-oss-20b` sometimes echoes the JSON schema, see `docs/eval/r5-results.md`). Keys `GROQ_API_KEY_1` to `_4`, tried in order, empty ones skipped. Failover rule below. Synthetic data only on a free tier. |
 | `rules` | No key, tests, outages | Keyword classifier, confidence capped at 0.5, so always unsorted. |
 
 Provider is chosen in `modules/ai-provider/factory.ts`. Model id comes from `AI_MODEL`; no hosted model ID is guessed when unset. Missing credentials/model yields sanitized `NOT_CONFIGURED` and rules fallback. Google remains the documented demo choice, subject to a real account/model smoke test; local Ollama is the intended development setup. See `s2-ai-provider-setup.md`.
@@ -52,7 +52,7 @@ PII minimization supports known sender tokens, bounded introduced names, common 
 6. Low confidence goes to unsorted.
 
 ## Evaluation
-R5 results (30 labelled seeds, Groq `openai/gpt-oss-20b` and rules): `docs/eval/r5-results.md`. `pnpm eval:ai --r5` adds per category accuracy, complaint recall, draft template fallback and grounding outcomes, and writes to `docs/eval/`.
+R5 results (30 labelled seeds, Groq `openai/gpt-oss-20b` and rules, plus the Phase 6 rerun on `openai/gpt-oss-120b`): `docs/eval/r5-results.md`. `pnpm eval:ai --r5` adds per category accuracy, complaint recall, draft template fallback and grounding outcomes, and writes to `docs/eval/`.
 
 M6 guard: Hindi/Hinglish/English confirmations and financial/availability promises are rejected; Devanagari digits are normalized and numeric facts require original-text/server evidence. Guest budgets and refund acknowledgments are distinguished from business promises. Checks still precede trusted quote substitution. Saved-output replay across the unchanged 30 seeds is documented in `reviews/r1-r4-draft-guard-evaluation.md`; the under-30% template target remains unmet.
 

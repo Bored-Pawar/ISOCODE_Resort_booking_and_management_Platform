@@ -28,8 +28,8 @@ CSS variables on `:root`, mapped into Tailwind theme. Light theme only for the M
 | `--accent-hover` | `#253B2E` | Primary hover |
 | `--accent-soft` | `#E6EDE8` | Selected states, accent badges |
 | `--coffee` | `#7A4E2D` | Rare highlight only (e.g. "Best value" tag) |
-| `--success` | `#2E7D4F` | Confirmed, saved |
-| `--warning` | `#A86A12` | Holds expiring, low confidence |
+| `--success` | `#276B43` | Confirmed, saved (darkened in S3 H5 from `#2E7D4F` for AA on tinted badges) |
+| `--warning` | `#8A560C` | Holds expiring, low confidence (darkened in S3 H5 from `#A86A12` for AA on tinted badges) |
 | `--danger` | `#B3261E` | Errors, complaints, sold out |
 
 Text on `--accent` is `#FFFFFF`. Status colours always pair with an icon or word, never colour alone.
