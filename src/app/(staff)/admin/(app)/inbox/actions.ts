@@ -25,11 +25,27 @@ const MESSAGES: Record<string, string> = {
     "The draft changed since you opened it (rebuilt or edited by someone). Nothing was saved or sent. Review the new draft below.",
   ALREADY_OPEN: "Reservations and the GM have already been asked. Wait for them to mark it seen.",
   NOT_OPEN: "This request was already marked seen.",
+  QUOTE_REBUILDING:
+    "The quote is being rebuilt from the saved details. Nothing was sent. Wait for it, or use Retry.",
+  QUOTE_FAILED:
+    "The quote could not be rebuilt, so this draft is out of date. Nothing was sent. Use Retry.",
+  QUOTE_STALE:
+    "The saved details changed after this draft was priced. Nothing was sent. Use Retry to rebuild the quote.",
+  REBUILD_FAILED:
+    "The quote could not be rebuilt. The old draft cannot be sent. Try again in a moment.",
 };
+/** Refusals that mean the page shows an out-of-date draft: refresh it rather than keep it. */
+const STALE_CODES = new Set([
+  "STALE_DRAFT",
+  "QUOTE_REBUILDING",
+  "QUOTE_FAILED",
+  "QUOTE_STALE",
+  "REBUILD_FAILED",
+]);
 const fail = (code: string): ActionResult => ({
   ok: false,
   message: MESSAGES[code] ?? "Could not save. Try again.",
-  ...(code === "STALE_DRAFT" ? { stale: true } : {}),
+  ...(STALE_CODES.has(code) ? { stale: true } : {}),
 });
 const refresh = () => revalidatePath("/admin/inbox", "layout");
 
@@ -46,7 +62,13 @@ export async function saveFieldsAction(input: unknown): Promise<ActionResult> {
     if (res.draft === "locked")
       return { ok: true, message: "Saved. The reply was already sent, so it was not rebuilt." };
     if (res.draft === "failed")
-      return { ok: true, message: "Saved. The draft could not be rebuilt; use Regenerate." };
+      return {
+        ok: true,
+        message:
+          "Saved, but the quote could not be rebuilt. The old draft cannot be sent; use Retry.",
+      };
+    if (res.draft === "superseded")
+      return { ok: true, message: "Saved. A newer change is rebuilding the draft." };
     return { ok: true, message: "Saved." };
   } catch (error) {
     console.error("saveFields failed", safeError(error));
@@ -94,6 +116,21 @@ export async function regenerateAction(input: unknown): Promise<ActionResult> {
     return { ok: true, message: "New draft ready. Review it before sending." };
   } catch (error) {
     console.error("regenerate failed", safeError(error));
+    return fail("ERROR");
+  }
+}
+
+/** Retry: rebuild the quote and draft from the saved details (template prose, rate table only). */
+export async function rebuildQuoteAction(input: unknown): Promise<ActionResult> {
+  const actor = await inboxActor();
+  if (!actor) return FORBIDDEN;
+  try {
+    const res = await inbox.rebuildQuote(input, actor);
+    if (!res.ok) return fail(res.code);
+    refresh();
+    return { ok: true, message: "Quote rebuilt from the saved details. Review it before sending." };
+  } catch (error) {
+    console.error("rebuildQuote failed", safeError(error));
     return fail("ERROR");
   }
 }

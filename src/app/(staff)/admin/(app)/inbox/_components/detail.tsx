@@ -147,7 +147,12 @@ export function Detail({
       ) : null}
 
       <Section title="Details">
-        <FieldsForm enquiryId={q.id} extracted={detail.extracted} canEdit={detail.can.work} />
+        <FieldsForm
+          enquiryId={q.id}
+          extracted={detail.extracted}
+          room={detail.room}
+          canEdit={detail.can.work}
+        />
       </Section>
 
       {detail.can.work ? (
