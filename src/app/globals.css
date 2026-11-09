@@ -13,8 +13,9 @@
   --accent-soft: #e6ede8;
   --accent-foreground: #ffffff;
   --coffee: #7a4e2d;
-  --success: #2e7d4f;
-  --warning: #a86a12;
+  /* H5: darkened so badge text on a 10% tint of itself passes WCAG AA (4.5:1). */
+  --success: #276b43;
+  --warning: #8a560c;
   --danger: #b3261e;
   --shadow-pop: 0 8px 24px rgba(31, 27, 22, 0.08);
   --ease: 150ms ease-out;
