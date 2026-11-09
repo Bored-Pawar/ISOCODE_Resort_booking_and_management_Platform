@@ -29,8 +29,11 @@ export function AuthForm({
   consent?: React.ReactNode;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const values = state?.values;
   return (
-    <form action={formAction} className="flex flex-col gap-4" noValidate>
+    // React 19 resets uncontrolled fields after an action; remounting on each failed attempt
+    // with the echoed values as defaults keeps what was typed. Passwords are never echoed.
+    <form key={state?.attempt ?? 0} action={formAction} className="flex flex-col gap-4" noValidate>
       {next ? <input type="hidden" name="next" value={next} /> : null}
       {fields.map((f) =>
         f.type === "password" ? (
@@ -50,6 +53,7 @@ export function AuthForm({
             type={f.type ?? "text"}
             autoComplete={f.autoComplete}
             required={f.required ?? true}
+            defaultValue={values?.[f.name] ?? ""}
             error={state?.fieldErrors?.[f.name]}
           />
         ),
@@ -62,6 +66,7 @@ export function AuthForm({
               name="consent"
               className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]"
               aria-invalid={state?.fieldErrors?.consent ? true : undefined}
+              defaultChecked={values?.consent === "on"}
             />
             <span>{consent}</span>
           </label>

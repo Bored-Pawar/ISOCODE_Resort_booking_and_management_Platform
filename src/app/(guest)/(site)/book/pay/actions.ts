@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth";
+import { allow, RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
 import { booking, type Booking } from "@/modules/booking";
 import { acquireBookingHold } from "@/modules/booking/actions";
 import { MockProvider, TEST_OUTCOMES } from "@/modules/payments";
@@ -39,7 +40,9 @@ export async function payBooking(_: PayFormState, formData: FormData): Promise<P
     outcome: formData.get("outcome"),
     attemptId: formData.get("attemptId"),
   });
-  await requireRole("guest");
+  const guest = await requireRole("guest");
+  if (!(await allow("pay", guest.id)))
+    return { step: { kind: "error", message: RATE_LIMITED_MESSAGE } };
   if (!parsed.success)
     return { step: { kind: "error", message: "Choose a test outcome and try again." } };
   const b = await ownBooking(parsed.data.ref);
@@ -85,6 +88,7 @@ export type RefreshState = { message?: string; enquiryHref?: string } | undefine
 export async function refreshHold(_: RefreshState, formData: FormData): Promise<RefreshState> {
   const parsed = refSchema.safeParse(formData.get("ref"));
   const guest = await requireRole("guest");
+  if (!(await allow("hold", guest.id))) return { message: RATE_LIMITED_MESSAGE };
   if (!parsed.success) return { message: "We could not find this booking." };
   const b = await ownBooking(parsed.data);
   if (!b) return { message: "We could not find this booking." };
